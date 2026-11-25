@@ -33,7 +33,7 @@ Next.js 16 (App Router, Turbopack) + TypeScript 7 + PGlite (PostgreSQL embutido 
 | 5 | Operação comercial: assinatura SaaS e cobrança do aluno **separadas**, eventos assinados/idempotentes, painel básico | 🟡 **backend e libs prontos; faltam testes de API, telas e README** (ver §4) |
 | 6 | IA assistiva: sugestões com evidências, aprovação do personal | ⏳ não iniciada |
 
-Verificação atual: `npx tsc --noEmit` limpo; `npm test` = **169 testes passando (12 arquivos)**.
+Verificação atual: `npx tsc --noEmit` limpo; `npm test` = **208 testes passando (13 arquivos)**.
 
 ## 4. Fila de trabalho, NA ORDEM (continue daqui)
 
