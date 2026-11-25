@@ -110,6 +110,7 @@ Segue o brandbook v1.1 "Identidade Visual Instagram 2026" (resumo do brandbook c
 - **Adaptações para o app:** não há vermelho na paleta, então erros usam uma barra azul com "ATENÇÃO" e diferenças positivas/negativas são indicadas pelo sinal, não por cor.
 - **Fonte condensada:** Heros Condensed e TeX Gyre Heros Cn não estão no npm. A pilha de fontes tenta `Heros Cn`/`TeX Gyre Heros Cn` instaladas no sistema e cai em Inter itálico. Para o visual final, adicione os arquivos licenciados com `@font-face`.
 - Peça gráfica do avatar, rabiscos e fotos do brandbook não fazem parte do app.
+- **Tela inicial e animações:** a página `/` tem herói, cartões que aparecem ao rolar e um painel de acesso que expande para tela cheia (abre como diálogo modal, fecha com Esc ou "Fechar" devolvendo o foco). Os efeitos de rolagem (entrada em cascata, paralaxe das faixas inclinadas, barra de progresso) estão em `public/scrollfx.js` e `src/app/scrollfx.css`, sem dependências externas; os ícones têm microanimações e o cursor dos campos de texto usa uma mola. Os efeitos `sticky` e `horizontal` não foram incluídos (o app não os usa). Verificado no navegador em desktop; a tela inicial em 375 px e com `prefers-reduced-motion` ainda não foi conferida.
 
 ## Arquitetura (propostas)
 
