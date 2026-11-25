@@ -1,6 +1,7 @@
-// Validação ponta a ponta por HTTP contra um servidor em execução (entregas 1 e 2 + senha).
+// Validação ponta a ponta por HTTP contra um servidor em execução (entregas 1 a 5 + senha).
 // Uso: npm run dev (outro terminal) e depois npm run validate [http://localhost:3000]
 // Cria contas novas a cada execução (e-mails com sufixo aleatório); não depende do seed.
+import { sign } from "../src/server/payments";
 const BASE = process.argv[2] ?? "http://localhost:3000";
 const RUN = Math.random().toString(36).slice(2, 8);
 
@@ -187,6 +188,127 @@ async function main() {
   } else {
     console.log("  (servidor em produção: sem devLink; passos de redefinição cobertos em tests/password-reset.test.ts)");
   }
+
+  // ------------------------------------------------------------------ Entrega 3
+  section("Entrega 3 · evolução e último treino");
+  // a seção de senha redefiniu a senha do a1 e derrubou a sessão dele: entra de novo
+  await a1.c.post("/auth/login", { email: `a1.${RUN}@a.test`, password: known.body.devLink ? "nova-senha-77" : "senha-segura-1" });
+  const e3 = await student(ana, "e3");
+  const e3w = (await ana.post("/versions", { studentId: e3.id, name: "Treino E3", publish: true, exercises: [{ exerciseId: ex["Supino reto"].id, sets: [wk({ loadKg: 60 }), wk({ loadKg: 60 })] }] })).body.id as string;
+  const e3d = (await e3.c.get(`/versions/${e3w}`)).body;
+  const e3sets: string[] = e3d.exercises.flatMap((e: any) => e.sets.map((s: any) => s.id));
+  const e3log = (await e3.c.post(`/versions/${e3w}/logs`, {})).body.id as string;
+  for (const s of e3sets) await e3.c.put(`/logs/${e3log}/sets/${uuid()}`, { versionSetId: s, reps: 10, loadKg: 62.5, rir: 2 });
+  check("sessão aberta não entra no último treino", Object.keys((await e3.c.get(`/versions/${e3w}/last`)).body).length === 0);
+  await e3.c.post(`/logs/${e3log}/finish`, { note: "" });
+  const last = (await e3.c.get(`/versions/${e3w}/last`)).body;
+  check("último treino mostra a melhor série da sessão concluída", last[e3d.exercises[0].id]?.best?.loadKg === 62.5 && last[e3d.exercises[0].id].sets.length === 2);
+  const evo = await ana.get(`/students/${e3.id}/evolution`);
+  check("personal vê a evolução com a ressalva sobre hipertrofia", evo.status === 200 && evo.body.summary.sessionsCompleted === 1 && /não representa necessariamente hipertrofia/.test(evo.body.summary.note) && evo.body.exercises.length >= 1);
+  const e3perm = (await ana.get(`/students/${e3.id}/permissions`)).body;
+  await ana.put(`/students/${e3.id}/permissions`, { ...e3perm, viewHistory: false });
+  check("aluno sem a permissão não vê a própria evolução (403)", (await e3.c.get("/me/evolution")).status === 403);
+  await ana.put(`/students/${e3.id}/permissions`, { ...e3perm, viewHistory: true });
+  check("com a permissão, o aluno vê a própria evolução", (await e3.c.get("/me/evolution")).status === 200);
+  check("isolamento da evolução e do último treino", (await beta.get(`/students/${e3.id}/evolution`)).status === 404 && (await e3.c.get(`/students/${a1.id}/evolution`)).status === 403 && (await a2.c.get(`/versions/${e3w}/last`)).status === 404 && (await ana.get(`/versions/${e3w}/last`)).status === 403);
+
+  // ------------------------------------------------------------------ Entrega 4
+  section("Entrega 4 · biblioteca e mídia por escopo");
+  const own = await ana.post("/exercises", { name: `Remada TRX ${RUN}`, equipment: "TRX", primaryMuscles: ["Dorsais"], secondaryMuscles: ["Bíceps"] });
+  check("personal cria exercício próprio; outra consultoria não o vê", own.status === 201 && !(await beta.get("/exercises")).body.some((e: any) => e.id === own.body.id) && (await b1.c.get(`/exercises/${own.body.id}/media`)).status === 404);
+  check("nome repetido do catálogo e aluno criando são recusados", (await ana.post("/exercises", { name: "supino RETO", primaryMuscles: ["Peitoral"] })).status === 409 && (await a1.c.post("/exercises", { name: "X", primaryMuscles: ["Y"] })).status === 403);
+  const sup = ex["Supino reto"].id as string;
+  const vid = await ana.post(`/exercises/${sup}/media`, { title: `Meu supino ${RUN}`, url: "https://exemplo.com/meu.mp4" });
+  check("vídeo próprio só em https", vid.status === 201 && (await ana.post(`/exercises/${sup}/media`, { title: "x", url: "http://exemplo.com/a.mp4" })).status === 400 && (await ana.post(`/exercises/${sup}/media`, { title: "x", url: "javascript:alert(1)" })).status === 400);
+  const titles = async (c: Client) => ((await c.get(`/exercises/${sup}/media`)).body.resolved.items as any[]).map((i) => i.title);
+  check("adicionar não muda o que o aluno vê até configurar", !(await titles(a2.c)).includes(`Meu supino ${RUN}`));
+  check("regra geral 'ambas' vale para todos os alunos", (await ana.put(`/exercises/${sup}/media-preference`, { mode: "both", ownMediaId: vid.body.id })).status === 200 && (await titles(a2.c)).includes(`Meu supino ${RUN}`));
+  check("regra por aluno prevalece; outro aluno segue a geral", (await ana.put(`/exercises/${sup}/media-preference`, { mode: "official", studentId: a2.id })).status === 200 && !(await titles(a2.c)).includes(`Meu supino ${RUN}`) && (await titles(a1.c)).includes(`Meu supino ${RUN}`));
+  check("outra consultoria não recebe a personalização nem usa vídeo alheio", !(await titles(b1.c)).includes(`Meu supino ${RUN}`) && (await beta.put(`/exercises/${sup}/media-preference`, { mode: "own", ownMediaId: vid.body.id })).status === 400);
+  check("aluno vê só o resultado e não altera mídia (403)", Object.keys((await a1.c.get(`/exercises/${sup}/media`)).body).sort().join() === "exercise,resolved" && (await a1.c.put(`/exercises/${sup}/media-preference`, { mode: "own", ownMediaId: vid.body.id })).status === 403);
+
+  section("Entrega 4 · avaliações");
+  const tpl4 = await ana.post("/assessment-templates", { key: "triagem" });
+  check("modelo pronto da consultoria; outra consultoria não vê; aluno 403", tpl4.status === 201 && (await beta.get("/assessment-templates")).body.templates.length === 0 && (await a1.c.get("/assessment-templates")).status === 403);
+  const asm = await ana.post(`/students/${a1.id}/assessments`, { templateId: tpl4.body.id });
+  check("personal envia; o aluno vê pendente", asm.status === 201 && asm.body.status === "pending" && (await a1.c.get("/me/assessments")).body.some((x: any) => x.id === asm.body.id && x.status === "pending"));
+  const ans = { dor_peito: false, tontura: false, pressao: false, cronica: false, lesao_atual: true, detalhes: "joelho direito" };
+  check("resposta inválida recusada; válida aceita uma vez só", (await a1.c.post(`/assessments/${asm.body.id}/submit`, { answers: { dor_peito: "não" } })).status === 400 && (await a1.c.post(`/assessments/${asm.body.id}/submit`, { answers: ans })).status === 200 && (await a1.c.post(`/assessments/${asm.body.id}/submit`, { answers: ans })).status === 409);
+  check("dado de saúde isolado: outro aluno e outra consultoria recebem 404", (await a2.c.get(`/assessments/${asm.body.id}`)).status === 404 && (await beta.get(`/assessments/${asm.body.id}`)).status === 404 && (await beta.get(`/students/${a1.id}/assessments`)).status === 404 && (await a2.c.post(`/assessments/${asm.body.id}/submit`, { answers: ans })).status === 404);
+  await ana.get(`/assessments/${asm.body.id}`);
+  const aud4 = (await ana.get("/audit")).body as any[];
+  check("leitura pelo personal fica na auditoria sem as respostas", aud4.some((x) => x.action === "assessment.view") && aud4.some((x) => x.action === "assessment.create") && !JSON.stringify(aud4).includes("joelho"));
+
+  section("Entrega 4 · check-ins");
+  const good = { sono: 7, fadiga: 4, estresse: 3, motivacao: 8, dor: "Não" };
+  check("aluno responde e fica em dia; resposta inválida é recusada", (await a2.c.post("/me/checkin", { answers: { sono: 7 } })).status === 400 && (await a2.c.post("/me/checkin", { answers: good })).status === 201 && (await a2.c.get("/me/checkin")).body.due === false);
+  const hurt = await e3.c.post("/me/checkin", { answers: { ...good, fadiga: 9, dor: "Sim, desconforto significativo" } });
+  const panel = (await ana.get("/checkins")).body as any[];
+  check("painel: alerta vem primeiro; só a própria consultoria", hurt.status === 201 && panel[0].studentId === e3.id && panel[0].priority === 2 && !panel.some((p) => p.studentId === b1.id));
+  check("configuração por aluno; aluno e outra consultoria não alteram", (await ana.put(`/students/${a2.id}/checkin-config`, { frequencyDays: 3, questionIds: ["sono", "dor"] })).status === 200 && (await a2.c.get("/me/checkin")).body.frequencyDays === 3 && (await a2.c.put("/checkin-config", { frequencyDays: 1, questionIds: ["sono"] })).status === 403 && (await beta.put(`/students/${a2.id}/checkin-config`, { frequencyDays: 1, questionIds: ["sono"] })).status === 404 && (await beta.get(`/students/${a2.id}/checkins`)).status === 404);
+
+  section("Entrega 4 · chat privado");
+  check("mensagem do aluno chega ao personal como não lida; ler zera", (await a1.c.post("/me/chat", { body: "Treino de hoje ficou pesado" })).status === 201 && (await ana.get("/chat/unread")).body.count >= 1 && (await ana.post(`/chat/${a1.id}/read`, {})).status === 200 && (await ana.get(`/chat/${a1.id}`)).body.some((m: any) => m.body === "Treino de hoje ficou pesado" && m.mine === false));
+  check("personal responde e o aluno vê", (await ana.post(`/chat/${a1.id}`, { body: "Vamos reduzir a carga" })).status === 201 && (await a1.c.get("/me/chat")).body.some((m: any) => m.body === "Vamos reduzir a carga" && m.mine === false));
+  check("vazio e longo demais recusados", (await a1.c.post("/me/chat", { body: "   " })).status === 400 && (await a1.c.post("/me/chat", { body: "x".repeat(2001) })).status === 400);
+  check("isolamento: a conversa de um aluno não vaza para o outro nem para outra consultoria", !JSON.stringify((await a2.c.get("/me/chat")).body).includes("Treino de hoje ficou pesado") && (await beta.get(`/chat/${a1.id}`)).status === 404 && (await beta.post(`/chat/${a1.id}`, { body: "oi" })).status === 404 && (await a2.c.get("/chat")).status === 403);
+  let chatLast = 0;
+  for (let i = 0; i < 32; i++) chatLast = (await e3.c.post("/me/chat", { body: `m${i}` })).status;
+  check("excesso de mensagens por minuto: 429", chatLast === 429, String(chatLast));
+
+  // ------------------------------------------------------------------ Entrega 5
+  section("Entrega 5 · cobrança, webhook assinado e painel");
+  const SECRET = "dev-webhook-secret"; // padrão fora de produção
+  const hook = async (body: unknown, sig?: string | null) => {
+    const raw = JSON.stringify(body);
+    const headers: Record<string, string> = { "content-type": "application/json" };
+    if (sig !== null) headers["x-signature"] = sig ?? sign(SECRET, raw);
+    const res = await fetch(BASE + "/api/webhooks/payments", { method: "POST", headers, body: raw });
+    return { status: res.status, body: await res.json().catch(() => null) };
+  };
+  const evt = (ref: string, type: string, o: { id?: string; amount?: number; fee?: number; method?: string } = {}) => ({ id: o.id ?? uuid(), type, data: { ref, amountCents: o.amount, feeCents: o.fee, method: o.method } });
+  const mk = async (studentId: string, cents = 20000) => { const r = await ana.post(`/students/${studentId}/charges`, { description: "Mensalidade", amountCents: cents, dueDate: "2099-01-01" }); return { id: r.body.id as string, ref: `sim_ch_${r.body.id}`, status: r.status }; };
+  const billing = async (c: Client, studentId: string) => (await c.get(`/students/${studentId}/billing`)).body.charges as any[];
+  const ch1 = await mk(a1.id);
+  const ch2 = await mk(a1.id);
+  const probe = await hook(evt(ch1.ref, "payment.confirmed", { amount: 20000 }), null);
+  if (probe.status === 503) {
+    console.log("  (servidor em produção sem segredo: o webhook recusa tudo; coberto em tests/delivery5.test.ts)");
+  } else {
+    check("webhook sem assinatura ou com assinatura errada: 401", probe.status === 401 && (await hook(evt(ch1.ref, "payment.confirmed", { amount: 20000 }), "00".repeat(32))).status === 401 && (await billing(ana, a1.id)).find((c) => c.id === ch1.id).status === "pending");
+    const paid = evt(ch1.ref, "payment.confirmed", { amount: 20000, fee: 518, method: "pix" });
+    const results: string[] = []; for (let i = 0; i < 4; i++) results.push((await hook(paid)).body.result);
+    const row = (await billing(ana, a1.id)).find((c) => c.id === ch1.id);
+    check("o mesmo evento 4 vezes aplica uma só (taxa e método intactos)", results.join() === "applied,duplicate,duplicate,duplicate" && row.status === "paid" && row.feeCents === 518 && row.method === "pix");
+    check("valor divergente é rejeitado e não altera a cobrança", (await hook(evt(ch2.ref, "payment.confirmed", { amount: 1 }))).body.result === "rejected" && (await billing(ana, a1.id)).find((c) => c.id === ch2.id).status === "pending");
+    check("falha depois de pago é ignorada; estorno funciona", (await hook(evt(ch1.ref, "payment.failed"))).body.result === "ignored" && (await hook(evt(ch1.ref, "payment.refunded"))).body.result === "applied" && (await billing(ana, a1.id)).find((c) => c.id === ch1.id).status === "refunded");
+    check("cobrança do aluno e assinatura da plataforma não se misturam (a referência decide o alvo)", (await hook(evt(ch2.ref, "payment.canceled"))).body.scope === "student_charge" && (await hook(evt("sim_inv_" + uuid(), "payment.confirmed", { amount: 100 }))).body.result !== "applied");
+  }
+
+  section("Entrega 5 · contrato, ciclo, recebimento manual e painel");
+  const ctr = await ana.post(`/students/${a2.id}/contracts`, { description: "Consultoria mensal", amountCents: 15000, dueDay: 10 });
+  check("contrato mensal criado; valor e dia inválidos recusados", ctr.status === 201 && (await ana.post(`/students/${a2.id}/contracts`, { description: "x", amountCents: 0, dueDay: 10 })).status === 400 && (await ana.post(`/students/${a2.id}/contracts`, { description: "x", amountCents: 100, dueDay: 40 })).status === 400);
+  const cycle1 = await ana.post("/billing/cycle", {});
+  const cycle2 = await ana.post("/billing/cycle", {});
+  check("ciclo do mês não duplica cobrança por contrato", cycle1.status === 200 && cycle2.body.generated === 0);
+  const ch3 = await mk(a2.id, 9000);
+  check("recebimento manual só vale para cobrança em aberto e é auditado", (await ana.post(`/charges/${ch3.id}/mark-paid`, { method: "cash" })).status === 200 && (await ana.post(`/charges/${ch3.id}/mark-paid`, { method: "cash" })).status === 409 && ((await ana.get("/audit")).body as any[]).some((x) => /charge/.test(x.action)));
+  const ch4 = await mk(a2.id, 7000);
+  check("cancelamento: outra consultoria 404, aluno 403, personal 200", (await beta.post(`/charges/${ch4.id}/cancel`, {})).status === 404 && (await a2.c.post(`/charges/${ch4.id}/cancel`, {})).status === 403 && (await ana.post(`/charges/${ch4.id}/cancel`, {})).status === 200);
+  await ana.post("/expenses", { description: "Aluguel", category: "Espaço", amountCents: 5000, date: new Date().toISOString().slice(0, 10) });
+  const dash = (await ana.get("/billing/dashboard")).body;
+  check("painel do mês: recebido, despesas e resultado coerentes", dash.receivedCents >= 9000 && dash.expensesCents === 5000 && dash.resultCents === dash.netReceivedCents - dash.expensesCents && /futura/.test(dash.notIncluded), JSON.stringify(dash));
+  check("painel e eventos isolados por consultoria; aluno 403", (await beta.get("/billing/dashboard")).body.receivedCents === 0 && (await beta.get("/billing/events")).body.length === 0 && (await a1.c.get("/billing/dashboard")).status === 403 && (await a1.c.post("/billing/cycle", {})).status === 403);
+
+  section("Entrega 5 · cobranças do aluno, simulador e assinatura");
+  const mine = (await a2.c.get("/me/billing")).body;
+  check("aluno vê só as próprias cobranças e a contratação", mine.charges.length > 0 && !JSON.stringify(mine).includes(ch2.id) && mine.contracts.length === 1);
+  const open = mine.charges.find((c: any) => ["pending", "overdue"].includes(c.status));
+  check("aluno simula o próprio pagamento; cobrança alheia: 404", !!open && (await a2.c.post(`/me/charges/${open.id}/simulate`, { outcome: "paid" })).body.result === "applied" && (await a2.c.post(`/me/charges/${ch2.id}/simulate`, { outcome: "paid" })).status === 404);
+  const saas = (await ana.get("/saas")).body;
+  check("assinatura: plano gratuito por padrão e planos marcados como proposta", saas.subscription.planId === "free" && saas.plansAreProposal === true);
+  check("trocar de plano inicia o teste; plano inválido 400; aluno 403; limite não bloqueia", (await ana.post("/saas/plan", { planId: "starter" })).status === 200 && (await ana.get("/saas")).body.subscription.status === "trialing" && (await ana.post("/saas/plan", { planId: "invalido" })).status === 400 && (await a1.c.post("/saas/plan", { planId: "premium" })).status === 403 && (await ana.post("/versions", { studentId: a1.id, name: "Sem bloqueio por limite", exercises: [{ exerciseId: sup, sets: [wk()] }] })).status === 201);
+  check("assinatura de uma consultoria não aparece na outra", (await beta.get("/saas")).body.subscription.planId === "free");
 
   console.log(`\n${pass} verificações ok, ${fail} falhas`);
   if (fail) { console.log("\nFalhas:\n" + failures.map((f) => " - " + f).join("\n")); process.exit(1); }

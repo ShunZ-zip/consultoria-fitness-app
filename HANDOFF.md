@@ -20,7 +20,7 @@ Next.js 16 (App Router, Turbopack) + TypeScript 7 + PGlite (PostgreSQL embutido 
 - Regras puras ficam em `src/lib/*` (volume, evolution, syncQueue, permissions, media, assessment, checkin, billing, finance, format) e têm testes unitários.
 - Autorização central: `requireActor(ctx, role?)`, `loadVersion`, `assertStudent`, `requirePerm`. Auditoria: `audit(db, actor, action, detail)` → `audit_log`.
 - Testes chamam os handlers diretamente (`tests/helpers.ts`: `call(handler, {body, cookie, params})`). Banco em memória (`DB_DIR=memory`, `tests/setup.ts`). **Sempre incluir testes de isolamento** (aluno×aluno, consultoria×consultoria) e rodar uma "mutação" rápida (quebrar a regra de propósito, ver o teste falhar, restaurar).
-- Validação por HTTP contra o servidor real: `npm run validate` (`scripts/validate.ts`; cobre entregas 1–2 + senha; **ainda não cobre 3–5**).
+- Validação por HTTP contra o servidor real: `npm run validate` (`scripts/validate.ts`; cobre entregas 1–5 + senha, 96 verificações; exige servidor rodando).
 - Armadilhas do ambiente: (a) heredocs longos no Bash às vezes quebram — use a ferramenta Write para arquivos e Python para patches (`assert count == 1`); (b) o servidor de desenvolvimento **precisa ser reiniciado** quando mudam `src/lib/*` usados no servidor ou migrações (o módulo/DB ficam em memória); (c) `rm -rf data/pglite` + `npm run seed` recria o banco de demonstração; (d) o painel do navegador acelera/atrasa animações: ao tirar captura, esperar alguns segundos; (e) o `preview_start name=dev` usa `.claude/launch.json`.
 
 ## 3. Estado por entrega (plano original: 6 entregas)
@@ -37,7 +37,7 @@ Verificação atual: `npx tsc --noEmit` limpo; `npm test` = **208 testes passand
 
 ## 4. Fila de trabalho, NA ORDEM (continue daqui)
 
-> **Issue #2 (telas da entrega 5) concluída e verificada no navegador.** Próximo: #3 (validate.ts das entregas 3–5 e README) → #4 → #5 → #6 → #7 → #9. Pendência conhecida para #6/#7: aviso de hidratação do React em carga completa (ScrollFX altera estilos antes da hidratação) e "Simular pagamento" da assinatura sem fatura para testar na UI.
+> **Issues #2 (telas da entrega 5) e #3 (validate.ts 1–5 com 96 verificações + README) concluídas.** Próximo: #4 (kanban) → #5 → #6 → #7 → #9. Pendência conhecida para #6/#7: aviso de hidratação do React em carga completa (ScrollFX altera estilos antes da hidratação) e "Simular pagamento" da assinatura sem fatura para testar na UI.
 
 > **A fila detalhada agora vive nas Issues do GitHub** (cada uma com desenho, casos de teste e critério de pronto). Trabalhe nesta ordem e feche cada issue ao terminar (`gh issue close N --comment "..."`):
 > #1 testes da entrega 5 → #2 telas da entrega 5 → #3 validate.ts + README → #4 kanban do personal → #5 entrega 6 (IA por regras) → #6 auditoria de UI/UX → #7 pendências de animações/tela inicial → #9 validação final. **#8 = decisões em aberto com o usuário** (não bloqueiam).

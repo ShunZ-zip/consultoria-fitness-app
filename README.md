@@ -4,7 +4,13 @@
 - **Entrega 2:** editor por série completo, rascunho editável, **versões** (a publicada é imutável), duplicar, **modelos**, **volume por músculo** com peso configurável e **auditoria** das alterações.
 - **Entrega 2 (autonomia):** **permissões individuais por aluno** (opção C, 9 permissões do protótipo), alternativas autorizadas por exercício e adaptações da sessão registradas à parte, sem alterar a prescrição.
 
-Fora do escopo (conforme combinado): agenda profissional (etapa 4, tópico 7, **pendente**), pagamentos reais, IA, offline, mídias, chat, avaliações, cronômetro de descanso, evolução e check-ins (aparecem no protótipo, mas são de entregas seguintes). Todos os dados de exemplo são **fictícios**.
+- **Entrega 3:** registro robusto: **modo offline com fila de sincronização**, histórico, **evolução** (carga, 1RM estimado por Epley, recordes, aderência), cronômetro de descanso e **último treino** exibido durante o registro.
+- **Entrega 4:** acompanhamento: **mídia oficial ou própria** por exercício (regra geral e por aluno), **biblioteca privada** de exercícios, **avaliações** configuráveis, **check-ins** com painel e **chat** individual (texto).
+- **Entrega 5:** operação comercial: **cobrança dos alunos** (contratos mensais, cobranças avulsas, recebimento manual, cancelamento), **assinatura da plataforma** (planos propostos), **webhook assinado e idempotente**, **painel financeiro básico** e despesas. Tudo em **ambiente simulado**: nenhum valor real é cobrado.
+
+Telas novas das entregas 3 a 5: Financeiro e Assinatura (personal), Pagamentos (aluno), Avaliações, Mensagens, Evolução e check-in.
+
+Fora do escopo (conforme combinado): agenda profissional (etapa 4, tópico 7, **pendente**), **pagamentos reais** (provedor não escolhido), integração com **IA externa**, fotos corporais (exigem armazenamento privado e LGPD), upload de arquivos no chat e nutrição. Fluxo de caixa, DRE, margem, pró-labore, churn, CAC, LTV e projeções ficam para evolução futura. Todos os dados de exemplo são **fictícios**.
 
 ## Como rodar
 
@@ -24,6 +30,9 @@ Contas do seed (senha `demo12345`):
 | Aluno Um / Dois | aluno1@demo.test / aluno2@demo.test | Alfa |
 | Personal | personal.beta@demo.test | Beta |
 | Aluno Três | aluno3@demo.test | Beta |
+| Personal de **teste** | `admin` (senha `admin`) | Modelo (6 alunos `modelo1@demo.test` a `modelo6@demo.test`, senha `admin`, com cobranças de 4 meses e despesas, para ver as telas com números) |
+
+A conta `admin` existe **só no seed**, para testes locais. Nunca rode o seed em produção.
 
 Para recomeçar do zero: pare o servidor, apague a pasta `data` e rode `npm run seed`. Bancos criados na entrega 1 são migrados sozinhos ao abrir.
 
@@ -54,11 +63,28 @@ Para recomeçar do zero: pare o servidor, apague a pasta `data` e rode `npm run 
 2. **Sem provedor de e-mail configurado**, em desenvolvimento (`npm run dev`) o link aparece na própria tela e no console do servidor. Em produção **nada é enviado** até um provedor ser escolhido e `APP_URL` ser definida (o link nunca é montado a partir do cabeçalho Host).
 3. O link vale 60 minutos e uma única vez; só o hash fica no banco; máximo de 3 pedidos por hora por conta. Ao redefinir, todas as sessões da conta caem e os outros links pendentes são invalidados. Vale para personal e aluno.
 
+**Entrega 3**
+1. Como aluno, abra um treino e registre séries com a conexão desligada (DevTools → Network → Offline): o banner mostra a fila; ao voltar online, sincroniza sem duplicar. O cronômetro de descanso e o "último treino" aparecem durante o registro.
+2. Com a permissão "Consultar treinos anteriores", o aluno vê **Evolução** (carga, 1RM, recordes, aderência). O personal vê a mesma tela no perfil do aluno. A aderência só existe se o treino tiver frequência semanal.
+
+**Entrega 4**
+1. **Mídia:** na biblioteca, adicione um vídeo próprio (só https) a um exercício e escolha "oficial", "própria" ou "ambas", para todos os alunos ou para um aluno. O aluno vê só o resultado.
+2. **Avaliações:** crie um modelo (medidas, anamnese, triagem, testes ou personalizado), registre ou envie ao aluno; o aluno responde uma vez. Leituras pelo personal vão para a auditoria, sem as respostas.
+3. **Check-ins:** o aluno responde o questionário (sono, fadiga, estresse, motivação, dor); o painel do personal mostra alertas primeiro. Frequência e perguntas se configuram por aluno ou como padrão. Sem finalidade diagnóstica.
+4. **Chat:** conversa individual, com não lidas, vínculo opcional com exercício e limite de mensagens por minuto.
+
+**Entrega 5** (ambiente simulado)
+1. Como `personal.alfa@demo.test` (ou `admin`), abra **Financeiro**: cartões do mês, cobranças por status, **Gerar cobranças do mês**, **Marcar paga** (com o método), **Cancelar**, contratos, cobrança avulsa, despesas e eventos de conciliação.
+2. Em **Assinatura**: planos Gratuito / Starter R$ 9,90 / Professional R$ 39,90 / Premium R$ 69,90, **marcados como proposta**; teste de 30 dias uma vez; o limite de alunos **não bloqueia** o uso.
+3. Como `aluno1@demo.test`, abra **Pagamentos**: contratação e cobranças com status em texto e **Simular pagamento** (só fora de produção).
+4. O webhook (`POST /api/webhooks/payments`) exige assinatura HMAC-SHA256 no cabeçalho `x-signature`. Fora de produção o segredo padrão é `dev-webhook-secret`; em produção é obrigatório definir `PAYMENT_WEBHOOK_SECRET` (sem ele o webhook responde 503). O mesmo evento repetido não repete o efeito.
+
 ## Testes
 
 ```powershell
-npm test          # 83 testes, banco em memória
+npm test          # 208 testes em 13 arquivos, banco em memória
 npm run typecheck
+npm run validate  # validação HTTP ponta a ponta (entregas 1 a 5): exige o servidor rodando (npm run dev)
 ```
 
 - `flow.test.ts`: convite → publicação → registro → comparação.
@@ -67,8 +93,13 @@ npm run typecheck
 - `permissions.test.ts`: as 9 permissões (padrão, configuração individual, auditoria, quem pode configurar), "sempre pode registrar", ordem, substituição autorizada/livre, exercício e série extra, descanso, volume, histórico, alternativas e comparação em três camadas.
 - `password-reset.test.ts`: esqueci a senha (resposta igual para e-mail cadastrado ou não, uso único, expiração, limite por hora, sessões derrubadas, token só em hash).
 - `volume.test.ts`: regra de volume (diretas, indiretas, peso, aquecimento e preparação fora do ponderado).
+- `delivery3.test.ts`, `evolution.test.ts`, `syncQueue.test.ts`: evolução e aderência, último treino, frequência semanal, fila de sincronização offline.
+- `delivery4.test.ts`, `followup-libs.test.ts`: biblioteca e mídia por escopo, avaliações, check-ins, chat e as regras puras de apoio.
+- `delivery5.test.ts`, `billing-libs.test.ts`: webhook assinado, eventos idempotentes e fora de ordem, separação entre assinatura da plataforma e cobrança do aluno, ciclo de cobrança, recebimento manual, painel, despesas, simulador (404 em produção) e isolamento.
 
-Os testes chamam os handlers da API (`Request` → `Response`), a mesma camada das rotas do Next. Não há teste automatizado de navegador; as telas foram verificadas manualmente.
+`npm run validate` cria contas novas a cada execução e confere por HTTP o que os testes cobrem por chamada direta de handlers: 96 verificações nas entregas 1 a 5 e na recuperação de senha.
+
+Os testes chamam os handlers da API (`Request` → `Response`), a mesma camada das rotas do Next. Não há teste automatizado de navegador; as telas foram verificadas manualmente (as telas financeiras em desktop; a verificação em 375 px cobriu só o Financeiro).
 
 ## Identidade visual
 
@@ -109,6 +140,10 @@ A lista de 9 permissões e os padrões vêm do protótipo. O protótipo não des
 1. **Taxonomia muscular e catálogo:** 16 exercícios oficiais fictícios com músculos primários/secundários **provisórios**. Exercício com mais de um músculo primário conta uma direta em cada; o documento deixa isso para validação.
 2. **Peso das indiretas:** padrão 0,5 (proposta), por consultoria e não por exercício.
 3. **Fonte condensada da marca:** instalar/licenciar Heros Condensed (ou aprovar TeX Gyre Heros Cn).
+4. **Provedor de pagamentos e de e-mail:** nenhum foi escolhido; sem eles não há cobrança real nem envio de e-mail.
+5. **Provedor de IA:** a entrega 6 (sugestões assistivas) será por regras, sem LLM externo; integrar um provedor é decisão futura.
+6. **Planos da plataforma:** preços, limites e o teste de 30 dias são **propostas** e não bloqueiam o uso.
+7. **Agenda profissional (tópico 7):** pendente; nada foi implementado.
 
 ## Limitações conhecidas
 
@@ -117,5 +152,10 @@ A lista de 9 permissões e os padrões vêm do protótipo. O protótipo não des
 - Sem excluir rascunho, modelo ou treino.
 - A substituição, a ordem e os exercícios extras valem só para a sessão em registro; ainda não há "lembrar para as próximas sessões".
 - O volume do personal considera a prescrição, não as adaptações do aluno.
-- Um registro do aluno por vez; sem modo offline (entrega 3).
+- Um registro do aluno por vez. O modo offline guarda a fila no navegador do aluno; limpar os dados do site antes de sincronizar perde o que estava na fila.
+- **Sem provedor de pagamentos:** só o provedor simulado, que existe fora de produção. Em produção, sem provedor, a tela mostra "Pagamento online indisponível" e o webhook exige segredo. O app não guarda dado de cartão nem de Pix.
+- **E-mail só em desenvolvimento** (o link de recuperação aparece na tela); em produção nada é enviado.
+- Os limites dos planos da plataforma não bloqueiam o uso (propostas).
+- O botão "Simular pagamento" da assinatura só aparece quando há fatura da plataforma (após o fim do teste); não foi exercitado na interface, apenas nos testes.
+- Em carga completa da página o console mostra um aviso de hidratação do React causado pelos efeitos de rolagem; não afeta o uso e está na fila de ajustes.
 - Com uma nova versão publicada, um registro em andamento na versão anterior pode ser concluído, mas não se abrem novos.
