@@ -36,6 +36,10 @@ Next.js 16 (App Router, Turbopack) + TypeScript 7 + PGlite (PostgreSQL embutido 
 Verificação atual: `npx tsc --noEmit` limpo; `npm test` = **169 testes passando (12 arquivos)**.
 
 ## 4. Fila de trabalho, NA ORDEM (continue daqui)
+
+> **A fila detalhada agora vive nas Issues do GitHub** (cada uma com desenho, casos de teste e critério de pronto). Trabalhe nesta ordem e feche cada issue ao terminar (`gh issue close N --comment "..."`):
+> #1 testes da entrega 5 → #2 telas da entrega 5 → #3 validate.ts + README → #4 kanban do personal → #5 entrega 6 (IA por regras) → #6 auditoria de UI/UX → #7 pendências de animações/tela inicial → #9 validação final. **#8 = decisões em aberto com o usuário** (não bloqueiam).
+> O resumo abaixo é só contexto; em caso de divergência, a issue manda.
 1. **Entrega 5 — terminar**
    - Escrever `tests/delivery5.test.ts` (padrão dos outros): webhook (assinatura inválida 401; sem segredo 503), **evento repetido não repete efeito** (mesmo `id`), valor divergente → `rejected`, evento fora de ordem ignorado, **SaaS e cobrança do aluno não se misturam** (ref decide o alvo), ciclo de cobrança (uma cobrança por contrato/mês, vencimento no fim do mês, atraso), recebimento manual e cancelamento (auditados), painel (`/api/billing/dashboard`), despesas, plano (trial 30 dias uma vez; fim do teste gera fatura), **isolamento** (outra consultoria 404; aluno só vê as próprias cobranças; trabalho de aluno em rotas de personal = 403), simulador **404 em produção** (`NODE_ENV=production`).
    - Telas: personal `/personal/financeiro` (painel + contratos + cobranças + despesas + "gerar cobranças do mês"), `/personal/assinatura` (planos propostos, uso, faturas, simular pagamento só em dev); aluno `/aluno/pagamentos` (cobranças, botão "simular pagamento" só em dev). Adicionar itens à navegação em `src/components/Shell.tsx` (ícone `card`).

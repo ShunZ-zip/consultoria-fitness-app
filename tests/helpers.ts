@@ -8,13 +8,14 @@ export interface Res<T = any> { status: number; body: T; cookie?: string }
 /** Chama o handler da API diretamente, como o Next faria (Request -> Response). */
 export async function call<T = any>(
   handler: Handler,
-  opts: { method?: string; body?: unknown; cookie?: string; params?: Record<string, string>; json?: boolean } = {},
+  opts: { method?: string; body?: unknown; cookie?: string; params?: Record<string, string>; json?: boolean; headers?: Record<string, string>; query?: string } = {},
 ): Promise<Res<T>> {
   const method = opts.method ?? (opts.body !== undefined ? "POST" : "GET");
   const headers: Record<string, string> = {};
   if (opts.json !== false && method !== "GET") headers["content-type"] = "application/json";
   if (opts.cookie) headers.cookie = opts.cookie;
-  const req = new Request("http://test.local/api", {
+  if (opts.headers) Object.assign(headers, opts.headers);
+  const req = new Request("http://test.local/api" + (opts.query ? `?${opts.query}` : ""), {
     method, headers, body: opts.body !== undefined ? JSON.stringify(opts.body) : method === "GET" ? undefined : "{}",
   });
   const res = await handler(req, opts.params ?? {});
