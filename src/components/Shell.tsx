@@ -15,6 +15,7 @@ const NAV: Record<Me["role"], NavItem[]> = {
     { href: "/personal/biblioteca", label: "Biblioteca", icon: "dumbbell", active: (p) => p.startsWith("/personal/biblioteca") },
     { href: "/personal/avaliacoes", label: "Avaliações", icon: "clipboard", active: (p) => p.startsWith("/personal/avaliacoes") },
     { href: "/personal/chat", label: "Mensagens", icon: "chat", active: (p) => p.startsWith("/personal/chat"), chat: true },
+    { href: "/personal/financeiro", label: "Financeiro", icon: "card", active: (p) => p.startsWith("/personal/financeiro") || p.startsWith("/personal/assinatura") },
   ],
   student: [
     { href: "/aluno", label: "Treinos", icon: "dumbbell", active: (p) => p === "/aluno" || p.startsWith("/aluno/treino") },
@@ -22,6 +23,7 @@ const NAV: Record<Me["role"], NavItem[]> = {
     { href: "/aluno/checkin", label: "Check-in", icon: "pulse", active: (p) => p.startsWith("/aluno/checkin") },
     { href: "/aluno/avaliacoes", label: "Avaliações", icon: "clipboard", active: (p) => p.startsWith("/aluno/avaliacoes") },
     { href: "/aluno/chat", label: "Conversa", icon: "chat", active: (p) => p.startsWith("/aluno/chat"), chat: true },
+    { href: "/aluno/pagamentos", label: "Pagamentos", icon: "card", active: (p) => p.startsWith("/aluno/pagamentos") },
   ],
 };
 

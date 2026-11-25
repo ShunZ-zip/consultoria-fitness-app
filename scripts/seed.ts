@@ -114,6 +114,24 @@ async function main() {
       [uid(), alfa.cid, studentId, sender, bodyText, new Date(Date.now() - hoursAgo * 3600000), read ? new Date() : null]);
   }
 
+  // Entrega 5: contrato mensal, cobranças (paga, pendente, em atraso) e uma despesa (tudo fictício, provedor simulado).
+  const today = new Date(); const ym = today.toISOString().slice(0, 7);
+  const contractId = uid();
+  await db.query("insert into student_contracts (id, consultancy_id, student_id, description, amount_cents, due_day, start_month, created_by) values ($1,$2,$3,'Consultoria mensal',20000,10,$4,$5)", [contractId, alfa.cid, studentId, new Date(Date.now() - 70 * DAY).toISOString().slice(0, 7), trainerId]);
+  const chargeRows: [string, string, string, string | null][] = [
+    [new Date(Date.now() - 62 * DAY).toISOString().slice(0, 7), "paid", "pix", new Date(Date.now() - 60 * DAY).toISOString()],
+    [new Date(Date.now() - 31 * DAY).toISOString().slice(0, 7), "overdue", "", null],
+    [ym, "pending", "", null],
+  ];
+  for (const [period, status, method, paidAt] of chargeRows) {
+    const id = uid();
+    await db.query(
+      `insert into student_charges (id, consultancy_id, student_id, contract_id, period, description, amount_cents, fee_cents, due_date, status, method, provider_ref, created_by, paid_at)
+       values ($1,$2,$3,$4,$5,'Consultoria mensal',20000,$6,$7,$8,$9,$10,$11,$12)`,
+      [id, alfa.cid, studentId, contractId, period, status === "paid" ? 518 : 0, `${period}-10`, status, method || null, `sim_ch_${id}`, trainerId, paidAt]);
+  }
+  await db.query("insert into expenses (id, consultancy_id, description, category, amount_cents, date, created_by) values ($1,$2,'Aluguel do espaço','Espaço',15000,$3,$4)", [uid(), alfa.cid, `${ym}-02`, trainerId]);
+
   console.log("Seed aplicado (dados fictícios). Senha de todos: " + PASSWORD);
   console.log("  Personal Alfa : personal.alfa@demo.test  (alunos: aluno1@demo.test, aluno2@demo.test)");
   console.log("  Personal Beta : personal.beta@demo.test  (aluno: aluno3@demo.test)");

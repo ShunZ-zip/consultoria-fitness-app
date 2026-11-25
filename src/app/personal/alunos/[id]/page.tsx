@@ -3,6 +3,7 @@ import Link from "next/link";
 import { useParams } from "next/navigation";
 import { useCallback, useEffect, useState } from "react";
 import Shell from "../../../../components/Shell";
+import Icon from "../../../../components/Icon";
 import StudentFollowUp from "../../../../components/StudentFollowUp";
 import EvolutionPanel, { type EvolutionData } from "../../../../components/EvolutionPanel";
 import { api, useMe } from "../../../../lib/client";
@@ -50,7 +51,8 @@ export default function PerfilAluno() {
           <div className="row between">
             <h1>{student.name}</h1>
             <span className="row">
-              <Link className="btn ghost small" href={`/personal/chat/${student.id}`}>Conversa</Link>
+              <Link className="btn ghost small" href={`/personal/chat/${student.id}`}><Icon name="chat" />Conversa</Link>
+              <Link className="btn ghost small" href="/personal/financeiro"><Icon name="card" />Cobranças</Link>
               <Link className="btn small" href={`/personal/treinos/novo?aluno=${student.id}`}>Novo treino</Link>
             </span>
           </div>

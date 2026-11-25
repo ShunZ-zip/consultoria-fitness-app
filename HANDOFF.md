@@ -37,6 +37,8 @@ Verificação atual: `npx tsc --noEmit` limpo; `npm test` = **208 testes passand
 
 ## 4. Fila de trabalho, NA ORDEM (continue daqui)
 
+> **PONTO EXATO DE PARADA (contexto cheio, 90%):** issue **#1 concluída** (208 testes). **Issue #2 (telas da entrega 5)**: as 3 páginas já estão ESCRITAS e passam no `tsc`, mas **ainda NÃO foram verificadas no navegador** nem commitadas como "prontas": `src/app/personal/financeiro/page.tsx`, `src/app/personal/assinatura/page.tsx`, `src/app/aluno/pagamentos/page.tsx`; navegação (`Shell.tsx`: Financeiro / Pagamentos), atalho "Cobranças" no perfil do aluno e dados financeiros no `scripts/seed.ts`. **Próximo passo:** `rm -rf data/pglite && npm run seed`, `npm run dev` (esperar ~6 s: a 1ª navegação do painel pode falhar logo após subir), logar como `personal.alfa@demo.test` / `aluno1@demo.test` (senha `demo12345`) e conferir as 3 telas em desktop e 375 px, sem erros no console; testar "Gerar cobranças do mês", "Marcar paga", "Simular pagamento" (aluno e assinatura). Depois fechar #2 e seguir #3 → #4 …
+
 > **A fila detalhada agora vive nas Issues do GitHub** (cada uma com desenho, casos de teste e critério de pronto). Trabalhe nesta ordem e feche cada issue ao terminar (`gh issue close N --comment "..."`):
 > #1 testes da entrega 5 → #2 telas da entrega 5 → #3 validate.ts + README → #4 kanban do personal → #5 entrega 6 (IA por regras) → #6 auditoria de UI/UX → #7 pendências de animações/tela inicial → #9 validação final. **#8 = decisões em aberto com o usuário** (não bloqueiam).
 > O resumo abaixo é só contexto; em caso de divergência, a issue manda.
