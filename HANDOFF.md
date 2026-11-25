@@ -1,0 +1,65 @@
+# HANDOFF — estado do projeto e como continuar
+
+> Gerado ao salvar o trabalho no GitHub por instrução do usuário ("ao chegar perto de 85% do contexto, envie ao GitHub e continue a partir do .md"). **Leia este arquivo primeiro**, depois `README.md` (como rodar/testar) e `consultoria-fitness-claude.md` (especificação do produto, fonte da verdade).
+
+## 1. O produto e as regras que não mudam
+App web de consultoria fitness (marca **Cauã Henry | Musculação**). Português do Brasil em toda a interface.
+
+- **Confirmado (não alterar):** consultorias privadas por convite; sem vitrine/feed/descoberta; autonomia configurável por aluno (opção C, 9 permissões do protótipo do usuário); registro do realizado separado da prescrição; IA assistiva opção B (personal aprova); identidade visual do brandbook; chat individual.
+- **Proposto (tratar como proposta):** tecnologias, preços/planos (R$ 0 / 9,90 / 39,90 / 69,90), taxonomia muscular, peso das indiretas (0,5), padrões das permissões.
+- **Pendente / fora do escopo:** **agenda profissional (etapa 4, tópico 7) — NÃO implementar nem criar nada parecido (sem horários, sem reservas)**; nutrição; **pagamentos reais** (provedor não escolhido: só provedor simulado fora de produção); integração com IA externa; fotos corporais (exigem armazenamento privado + LGPD); upload de arquivos no chat.
+- **Brandbook (regras duras):** só 4 cores — azul-marinho `#0E1B2B`, azul vivo `#1A73E9` (só títulos grandes), cinza `#E6EAED`, verde `#2AC38B` (acento com função; texto navy sobre verde). Nada de vermelho: erros usam barra azul + "ATENÇÃO". Títulos em Heros Condensed Bold Italic caixa-alta (fallback Inter itálico), texto Inter. **Sem depoimentos, sem alunos fictícios, sem "antes e depois", sem promessa de resultado.** Henry é graduando: nunca apresentá-lo como profissional registrado.
+- Privacidade: dados de saúde só para o aluno dono e o personal da consultoria; acesso indevido sempre responde **404** (papel errado = 403; sem sessão = 401).
+
+## 2. Stack e convenções (para não reaprender)
+Next.js 16 (App Router, Turbopack) + TypeScript 7 + PGlite (PostgreSQL embutido em `data/pglite`) + zod 4 + Vitest 5. Sem ORM: SQL direto via `ctx.db.query`.
+
+- `src/server/schema.ts`: `SCHEMA_SQL` + `MIGRATION_2..7_SQL` (aditivas e idempotentes, executadas em `db.ts` ao abrir). **Para mudar o banco: nova `MIGRATION_N_SQL` e registrá-la em `db.ts`.**
+- Handlers por entrega: `handlers.ts` (1–2: auth, convites, treinos, versões, modelos, volume, permissões, registros, comparação), `handlers3.ts` (evolução, último treino), `handlers4.ts` (mídia, avaliações, check-ins, chat), `handlers5.ts` + `payments.ts` (cobrança). Cada handler é `route(async (ctx) => ...)` (`http.ts`): recebe `Request`, devolve `Response`; exige `Content-Type: application/json` em escritas.
+- Rotas Next são finas: `src/app/api/**/route.ts` chamam o handler. Foram geradas por scripts Python (padrão: `export const GET = async (req, ctx) => handler(req, await ctx.params)`). Ao criar um handler novo, criar a rota correspondente.
+- Regras puras ficam em `src/lib/*` (volume, evolution, syncQueue, permissions, media, assessment, checkin, billing, finance, format) e têm testes unitários.
+- Autorização central: `requireActor(ctx, role?)`, `loadVersion`, `assertStudent`, `requirePerm`. Auditoria: `audit(db, actor, action, detail)` → `audit_log`.
+- Testes chamam os handlers diretamente (`tests/helpers.ts`: `call(handler, {body, cookie, params})`). Banco em memória (`DB_DIR=memory`, `tests/setup.ts`). **Sempre incluir testes de isolamento** (aluno×aluno, consultoria×consultoria) e rodar uma "mutação" rápida (quebrar a regra de propósito, ver o teste falhar, restaurar).
+- Validação por HTTP contra o servidor real: `npm run validate` (`scripts/validate.ts`; cobre entregas 1–2 + senha; **ainda não cobre 3–5**).
+- Armadilhas do ambiente: (a) heredocs longos no Bash às vezes quebram — use a ferramenta Write para arquivos e Python para patches (`assert count == 1`); (b) o servidor de desenvolvimento **precisa ser reiniciado** quando mudam `src/lib/*` usados no servidor ou migrações (o módulo/DB ficam em memória); (c) `rm -rf data/pglite` + `npm run seed` recria o banco de demonstração; (d) o painel do navegador acelera/atrasa animações: ao tirar captura, esperar alguns segundos; (e) o `preview_start name=dev` usa `.claude/launch.json`.
+
+## 3. Estado por entrega (plano original: 6 entregas)
+| # | Entrega | Estado |
+|---|---|---|
+| 1 | Fluxo ponta a ponta (convite → treino → registro → comparação) + isolamento | ✅ feita e validada (HTTP + testes) |
+| 2 | Editor completo, versões, duplicar, modelos, volume, auditoria, **permissões por aluno (opção C)**, esqueci a senha | ✅ feita e validada |
+| 3 | Registro robusto: **offline + fila de sincronização**, histórico, **evolução** (carga, 1RM Epley, recordes, aderência), cronômetro de descanso, último treino | ✅ feita; verificada no navegador (offline simulado e sincronização) |
+| 4 | Acompanhamento: **mídia oficial/própria** (regras por aluno), **avaliações** configuráveis, **check-ins**, **chat** (texto) | ✅ feita; 26 testes de API; telas verificadas |
+| 5 | Operação comercial: assinatura SaaS e cobrança do aluno **separadas**, eventos assinados/idempotentes, painel básico | 🟡 **backend e libs prontos; faltam testes de API, telas e README** (ver §4) |
+| 6 | IA assistiva: sugestões com evidências, aprovação do personal | ⏳ não iniciada |
+
+Verificação atual: `npx tsc --noEmit` limpo; `npm test` = **169 testes passando (12 arquivos)**.
+
+## 4. Fila de trabalho, NA ORDEM (continue daqui)
+1. **Entrega 5 — terminar**
+   - Escrever `tests/delivery5.test.ts` (padrão dos outros): webhook (assinatura inválida 401; sem segredo 503), **evento repetido não repete efeito** (mesmo `id`), valor divergente → `rejected`, evento fora de ordem ignorado, **SaaS e cobrança do aluno não se misturam** (ref decide o alvo), ciclo de cobrança (uma cobrança por contrato/mês, vencimento no fim do mês, atraso), recebimento manual e cancelamento (auditados), painel (`/api/billing/dashboard`), despesas, plano (trial 30 dias uma vez; fim do teste gera fatura), **isolamento** (outra consultoria 404; aluno só vê as próprias cobranças; trabalho de aluno em rotas de personal = 403), simulador **404 em produção** (`NODE_ENV=production`).
+   - Telas: personal `/personal/financeiro` (painel + contratos + cobranças + despesas + "gerar cobranças do mês"), `/personal/assinatura` (planos propostos, uso, faturas, simular pagamento só em dev); aluno `/aluno/pagamentos` (cobranças, botão "simular pagamento" só em dev). Adicionar itens à navegação em `src/components/Shell.tsx` (ícone `card`).
+   - Estender `scripts/validate.ts` com checks de 3–5. Atualizar README (entregas 3–5, decisões em aberto, limitações: sem provedor real, sem e-mail em produção).
+2. **Tela de organização do personal (kanban)** — pedido do usuário, baseado em exemplo com colunas arrastáveis. Desenho acordado:
+   - Tabela `tasks` (id, consultancy_id, title, tag, status `todo|in-progress|done`, student_id opcional, due_date opcional (texto AAAA-MM-DD, **não é agenda**), position, source_key único por consultoria p/ sugestões, created_by, timestamps). Handlers + rotas + testes (isolamento!).
+   - UI `/personal/organizacao`: 3 colunas (A fazer / Em andamento / Concluído), cartões com etiqueta, aluno e prazo opcional; **arrastar e soltar** (HTML5 DnD) com animação FLIP em mola (Web Animations), **botões ←/→ para mover (teclado e celular)**, adicionar/editar/excluir.
+   - **Sugestões automáticas** a partir de dados reais (check-in com alerta, aluno sem treino atual, mensagem do aluno sem resposta, avaliação pendente), com um clique para virar tarefa, sem duplicar (`source_key`).
+3. **Entrega 6 — IA assistiva (sem LLM externo)**: sugestões **por regras** sobre os registros (ex.: reps no topo da faixa com RIR registrado por sessões seguidas → sugerir revisar a carga; dor/fadiga recorrente → rever volume), sempre com **dados + justificativa** ou "dados insuficientes"; **a prescrição só muda após aprovação do personal** (fluxo: sugestão → revisar → "aplicar" cria **rascunho de nova versão**, nunca altera o publicado). Tabela `suggestions` (status pendente/aprovada/recusada, evidência em JSON). Testes: sem aprovação nada muda; evidências corretas; insuficiência de dados; isolamento. Integração com provedor de IA = decisão futura (documentar).
+4. **UI/UX "perfeito" (pedido do usuário)**: auditar com o navegador em 375 px e desktop: foco visível, contraste, alvos de toque ≥ 44 px, rótulos/aria, estados vazios/carregando/erro, mensagens em pt-BR, tabelas largas no celular (rolagem horizontal), nomes de página (`document.title` já existe), consistência dos botões. Usar as skills `design:accessibility-review` / `design:design-critique` / `frontend-design` se úteis.
+5. **Validação final e README**: rodar `tsc`, `npm test`, `npm run build`, `npm run validate`; recriar o banco; reportar honestamente o que passou.
+
+## 5. Trabalho de interface em andamento (animações e tela inicial) — conferir e finalizar
+Pedidos do usuário nesta fase: efeitos do "ScrollFX" (trigger/linked/parallax/sticky/horizontal), ícones animados, cursor "suave" ao digitar, tela inicial com botão que expande para tela cheia.
+- **Feito:** `public/scrollfx.js` (core + trigger + linked + parallax; sticky/horizontal **não incluídos**: o app não usa), `src/app/scrollfx.css`, `Fx.tsx` (wrapper React), `Backdrop.tsx` (faixas inclinadas 12° com paralaxe), `Stage.tsx` (telas públicas), `Shell.tsx` (navegação principal sticky com ícones, barra de progresso `linked`, entrada em cascata, link "pular para o conteúdo", `document.title`), `Icon.tsx` + CSS (ícones com microanimações no hover/foco/toque), `SmoothInput.tsx` (cursor com mola 500/30/0,5, **verificado**: posição = largura medida), `PasswordInput` (olho animado), `ExpandableScreen.tsx` + `LoginForm.tsx` + nova `src/app/page.tsx` (tela inicial; redireciona quem já tem sessão).
+- **Decisão consciente:** não usar `linked` "fade/text-reveal" em telas curtas do app (deixaria dados parcialmente invisíveis); `text-reveal` só na tela inicial (rolável).
+- **Falta:** (1) `src/app/login/page.tsx` ainda é a versão antiga — refatorar para usar `LoginForm` (a escrita falhou por arquivo modificado; ler e reescrever); (2) **verificar no navegador** a tela inicial `/` (hero, expandir/fechar com Esc, foco devolvido, mobile 375 px, `prefers-reduced-motion`) e que nada fique escondido após a entrada; (3) usar `Icon` nos botões que ainda são só texto (atalhos, "Salvo ✓" com `<Icon name="check" enter />`, banner de sincronização com `spin`, cronômetro com `timer`, abas da evolução); (4) conferir console sem erros e `npm run build`.
+- Observação: o componente de exemplo do usuário usava `dialkit`/`framer-motion`/Tailwind (inexistentes aqui); tudo foi reescrito sem dependências.
+
+## 6. Dados de demonstração
+`npm run seed` (senha `demo12345`): `personal.alfa@demo.test` (alunos `aluno1@…`, `aluno2@…`), `personal.beta@demo.test` (`aluno3@…`) — domínio `@demo.test`. Aluno Um tem 6 semanas de histórico, 2 avaliações, 2 check-ins (um com alerta), uma conversa e animação oficial de demonstração (SVG fictício em `public/media/`).
+
+## 7. Decisões em aberto com o usuário
+Taxonomia muscular/catálogo oficial (provisórios); peso das indiretas (0,5); fonte condensada licenciada (Heros Condensed); **provedor de pagamentos e de e-mail (nenhum escolhido)**; provedor de IA; agenda (tópico 7); regras finais dos planos (preços/limites/teste são propostas e **não bloqueiam o uso**).
+
+## 8. Instrução permanente do usuário sobre contexto
+"Quando estiver atingindo 85% da janela de contexto, jogue no GitHub e continue com o .md gerado." → Ao se aproximar do limite: atualizar este arquivo, `git add -A`, commit (mensagem com a linha `Co-Authored-By` indicada pelo ambiente), `git push`, e seguir a partir daqui.

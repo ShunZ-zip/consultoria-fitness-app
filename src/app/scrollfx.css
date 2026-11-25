@@ -1,0 +1,48 @@
+/*!
+ * ScrollFX v1.0.0 — estilos base (trigger, linked, parallax).
+ * Nada fica escondido se o JS não rodar: os estados iniciais só valem com html.sfx-js.
+ * Com prefers-reduced-motion o app mostra o estado final, sem movimento.
+ */
+html.sfx-js:not(.sfx-reduced) .sfx-t {
+  transition:
+    opacity   var(--sfx-duration, 700ms) var(--sfx-ease, cubic-bezier(.22, .61, .36, 1)),
+    transform var(--sfx-duration, 700ms) var(--sfx-ease, cubic-bezier(.22, .61, .36, 1)),
+    filter    var(--sfx-duration, 700ms) var(--sfx-ease, cubic-bezier(.22, .61, .36, 1)),
+    clip-path var(--sfx-duration, 700ms) var(--sfx-ease, cubic-bezier(.22, .61, .36, 1));
+}
+/* o atraso só vale na entrada */
+html.sfx-js:not(.sfx-reduced) .sfx-t.sfx-in { transition-delay: var(--sfx-delay, 0ms); }
+
+/* antes do init, esconde o que vai animar (evita "flash") */
+html.sfx-js.sfx-trigger:not(.sfx-reduced) [data-sfx~="trigger"]:not([data-sfx-stagger]):not(.sfx-ready),
+html.sfx-js.sfx-trigger:not(.sfx-reduced) [data-sfx~="trigger"][data-sfx-stagger]:not(.sfx-ready) > * { opacity: 0; }
+
+html.sfx-js:not(.sfx-reduced) .sfx-t:not(.sfx-in) { opacity: 0; }
+html.sfx-js:not(.sfx-reduced) .sfx-t--fade-up:not(.sfx-in)    { transform: translate3d(0, var(--sfx-dist, 32px), 0); }
+html.sfx-js:not(.sfx-reduced) .sfx-t--fade-down:not(.sfx-in)  { transform: translate3d(0, calc(var(--sfx-dist, 32px) * -1), 0); }
+html.sfx-js:not(.sfx-reduced) .sfx-t--fade-left:not(.sfx-in)  { transform: translate3d(calc(var(--sfx-dist, 32px) * -1), 0, 0); }
+html.sfx-js:not(.sfx-reduced) .sfx-t--fade-right:not(.sfx-in) { transform: translate3d(var(--sfx-dist, 32px), 0, 0); }
+html.sfx-js:not(.sfx-reduced) .sfx-t--zoom-in:not(.sfx-in)    { transform: scale(.88); }
+html.sfx-js:not(.sfx-reduced) .sfx-t--zoom-out:not(.sfx-in)   { transform: scale(1.12); }
+html.sfx-js:not(.sfx-reduced) .sfx-t--blur:not(.sfx-in)       { filter: blur(14px); transform: translate3d(0, 12px, 0); }
+html.sfx-js:not(.sfx-reduced) .sfx-t--mask-up:not(.sfx-in)    { opacity: 1; clip-path: inset(100% 0 0 0); transform: translate3d(0, 24px, 0); }
+html.sfx-js:not(.sfx-reduced) .sfx-t--mask-up.sfx-in          { clip-path: inset(0 0 0 0); }
+
+/* linked / parallax */
+.sfx-w { display: inline; }
+[data-sfx~="linked"][data-sfx-effect="bar"] { transform-origin: 0 50%; }
+[data-sfx~="parallax"] { will-change: translate, transform; }
+html.sfx-reduced [data-sfx~="linked"]:not([data-sfx-effect="bar"]) { opacity: 1 !important; transform: none !important; }
+html.sfx-reduced .sfx-w { opacity: 1 !important; }
+html.sfx-reduced [data-sfx~="parallax"] { translate: none !important; transform: none !important; }
+
+/* ---- integração com a identidade visual do app ---- */
+/* Barra de progresso de leitura da página (efeito "linked" no <body>): azul vivo da marca. */
+.read-progress { position: fixed; inset: 0 0 auto 0; height: 3px; z-index: 60; background: #1A73E9; transform: scaleX(0); pointer-events: none; }
+/* Raiz de cada tela: contém as faixas decorativas (sem barra de rolagem lateral e sem quebrar position: sticky). */
+.shell-root { position: relative; min-height: 100vh; overflow-x: clip; }
+.shell-root > .wrap, .shell-root > .top { position: relative; z-index: 1; }
+/* Faixas inclinadas de 12° ao fundo (corte inclinado da marca) com paralaxe lenta: só transparências do azul vivo. */
+.backdrop { position: absolute; inset: 0; overflow: clip; pointer-events: none; z-index: 0; }
+.band { position: absolute; left: -12%; right: -12%; height: 38vh; background: rgba(26, 115, 233, .07); transform: skewY(-12deg); }
+.band.b2 { height: 18vh; background: rgba(26, 115, 233, .05); }
