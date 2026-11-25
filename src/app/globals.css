@@ -214,3 +214,7 @@ td.num, th.num { text-align: right; font-variant-numeric: tabular-nums; }
 
 /* Títulos grandes da tela inicial: cinza claro (o cinza apagado de h2 é só para rótulos pequenos). */
 .land-h2, .exs-h2 { color: var(--g); letter-spacing: .01em; }
+
+/* Avisos de ação (sucesso/erro) ficam visíveis sob a navegação mesmo em telas longas. */
+.flash { position: sticky; top: 112px; z-index: 30; background: linear-gradient(var(--panel2), var(--panel2)), var(--n); padding: 8px 12px; border-left: 4px solid var(--v); }
+.err.flash { border-left-color: var(--b); }

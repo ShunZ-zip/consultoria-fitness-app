@@ -41,8 +41,8 @@ export default function Assinatura() {
       <h1>Assinatura</h1>
       {s && (
         <>
-          <p className="muted"><span className="tag">Planos: proposta</span> Preços, limites e teste de {s.trialDays} dias são propostas ainda em validação. {s.note}</p>
-          {error && <p className="err" role="alert">{error}</p>}{msg && <p className="okmsg" role="status">{msg}</p>}
+          <p className="muted"><span className="tag">Planos: proposta</span> {s.note}</p>
+          {error && <p className="err flash" role="alert">{error}</p>}{msg && <p className="okmsg flash" role="status">{msg}</p>}
           <div className="card" data-testid="subscription">
             <div className="row between">
               <span><b>Plano atual: {s.plans.find((p) => p.id === s.subscription.planId)?.name}</b> <span className={`tag ${s.subscription.status === "active" || s.subscription.status === "trialing" ? "pub" : ""}`}>{STATUS[s.subscription.status]}</span></span>
@@ -83,7 +83,7 @@ export default function Assinatura() {
                       : i.payable ? "" : <span className="muted">Pagamento online indisponível: provedor ainda não configurado</span>}</td>
                   </tr>
                 ))}
-                {s.invoices.length === 0 && <tr><td colSpan={5} className="muted">Nenhuma fatura. O plano gratuito não gera cobrança.</td></tr>}
+                {s.invoices.length === 0 && <tr><td colSpan={5} className="muted">Nenhuma fatura até agora. O plano gratuito e o período de teste não geram cobrança.</td></tr>}
               </tbody>
             </table>
           </div>

@@ -132,8 +132,46 @@ async function main() {
   }
   await db.query("insert into expenses (id, consultancy_id, description, category, amount_cents, date, created_by) values ($1,$2,'Aluguel do espaço','Espaço',15000,$3,$4)", [uid(), alfa.cid, `${ym}-02`, trainerId]);
 
+  // Conta de TESTE local: login "admin" / senha "admin" (só para ver a tela final com números de exemplo; dados fictícios).
+  const adminHash = await hashPassword("admin");
+  const adm = uid();
+  await db.query("insert into consultancies (id, name) values ($1,'Consultoria Modelo (teste)')", [adm]);
+  const admTrainer = uid();
+  await db.query("insert into users (id, email, name, password_hash) values ($1,'admin','Admin Teste',$2)", [admTrainer, adminHash]);
+  await db.query("insert into memberships (user_id, consultancy_id, role) values ($1,$2,'trainer')", [admTrainer, adm]);
+  const modelStudents: [string, number, number][] = [["Aluno Modelo 1", 25000, 5], ["Aluno Modelo 2", 18000, 10], ["Aluno Modelo 3", 32000, 15], ["Aluno Modelo 4", 15000, 20], ["Aluno Modelo 5", 22000, 25], ["Aluno Modelo 6", 28000, 8]];
+  const monthOf = (back: number) => { const d = new Date(); d.setDate(1); d.setMonth(d.getMonth() - back); return d.toISOString().slice(0, 7); };
+  const methods = ["pix", "card", "boleto", "pix", "cash", "pix"];
+  for (const [i, [nm, cents, dueDay]] of modelStudents.entries()) {
+    const sid = uid();
+    await db.query("insert into users (id, email, name, password_hash) values ($1,$2,$3,$4)", [sid, `modelo${i + 1}@demo.test`, nm, adminHash]);
+    await db.query("insert into memberships (user_id, consultancy_id, role) values ($1,$2,'student')", [sid, adm]);
+    const cId = uid();
+    await db.query("insert into student_contracts (id, consultancy_id, student_id, description, amount_cents, due_day, start_month, created_by) values ($1,$2,$3,'Consultoria mensal',$4,$5,$6,$7)", [cId, adm, sid, cents, dueDay, monthOf(3), admTrainer]);
+    for (const back of [3, 2, 1, 0]) {
+      const period = monthOf(back);
+      // meses antigos pagos; o anterior: alguns atrasados; o atual: alguns pagos, outros pendentes
+      const status = back >= 2 ? "paid" : back === 1 ? (i % 3 === 2 ? "overdue" : "paid") : (i % 2 === 0 ? "paid" : "pending");
+      const id = uid();
+      const fee = status === "paid" ? Math.round(cents * 0.0259) : 0;
+      await db.query(
+        `insert into student_charges (id, consultancy_id, student_id, contract_id, period, description, amount_cents, fee_cents, due_date, status, method, provider_ref, created_by, paid_at)
+         values ($1,$2,$3,$4,$5,'Consultoria mensal',$6,$7,$8,$9,$10,$11,$12,$13)`,
+        [id, adm, sid, cId, period, cents, fee, `${period}-${String(dueDay).padStart(2, "0")}`, status, status === "paid" ? methods[i] : null, `sim_ch_${id}`, admTrainer, status === "paid" ? new Date(`${period}-${String(dueDay).padStart(2, "0")}T12:00:00Z`) : null]);
+    }
+  }
+  for (const [d, cat, desc, cents, back] of [[3, "Espaço", "Aluguel do espaço", 60000, 0], [12, "Software", "Ferramentas e hospedagem", 8900, 0], [18, "Marketing", "Anúncios", 25000, 0], [5, "Espaço", "Aluguel do espaço", 60000, 1]] as const) {
+    await db.query("insert into expenses (id, consultancy_id, description, category, amount_cents, date, created_by) values ($1,$2,$3,$4,$5,$6,$7)", [uid(), adm, desc, cat, cents, `${monthOf(back)}-${String(d).padStart(2, "0")}`, admTrainer]);
+  }
+  // Mensagem e check-in de exemplo para o painel do personal não ficar vazio.
+  const firstModel = (await db.query<{ id: string }>("select id from users where email = 'modelo1@demo.test'")).rows[0].id;
+  await db.query("insert into messages (id, consultancy_id, student_id, sender_id, body, created_at, read_at) values ($1,$2,$3,$4,'Posso trocar o treino de quinta?', now() - interval '3 hours', null)", [uid(), adm, firstModel, firstModel]);
+  const ans = { sono: 6, fadiga: 5, estresse: 4, motivacao: 7, dor: "Não" };
+  await db.query("insert into checkins (id, consultancy_id, student_id, answers, flags, created_at) values ($1,$2,$3,$4::jsonb,$5::jsonb, now() - interval '2 days')", [uid(), adm, firstModel, JSON.stringify(ans), JSON.stringify(computeFlags(ans))]);
+
   console.log("Seed aplicado (dados fictícios). Senha de todos: " + PASSWORD);
   console.log("  Personal Alfa : personal.alfa@demo.test  (alunos: aluno1@demo.test, aluno2@demo.test)");
+  console.log("  TESTE (dados de exemplo): login admin / senha admin  (6 alunos modelo, cobranças de 4 meses, despesas)");
   console.log("  Personal Beta : personal.beta@demo.test  (aluno: aluno3@demo.test)");
   console.log("  Aluno Um tem 6 semanas de histórico fictício (11 sessões), 2 avaliações, 2 check-ins (um com sinal de atenção) e uma conversa.");
 }

@@ -37,7 +37,7 @@ Verificação atual: `npx tsc --noEmit` limpo; `npm test` = **208 testes passand
 
 ## 4. Fila de trabalho, NA ORDEM (continue daqui)
 
-> **PONTO EXATO DE PARADA (contexto cheio, 90%):** issue **#1 concluída** (208 testes). **Issue #2 (telas da entrega 5)**: as 3 páginas já estão ESCRITAS e passam no `tsc`, mas **ainda NÃO foram verificadas no navegador** nem commitadas como "prontas": `src/app/personal/financeiro/page.tsx`, `src/app/personal/assinatura/page.tsx`, `src/app/aluno/pagamentos/page.tsx`; navegação (`Shell.tsx`: Financeiro / Pagamentos), atalho "Cobranças" no perfil do aluno e dados financeiros no `scripts/seed.ts`. **Próximo passo:** `rm -rf data/pglite && npm run seed`, `npm run dev` (esperar ~6 s: a 1ª navegação do painel pode falhar logo após subir), logar como `personal.alfa@demo.test` / `aluno1@demo.test` (senha `demo12345`) e conferir as 3 telas em desktop e 375 px, sem erros no console; testar "Gerar cobranças do mês", "Marcar paga", "Simular pagamento" (aluno e assinatura). Depois fechar #2 e seguir #3 → #4 …
+> **Issue #2 (telas da entrega 5) concluída e verificada no navegador.** Próximo: #3 (validate.ts das entregas 3–5 e README) → #4 → #5 → #6 → #7 → #9. Pendência conhecida para #6/#7: aviso de hidratação do React em carga completa (ScrollFX altera estilos antes da hidratação) e "Simular pagamento" da assinatura sem fatura para testar na UI.
 
 > **A fila detalhada agora vive nas Issues do GitHub** (cada uma com desenho, casos de teste e critério de pronto). Trabalhe nesta ordem e feche cada issue ao terminar (`gh issue close N --comment "..."`):
 > #1 testes da entrega 5 → #2 telas da entrega 5 → #3 validate.ts + README → #4 kanban do personal → #5 entrega 6 (IA por regras) → #6 auditoria de UI/UX → #7 pendências de animações/tela inicial → #9 validação final. **#8 = decisões em aberto com o usuário** (não bloqueiam).
@@ -63,6 +63,8 @@ Pedidos do usuário nesta fase: efeitos do "ScrollFX" (trigger/linked/parallax/s
 - Observação: o componente de exemplo do usuário usava `dialkit`/`framer-motion`/Tailwind (inexistentes aqui); tudo foi reescrito sem dependências.
 
 ## 6. Dados de demonstração
+**Conta de teste local (pedido do usuário): login `admin` / senha `admin`** (Consultoria Modelo: 6 alunos modelo `modelo1..6@demo.test` com senha `admin`, contratos, cobranças de 4 meses em vários status e despesas). Só existe no seed; o login aceita texto livre no campo de e-mail por causa disso.
+
 `npm run seed` (senha `demo12345`): `personal.alfa@demo.test` (alunos `aluno1@…`, `aluno2@…`), `personal.beta@demo.test` (`aluno3@…`) — domínio `@demo.test`. Aluno Um tem 6 semanas de histórico, 2 avaliações, 2 check-ins (um com alerta), uma conversa e animação oficial de demonstração (SVG fictício em `public/media/`).
 
 ## 7. Decisões em aberto com o usuário

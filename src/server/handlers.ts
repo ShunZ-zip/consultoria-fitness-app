@@ -38,7 +38,7 @@ export const register = route(async (ctx) => {
 });
 
 export const login = route(async (ctx) => {
-  const input = await body(ctx, z.object({ email, password: z.string().min(1).max(200) }));
+  const input = await body(ctx, z.object({ email: z.string().trim().toLowerCase().min(1).max(200), password: z.string().min(1).max(200) }));
   const { rows } = await ctx.db.query<{ id: string; password_hash: string }>(
     "select id, password_hash from users where email = $1",
     [input.email],

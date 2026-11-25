@@ -34,7 +34,7 @@ export default function Pagamentos() {
     <Shell me={me} logout={logout}>
       <h1>Pagamentos</h1>
       <p className="muted">Aqui você acompanha a sua contratação e as cobranças do seu personal. {simulated && <><span className="tag">Ambiente simulado</span> Nenhum valor real é cobrado.</>}</p>
-      {error && <p className="err" role="alert">{error}</p>}{msg && <p className="okmsg" role="status">{msg}</p>}
+      {error && <p className="err flash" role="alert">{error}</p>}{msg && <p className="okmsg flash" role="status">{msg}</p>}
 
       <h2>Contratação</h2>
       {contracts.length === 0 && <p className="muted">Nenhum contrato recorrente.</p>}

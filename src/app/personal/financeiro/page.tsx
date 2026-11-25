@@ -62,16 +62,16 @@ export default function Financeiro() {
         <input type="month" aria-label="Mês" value={month} onChange={(e) => e.target.value && setMonth(e.target.value)} style={{ width: "auto" }} />
       </div>
       <p className="muted"><span className="tag">Ambiente simulado</span> Nenhum valor real é cobrado: o provedor de pagamentos ainda não foi escolhido. <Link href="/personal/assinatura">Assinatura da plataforma</Link></p>
-      {error && <p className="err" role="alert">{error}</p>}{msg && <p className="okmsg" role="status">{msg}</p>}
+      {error && <p className="err flash" role="alert">{error}</p>}{msg && <p className="okmsg flash" role="status">{msg}</p>}
 
       {dash && (
         <>
-          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(170px, 1fr))", gap: 12 }} data-testid="finance-dashboard">
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(150px, 1fr))", gap: 12 }} data-testid="finance-dashboard">
             {card("Recebido no mês", brl(dash.receivedCents), `${dash.paidCount} pagamento(s)`)}
             {card("Taxas do intermediador", brl(dash.feesCents), "repassadas, sem comissão da plataforma")}
             {card("Líquido recebido", brl(dash.netReceivedCents))}
             {card("A receber no mês", brl(dash.pendingCents), `${dash.pendingCount} cobrança(s)`)}
-            {card("Inadimplência", brl(dash.overdueCents), `${dash.overdueCount} em atraso${dash.defaultRatePct != null ? ` · ${String(dash.defaultRatePct).replace(".", ",")}% do faturado do mês` : ""}`)}
+            {card("Inadimplência", brl(dash.overdueCents), `${dash.overdueCount} em atraso (acumulado)${dash.defaultRatePct != null ? ` · ${String(dash.defaultRatePct).replace(".", ",")}% do faturado deste mês` : ""}`)}
             {card("Despesas", brl(dash.expensesCents))}
             {card("Resultado", brl(dash.resultCents), "líquido recebido − despesas")}
             {card("Ticket médio", dash.ticketAvgCents == null ? "—" : brl(dash.ticketAvgCents))}
