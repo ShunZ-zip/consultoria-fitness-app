@@ -67,11 +67,16 @@ export function ExpandableScreenContent({ children, className = "", label = "Pai
     const el = panel.current;
     if (!el || closing.current) return;
     closing.current = true; setShown(false);
-    const done = () => { document.body.style.overflow = ""; setMounted(false); hide(); triggerRef.current?.focus({ preventScroll: true }); };
+    let finished = false;
+    const done = () => {
+      if (finished) return; finished = true;
+      document.body.style.overflow = ""; setMounted(false); hide(); triggerRef.current?.focus({ preventScroll: true });
+    };
     const trig = triggerRef.current;
     if (reduce() || !trig) return done();
     const a = el.animate([{ clipPath: fullClip() }, { clipPath: clipFromRect(trig.getBoundingClientRect(), triggerRadius) }], { duration: 420, easing: EASE, fill: "forwards" });
     a.finished.then(done, done);
+    window.setTimeout(done, 900); // segurança: se a animação não reportar o fim (aba em segundo plano), fecha mesmo assim
   }, [hide, triggerRef, triggerRadius]);
 
   // Esc e "prender" o foco dentro do painel
