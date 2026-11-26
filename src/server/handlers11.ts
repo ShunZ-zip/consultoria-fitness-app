@@ -125,3 +125,20 @@ export const myRoutines = route(async (ctx) => {
     id: r.id, name: r.name, goal: r.goal, level: r.level, notes: r.notes, startsOn: r.starts_on, endsOn: r.ends_on, showTime: r.show_time,
   })));
 });
+
+/** Reordena os treinos (programas) de um aluno. A lista dada vem primeiro, na ordem enviada; os demais seguem na ordem atual. */
+export const reorderWorkouts = route(async (ctx) => {
+  const a = await requireActor(ctx, "trainer");
+  if (!uuid.safeParse(ctx.params.id).success) notFound();
+  await assertStudent(ctx.db, a, ctx.params.id);
+  const input = await body(ctx, z.object({ programIds: z.array(uuid).min(1).max(100) }));
+  const given = [...new Set(input.programIds)];
+  const all = (await ctx.db.query<{ id: string }>(
+    "select id from programs where student_id = $1 and consultancy_id = $2 order by position, created_at, id", [ctx.params.id, a.consultancyId])).rows.map((r) => r.id);
+  if (given.some((id) => !all.includes(id))) notFound();              // programa de outro aluno ou de outra consultoria
+  const next = [...given, ...all.filter((id) => !given.includes(id))];
+  await ctx.db.query(
+    "update programs p set position = u.pos::int from unnest($1::uuid[]) with ordinality as u(id, pos) where p.id = u.id", [next]);
+  await audit(ctx.db, a, "workout.reorder", { studentId: ctx.params.id, count: next.length });
+  return json({ order: next });
+});

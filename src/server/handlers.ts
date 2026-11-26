@@ -342,7 +342,8 @@ async function newProgram(tx: Q, a: Actor, studentId: string, programName: strin
   const programId = uid();
   const versionId = uid();
   await tx.query(
-    "insert into programs (id, consultancy_id, student_id, name, created_by, weekly_frequency, routine_id) values ($1,$2,$3,$4,$5,$6,$7)",
+    `insert into programs (id, consultancy_id, student_id, name, created_by, weekly_frequency, routine_id, position)
+     values ($1,$2,$3,$4,$5,$6,$7, (select coalesce(max(x.position), 0) + 1 from programs x where x.student_id = $3 and x.consultancy_id = $2))`,
     [programId, a.consultancyId, studentId, programName, a.userId, freq, routineId],
   );
   await tx.query("insert into program_versions (id, program_id, version) values ($1,$2,1)", [versionId, programId]);
@@ -439,7 +440,7 @@ export const listVersions = route(async (ctx) => {
   const { rows } = await ctx.db.query(
     `select pv.id, p.name, pv.status, pv.published_at as "publishedAt", pv.version, pv.program_id as "programId",
             p.student_id as "studentId", u.name as "studentName", p.routine_id as "routineId",
-            (select r.name from routines r where r.id = p.routine_id) as "routineName",
+            (select r.name from routines r where r.id = p.routine_id) as "routineName", p.position as "position",
             (pv.status = 'published' and pv.version = (select max(x.version) from program_versions x
                where x.program_id = pv.program_id and x.status = 'published')) as "isCurrent",
             (select count(*)::int from workout_logs l where l.version_id = pv.id
@@ -456,7 +457,7 @@ export const listVersions = route(async (ctx) => {
                      select 1 from routines r where r.id = p.routine_id and r.status = 'active'
                         and (r.visibility = 'always' or r.starts_on is null or r.starts_on <= $4)
                         and not (r.auto_archive and r.ends_on is not null and r.ends_on < $4)) )) )
-      order by pv.created_at desc`,
+      order by p.position asc, p.created_at asc, pv.created_at desc`,
     [a.role, a.consultancyId, a.userId, dayKey(new Date())],
   );
   return json(rows);

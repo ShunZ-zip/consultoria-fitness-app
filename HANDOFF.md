@@ -33,7 +33,7 @@ Next.js 16 (App Router, Turbopack) + TypeScript 7 + PGlite (PostgreSQL embutido 
 | 5 | Operação comercial: assinatura SaaS e cobrança do aluno **separadas**, eventos assinados/idempotentes, painel básico | 🟡 **backend e libs prontos; faltam testes de API, telas e README** (ver §4) |
 | 6 | IA assistiva: sugestões com evidências, aprovação do personal | ✅ por regras, sem IA externa; aprovar cria só rascunho; verificada no navegador |
 
-Verificação atual: `npx tsc --noEmit` limpo; `npm test` = **316 testes passando (24 arquivos)**; `npm run validate` = **111 verificações, 0 falhas**.
+Verificação atual: `npx tsc --noEmit` limpo; `npm test` = **320 testes passando (25 arquivos)**; `npm run validate` = **113 verificações, 0 falhas**.
 
 ## 4. Fila de trabalho, NA ORDEM (continue daqui)
 
@@ -123,6 +123,11 @@ Sessões **concluídas** pelos alunos aparecem para o personal em `/personal/fee
 **Hora real de início:** `POST /api/versions/[id]/logs` aceita `startedAt` (ISO) e o guarda se estiver entre **24 h atrás e agora** (futuro vira agora; mais antigo que 24 h é ignorado; formato inválido 400); reenviar o mesmo id nunca muda o início já guardado. Assim, iniciar offline e sincronizar depois não distorce o "Tempo de treino". Cronômetro: `elapsedText` em `src/lib/feedback.ts`.
 **Atalho da demonstração:** cada exercício tem, à direita do nome, o botão **Demonstração** (ícone de play, `aria-expanded`); só ao tocar carrega a mídia (3D, vídeo do YouTube ou do personal) via `MediaPanel`. **Decisão:** sem miniatura automática do YouTube, para não enviar o IP do aluno a terceiros antes de ele pedir; a miniatura de verdade fica para quando houver imagens próprias.
 **Testes:** `tests/feedback.test.ts` (+4 de lib e +2 de API; mutação do limite de 24 h detectada) e 2 verificações no `validate` (agora **111**); suíte **316 testes (24 arquivos)**. O `validate` passou a achar o registro por id na comparação (a ordem das sessões não importa). Verificado no navegador (desktop e 375 px): visualização → iniciar → cronômetro → demonstração abre/fecha → registrar série → concluir; início **sem rede** (barra aparece, "1 alteração guardada", sincroniza ao voltar). **Não verificado:** aparelho real sem rede de verdade e leitor de tela no cronômetro (`role=timer`).
+
+## 5o. Copiar de outro treino e reordenar treinos (issue #12, 5ª ideia adotada)
+**Copiar de:** no editor de treino novo, o campo **"Copiar de outro treino"** lista os treinos atuais (publicados) e rascunhos da consultoria (`Aluno · Treino vN`, rascunho marcado) e carrega os exercícios e séries no editor; o nome vira "… (cópia)" e o original não muda (é conteúdo novo, salvo como treino novo).
+**Reordenar:** `MIGRATION_13_SQL` (`programs.position`, com preenchimento pela ordem de criação). Treino novo entra **no fim**; `POST /api/students/[id]/workouts/order` {programIds} coloca os citados primeiro, na ordem enviada, e mantém os demais (id repetido não duplica; programa de outro aluno ou de outra consultoria = 404; aluno 403; lista vazia ou id inválido 400; auditado `workout.reorder`). `listVersions` ordena por `position`, depois criação, e as versões do mesmo treino ficam juntas (mais nova primeiro). Perfil do aluno: ↑/↓ na primeira linha de cada treino. O aluno vê a mesma ordem (dentro das rotinas também). É só apresentação: não mexe na prescrição.
+**Testes:** `tests/order.test.ts` (4; mutação da checagem de posse detectada) e 2 verificações no `validate` (agora **113**); suíte **320 testes (25 arquivos)**. Verificado no navegador: trocar a ordem, persistir, desfazer; "Copiar de" carregando 2 exercícios com 3 séries cada.
 
 ## 6. Dados de demonstração
 **Conta de teste local (pedido do usuário): login `admin` / senha `admin`** (Consultoria Modelo: 6 alunos modelo `modelo1..6@demo.test` com senha `admin`, contratos, cobranças de 4 meses em vários status e despesas). Só existe no seed; o login aceita texto livre no campo de e-mail por causa disso.

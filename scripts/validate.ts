@@ -360,6 +360,15 @@ async function main() {
   check("rotina que começa no futuro com 'só a partir do início' não aparece para o aluno (nem as orientações); o personal vê o motivo", fut.status === 201 && !((await a1.c.get("/versions")).body as any[]).some((v) => v.name === "Treino da futura") && !(await a1.c.get("/me/routines")).body.some((r: any) => r.id === fut.body.id) && ((await ana.get(`/students/${a1.id}/routines`)).body as any[]).find((r) => r.id === fut.body.id)?.hiddenReason === "not_started");
   check("ISOLAMENTO: outra consultoria 404 (listar e excluir rotina); aluno 403; treino em rotina de outro aluno 404", (await beta.get(`/students/${a1.id}/routines`)).status === 404 && (await beta.post(`/routines/${rt.body.id}/status`, { status: "deleted" })).status === 404 && (await a1.c.get(`/students/${a1.id}/routines`)).status === 403 && (await a1.c.post(`/routines/${rt.body.id}/status`, { status: "deleted" })).status === 403 && (await ana.post("/versions", { studentId: a2.id, name: "Rotina do outro aluno", routineId: rt.body.id, exercises: [{ exerciseId: sup, sets: [wk()] }] })).status === 404);
 
+  section("Ordem dos treinos do aluno");
+  const progOrder = async (c: Client) => [...new Set(((await c.get("/versions")).body as any[]).filter((v) => v.studentId === a1.id).map((v) => v.programId as string))];
+  const before = await progOrder(ana);
+  const reversed = [...before].reverse();
+  const reo = await ana.post(`/students/${a1.id}/workouts/order`, { programIds: reversed });
+  const trainerOrder = await progOrder(ana), studentOrder = await progOrder(a1.c);
+  check("personal reordena os treinos; o aluno vê os seus (publicados) na mesma ordem relativa", before.length >= 2 && reo.status === 200 && trainerOrder.join() === reversed.join() && studentOrder.length >= 1 && studentOrder.join() === trainerOrder.filter((id) => studentOrder.includes(id)).join());
+  check("ordenar: programa de outra consultoria 404, aluno 403, lista vazia 400", (await ana.post(`/students/${a1.id}/workouts/order`, { programIds: [] })).status === 400 && (await beta.post(`/students/${a1.id}/workouts/order`, { programIds: before })).status === 404 && (await a1.c.post(`/students/${a1.id}/workouts/order`, { programIds: before })).status === 403);
+
   console.log(`\n${pass} verificações ok, ${fail} falhas`);
   if (fail) { console.log("\nFalhas:\n" + failures.map((f) => " - " + f).join("\n")); process.exit(1); }
 }

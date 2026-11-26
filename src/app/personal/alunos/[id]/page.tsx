@@ -13,7 +13,7 @@ import { api, useMe } from "../../../../lib/client";
 import { PERMISSIONS, type Permissions } from "../../../../lib/permissions";
 
 interface Student { id: string; name: string; email: string }
-interface Version { id: string; name: string; status: "draft" | "published"; studentId: string; version: number; isCurrent: boolean; logCount: number; routineId: string | null; routineName: string | null }
+interface Version { id: string; programId: string; name: string; status: "draft" | "published"; studentId: string; version: number; isCurrent: boolean; logCount: number; routineId: string | null; routineName: string | null }
 interface RoutineOpt { id: string; name: string; status: string }
 
 export default function PerfilAluno() {
@@ -52,6 +52,18 @@ export default function PerfilAluno() {
     const r = await api(`/versions/${versionId}/routine`, "POST", { routineId: routineId || null });
     if (!r.ok) return setError("Não foi possível mover o treino de rotina.");
     setSaved("Treino movido. A prescrição não mudou."); load();
+  }
+
+  /** Sobe ou desce um treino (todas as versões dele andam juntas). A ordem vale para o aluno também. */
+  async function moveProgram(programId: string, dir: -1 | 1) {
+    const order = [...new Set(versions.map((v) => v.programId))];
+    const i = order.indexOf(programId), j = i + dir;
+    if (i < 0 || j < 0 || j >= order.length) return;
+    [order[i], order[j]] = [order[j], order[i]];
+    setError(""); setSaved("");
+    const r = await api(`/students/${id}/workouts/order`, "POST", { programIds: order });
+    if (!r.ok) return setError("Não foi possível reordenar os treinos.");
+    setSaved("Ordem dos treinos atualizada."); load();
   }
 
   const enabled = perms ? Object.values(perms).filter(Boolean).length : 0;
@@ -97,9 +109,21 @@ export default function PerfilAluno() {
 
           <h2>Treinos</h2>
           {versions.length === 0 && <p className="muted">Nenhum treino ainda.</p>}
-          {versions.map((v) => (
+          {versions.map((v, idx) => {
+            const programOrder = [...new Set(versions.map((x) => x.programId))];
+            const first = versions.findIndex((x) => x.programId === v.programId) === idx;   // setas só na 1ª linha de cada treino
+            const pos = programOrder.indexOf(v.programId);
+            return (
             <div className="card row between" key={v.id}>
-              <span><Link href={`/personal/treinos/${v.id}`}>{v.name}</Link> <span className="muted">v{v.version}</span></span>
+              <span className="row" style={{ gap: 6 }}>
+                {programOrder.length > 1 && (first ? (
+                  <span className="row" style={{ gap: 4 }}>
+                    <button type="button" className="btn ghost small" aria-label={`Subir o treino ${v.name}`} disabled={pos === 0} onClick={() => moveProgram(v.programId, -1)}>↑</button>
+                    <button type="button" className="btn ghost small" aria-label={`Descer o treino ${v.name}`} disabled={pos === programOrder.length - 1} onClick={() => moveProgram(v.programId, 1)}>↓</button>
+                  </span>
+                ) : <span style={{ width: 94 }} aria-hidden="true" />)}
+                <span><Link href={`/personal/treinos/${v.id}`}>{v.name}</Link> <span className="muted">v{v.version}</span></span>
+              </span>
               <span className="row">
                 {routines.length > 0 && (
                   <select style={{ maxWidth: 200 }} aria-label={`Rotina do treino ${v.name}`} value={v.routineId ?? ""} onChange={(e) => moveWorkout(v.id, e.target.value)}>
@@ -111,7 +135,8 @@ export default function PerfilAluno() {
                 {v.status === "published" && <span className="muted">{v.logCount} registro(s)</span>}
               </span>
             </div>
-          ))}
+            );
+          })}
         </>
       )}
     </Shell>

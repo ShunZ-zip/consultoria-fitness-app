@@ -506,6 +506,14 @@ create index if not exists routines_student on routines (consultancy_id, student
 alter table programs add column if not exists routine_id uuid references routines(id);
 `;
 
+// Ordem dos treinos do aluno (o personal reordena; treino novo entra no fim). Só apresentação: não mexe na prescrição.
+export const MIGRATION_13_SQL = `
+alter table programs add column if not exists position int not null default 0;
+update programs p set position = r.rn
+  from (select id, row_number() over (partition by student_id order by created_at, id)::int as rn from programs) r
+ where p.id = r.id and p.position = 0;
+`;
+
 // Catálogo oficial inicial (nomes e músculos provisórios; vídeos de referência em src/lib/referenceVideos.ts).
 // Taxonomia muscular PROVISÓRIA: o documento deixa a taxonomia e a ponderação para validação.
 export interface OfficialExercise { name: string; equipment: string; primary: string[]; secondary: string[] }

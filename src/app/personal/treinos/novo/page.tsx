@@ -72,6 +72,7 @@ function Builder() {
   const [picker, setPicker] = useState(false);
   const [routineId, setRoutineId] = useState(routineParam ?? "");
   const [routineOpts, setRoutineOpts] = useState<{ id: string; name: string }[]>([]);
+  const [copyOpts, setCopyOpts] = useState<{ id: string; label: string }[]>([]);
   const [favorites, setFavorites] = useState<Set<string>>(new Set());
   const [myPresets, setMyPresets] = useState<MyPreset[]>([]);
   const [savingFor, setSavingFor] = useState(""); const [presetName, setPresetName] = useState("");
@@ -111,6 +112,16 @@ function Builder() {
       setRoutineId((cur) => (ok.some((x) => x.id === cur) ? cur : ""));
     });
   }, [me, studentId, editId]);
+
+  useEffect(() => {
+    if (!me || editId) { setCopyOpts([]); return; }
+    api("/versions").then((r) => {
+      if (!r.ok) return;
+      const vs = (r.data as { id: string; name: string; status: string; isCurrent: boolean; version: number; studentName: string }[])
+        .filter((v) => v.status === "draft" || v.isCurrent);
+      setCopyOpts(vs.map((v) => ({ id: v.id, label: `${v.studentName} · ${v.name} v${v.version}${v.status === "draft" ? " (rascunho)" : ""}` })));
+    });
+  }, [me, editId]);
 
   const list = items ?? [];
   const byId = useMemo(() => new Map(catalog.map((c) => [c.id, c])), [catalog]);
@@ -187,6 +198,17 @@ function Builder() {
     const t = await api("/templates"); if (t.ok) setTemplates(t.data);
   }
 
+  /** Copia os exercícios e séries de outro treino para este editor (conteúdo novo; o original não muda). */
+  async function loadCopy(id: string) {
+    if (!id) return;
+    setError(""); setInfo("");
+    const v = await api(`/versions/${id}`);
+    if (!v.ok) return setError("Não foi possível abrir o treino escolhido.");
+    setItems(fromApi(v.data.exercises));
+    setName((n) => (n && n !== "Treino A" ? n : `${v.data.name} (cópia)`));
+    setInfo(`Treino “${v.data.name}” copiado. Ajuste e salve: o original não muda.`);
+  }
+
   async function loadTemplate(id: string) {
     if (!id) return;
     const m = await api(`/templates/${id}`);
@@ -223,6 +245,15 @@ function Builder() {
               <select id="rot" value={routineId} onChange={(e) => setRoutineId(e.target.value)}>
                 <option value="">Sem rotina</option>
                 {routineOpts.map((r) => <option key={r.id} value={r.id}>{r.name}</option>)}
+              </select>
+            </div>
+          )}
+          {!editId && copyOpts.length > 0 && (
+            <div style={{ flex: 1, minWidth: 200 }}>
+              <label htmlFor="cp">Copiar de outro treino</label>
+              <select id="cp" value="" onChange={(e) => loadCopy(e.target.value)}>
+                <option value="">Escolher…</option>
+                {copyOpts.map((o) => <option key={o.id} value={o.id}>{o.label}</option>)}
               </select>
             </div>
           )}
