@@ -6,7 +6,9 @@ import { api, type Me } from "../lib/client";
 import Backdrop from "./Backdrop";
 import Fx from "./Fx";
 import Icon, { type IconName } from "./Icon";
+import Skeleton from "./Skeleton";
 import Wordmark from "./Wordmark";
+import { useTitleFromH1 } from "../lib/useTitle";
 
 interface NavItem { href: string; label: string; icon: IconName; active: (p: string) => boolean; chat?: boolean }
 const NAV: Record<Me["role"], NavItem[]> = {
@@ -38,14 +40,7 @@ export default function Shell({ me, logout, children }: { me: Me | null; logout:
     load(); const t = setInterval(load, 20000); return () => clearInterval(t);
   }, [me, path]);
 
-  // Título da aba = título da página (ajuda a se localizar e a leitores de tela).
-  useEffect(() => {
-    const t = setTimeout(() => {
-      const h = document.querySelector("main h1")?.textContent?.trim();
-      document.title = h ? `${h} · Cauã Henry | Musculação` : "Cauã Henry | Musculação";
-    }, 350);
-    return () => clearTimeout(t);
-  }, [path, me]);
+  useTitleFromH1();
 
   return (
     <div className="shell-root">
@@ -76,7 +71,7 @@ export default function Shell({ me, logout, children }: { me: Me | null; logout:
         </nav>
       )}
       <main className="wrap" id="conteudo" tabIndex={-1}>
-        {me ? <Fx animation="fade-up" stagger={55} distance={18} duration={550}>{children}</Fx> : <p className="muted" role="status">Carregando…</p>}
+        {me ? <Fx animation="fade-up" stagger={55} distance={18} duration={550}>{children}</Fx> : <Skeleton />}
         <div className="signature">Cauã Henry | Musculação baseada em evidências{me ? ` · ${me.consultancyName}` : ""}</div>
       </main>
     </div>

@@ -2,6 +2,7 @@
 import Link from "next/link";
 import { useCallback, useEffect, useMemo, useState, type FormEvent } from "react";
 import { MediaItems } from "../../../components/MediaViewer";
+import Skeleton from "../../../components/Skeleton";
 import Shell from "../../../components/Shell";
 import { api, useMe } from "../../../lib/client";
 import type { MediaItem, MediaMode, MediaPref, ResolvedMedia } from "../../../lib/media";
@@ -37,15 +38,15 @@ function MediaManager({ ex, students }: { ex: Ex; students: Student[] }) {
     setInfo("Regra salva e registrada na auditoria."); load(preview);
   }
 
-  if (!data) return <p className="muted">Carregando…</p>;
+  if (!data) return <Skeleton />;
   const rule = (sid: string | null) => data.preferences.find((p) => p.studentId === sid);
   const label = (m: MediaMode) => ({ official: "só a animação oficial", own: "só o vídeo próprio", both: "animação oficial + vídeo próprio" }[m]);
   return (
     <div style={{ marginTop: 10, paddingTop: 10, borderTop: "1px solid var(--line)" }}>
       <p className="muted">Animação oficial: {data.official.length ? data.official.map((m) => m.title).join(", ") : "ainda não disponível para este exercício"}. Vídeos próprios: {data.own.length}.</p>
       <form className="row" onSubmit={addVideo}>
-        <input style={{ flex: 1, minWidth: 140 }} placeholder="Título do vídeo" required value={title} onChange={(e) => setTitle(e.target.value)} />
-        <input style={{ flex: 2, minWidth: 200 }} placeholder="Link https do vídeo" required value={url} onChange={(e) => setUrl(e.target.value)} />
+        <input style={{ flex: 1, minWidth: 140 }} placeholder="Título do vídeo" aria-label="Título do vídeo" required value={title} onChange={(e) => setTitle(e.target.value)} />
+        <input style={{ flex: 2, minWidth: 200 }} placeholder="Link https do vídeo" aria-label="Link https do vídeo" required value={url} onChange={(e) => setUrl(e.target.value)} />
         <button className="btn small">Adicionar vídeo</button>
       </form>
 
@@ -112,10 +113,10 @@ export default function Biblioteca() {
         <form onSubmit={create}>
           <b className="hf" style={{ fontSize: 12, letterSpacing: ".1em" }}>Novo exercício próprio</b>
           <div className="row" style={{ marginTop: 8 }}>
-            <input style={{ flex: 2, minWidth: 180 }} placeholder="Nome" required value={f.name} onChange={(e) => setF({ ...f, name: e.target.value })} />
-            <input style={{ flex: 1, minWidth: 120 }} placeholder="Equipamento" value={f.equipment} onChange={(e) => setF({ ...f, equipment: e.target.value })} />
-            <input style={{ flex: 2, minWidth: 180 }} placeholder="Músculos primários (vírgula)" required value={f.primary} onChange={(e) => setF({ ...f, primary: e.target.value })} />
-            <input style={{ flex: 2, minWidth: 180 }} placeholder="Secundários (vírgula)" value={f.secondary} onChange={(e) => setF({ ...f, secondary: e.target.value })} />
+            <input style={{ flex: 2, minWidth: 180 }} placeholder="Nome" aria-label="Nome" required value={f.name} onChange={(e) => setF({ ...f, name: e.target.value })} />
+            <input style={{ flex: 1, minWidth: 120 }} placeholder="Equipamento" aria-label="Equipamento" value={f.equipment} onChange={(e) => setF({ ...f, equipment: e.target.value })} />
+            <input style={{ flex: 2, minWidth: 180 }} placeholder="Músculos primários (vírgula)" aria-label="Músculos primários (vírgula)" required value={f.primary} onChange={(e) => setF({ ...f, primary: e.target.value })} />
+            <input style={{ flex: 2, minWidth: 180 }} placeholder="Secundários (vírgula)" aria-label="Secundários (vírgula)" value={f.secondary} onChange={(e) => setF({ ...f, secondary: e.target.value })} />
             <button className="btn small">Criar</button>
           </div>
         </form>

@@ -64,12 +64,12 @@ export default function ModelosAvaliacao() {
         <input id="tn" value={name} onChange={(e) => setName(e.target.value)} />
         {rows.map((r, i) => (
           <div className="row" key={i} style={{ marginTop: 8 }}>
-            <input style={{ flex: 3, minWidth: 180 }} placeholder="Pergunta ou medida" value={r.label} onChange={(e) => setRows(rows.map((x, y) => (y === i ? { ...x, label: e.target.value } : x)))} />
+            <input style={{ flex: 3, minWidth: 180 }} placeholder="Pergunta ou medida" aria-label="Pergunta ou medida" value={r.label} onChange={(e) => setRows(rows.map((x, y) => (y === i ? { ...x, label: e.target.value } : x)))} />
             <select style={{ flex: 1, minWidth: 120 }} value={r.type} onChange={(e) => setRows(rows.map((x, y) => (y === i ? { ...x, type: e.target.value as FieldType } : x)))} aria-label="Tipo">
               {TYPES.map((t) => <option key={t.v} value={t.v}>{t.l}</option>)}
             </select>
-            {r.type === "number" && <input style={{ width: 90 }} placeholder="Unidade" value={r.unit} onChange={(e) => setRows(rows.map((x, y) => (y === i ? { ...x, unit: e.target.value } : x)))} />}
-            {r.type === "choice" && <input style={{ flex: 2, minWidth: 160 }} placeholder="Opções (vírgula)" value={r.options} onChange={(e) => setRows(rows.map((x, y) => (y === i ? { ...x, options: e.target.value } : x)))} />}
+            {r.type === "number" && <input style={{ width: 90 }} placeholder="Unidade" aria-label="Unidade" value={r.unit} onChange={(e) => setRows(rows.map((x, y) => (y === i ? { ...x, unit: e.target.value } : x)))} />}
+            {r.type === "choice" && <input style={{ flex: 2, minWidth: 160 }} placeholder="Opções (vírgula)" aria-label="Opções (vírgula)" value={r.options} onChange={(e) => setRows(rows.map((x, y) => (y === i ? { ...x, options: e.target.value } : x)))} />}
             <button className="btn ghost small" aria-label="Remover campo" onClick={() => setRows(rows.filter((_, y) => y !== i))}>×</button>
           </div>
         ))}

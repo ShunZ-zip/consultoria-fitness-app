@@ -1,6 +1,6 @@
 "use client";
 import { useRouter, useSearchParams } from "next/navigation";
-import { Suspense, useEffect, useMemo, useState } from "react";
+import { cloneElement, Suspense, useEffect, useId, useMemo, useState } from "react";
 import Shell from "../../../../components/Shell";
 import { api, useMe } from "../../../../lib/client";
 import { computeVolume, DEFAULT_INDIRECT_WEIGHT, type SetType } from "../../../../lib/volume";
@@ -37,8 +37,9 @@ const toPayload = (items: ExForm[]) => items.map((e) => ({
   })),
 }));
 
-function Field({ label, children }: { label: string; children: React.ReactNode }) {
-  return <div><label style={{ margin: "0 0 3px", fontSize: 11 }}>{label}</label>{children}</div>;
+function Field({ label, children }: { label: string; children: React.ReactElement<{ id?: string }> }) {
+  const id = useId();
+  return <div><label htmlFor={id} style={{ margin: "0 0 3px", fontSize: 11 }}>{label}</label>{cloneElement(children, { id })}</div>;
 }
 
 function Builder() {
@@ -179,7 +180,7 @@ function Builder() {
       {list.map((it, i) => (
         <div className="card" key={i}>
           <div className="row between">
-            <select style={{ maxWidth: 380 }} value={it.exerciseId} onChange={(e) => setList((xs) => xs.map((x, y) => (y === i ? { ...x, exerciseId: e.target.value, alternativeIds: x.alternativeIds.filter((z) => z !== e.target.value) } : x)))}>
+            <select aria-label="Exercício" style={{ maxWidth: 380 }} value={it.exerciseId} onChange={(e) => setList((xs) => xs.map((x, y) => (y === i ? { ...x, exerciseId: e.target.value, alternativeIds: x.alternativeIds.filter((z) => z !== e.target.value) } : x)))}>
               {catalog.map((c) => <option key={c.id} value={c.id}>{c.name} · {c.muscle}</option>)}
             </select>
             <span className="row">
@@ -268,7 +269,7 @@ function Builder() {
         <button className="btn ghost" disabled={busy || invalid} onClick={() => save(false)}>Salvar rascunho</button>
       </div>
       <div className="row" style={{ marginTop: 14 }}>
-        <input style={{ maxWidth: 260 }} placeholder="Nome do modelo" value={tplName} onChange={(e) => setTplName(e.target.value)} />
+        <input style={{ maxWidth: 260 }} placeholder="Nome do modelo" aria-label="Nome do modelo" value={tplName} onChange={(e) => setTplName(e.target.value)} />
         <button className="btn ghost small" disabled={invalid} onClick={saveTemplate}>Salvar como modelo</button>
       </div>
       <p className="muted">Depois de publicado, o treino não pode mais ser editado: mudanças geram uma nova versão e a anterior fica preservada.</p>

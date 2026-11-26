@@ -16,8 +16,16 @@ const auditText = (e: AuditEntry) => {
   if (e.action === "settings.indirect_weight") return `Peso das séries indiretas: ${e.detail.from} → ${e.detail.to}`;
   if (e.action === "version.publish") return `Publicou a versão ${e.detail.version} de um treino`;
   if (e.action === "student.permissions") return `Permissões de um aluno: ${Object.keys(e.detail.changed ?? {}).length} alteração(ões)`;
-  if (e.action === "version.create") return `Criou a versão ${e.detail.version} (rascunho)`;
-  return e.action;
+  if (e.action === "version.create") return `Criou a versão ${e.detail.version} (rascunho)${e.detail.suggestionId ? " a partir de uma sugestão" : ""}`;
+  const plain: Record<string, string> = {
+    "assessment.create": "Registrou ou enviou uma avaliação", "assessment.submit": "Um aluno respondeu a uma avaliação", "assessment.view": "Abriu uma avaliação de aluno",
+    "billing.cycle": "Gerou as cobranças do mês", "charge.create": "Criou uma cobrança", "charge.cancel": "Cancelou uma cobrança", "charge.manual_paid": "Registrou um recebimento manual",
+    "checkin.config": "Alterou a configuração de check-in", "contract.create": "Criou um contrato mensal", "contract.cancel": "Cancelou um contrato",
+    "media.add": "Adicionou um vídeo próprio a um exercício", "media.preference": "Mudou a mídia mostrada aos alunos", "saas.plan": "Trocou o plano da plataforma",
+    "suggestion.generate": "Analisou os registros de um aluno", "suggestion.approve": "Aprovou uma sugestão", "suggestion.reject": "Recusou uma sugestão",
+    "task.create": "Criou uma tarefa", "task.delete": "Excluiu uma tarefa",
+  };
+  return plain[e.action] ?? e.action;
 };
 
 export default function Personal() {
@@ -153,6 +161,7 @@ export default function Personal() {
           <>
             <label style={{ marginTop: 14 }}>Últimas alterações (auditoria)</label>
             <table>
+              <thead><tr><th scope="col">Alteração</th><th scope="col">Quem</th><th scope="col">Quando</th></tr></thead>
               <tbody>
                 {audit.slice(0, 8).map((e) => (
                   <tr key={e.id}><td>{auditText(e)}</td><td className="muted">{e.actorName}</td><td className="num muted">{new Date(e.at).toLocaleString("pt-BR")}</td></tr>

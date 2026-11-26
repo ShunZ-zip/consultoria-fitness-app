@@ -13,6 +13,8 @@ interface Ev { id: string; type: string; result: string; reason: string | null; 
 interface Student { id: string; name: string }
 
 export const STATUS_LABEL: Record<string, string> = { pending: "Pendente", paid: "Paga", overdue: "Em atraso", failed: "Falhou", canceled: "Cancelada", refunded: "Estornada" };
+const EVENT_LABEL: Record<string, string> = { "payment.pending": "Pagamento pendente", "payment.confirmed": "Pagamento confirmado", "payment.failed": "Pagamento falhou", "payment.canceled": "Pagamento cancelado", "payment.refunded": "Pagamento estornado", "system.overdue": "Marcada em atraso (sistema)" };
+const RESULT_LABEL: Record<string, string> = { applied: "Aplicado", duplicate: "Repetido (sem efeito)", ignored: "Ignorado", rejected: "Rejeitado" };
 const METHOD_LABEL: Record<string, string> = { pix: "Pix", boleto: "Boleto", card: "Cartão", cash: "Dinheiro", outro: "Outro" };
 const toCents = (v: string) => Math.round(Number(v.replace(/\./g, "").replace(",", ".")) * 100);
 const dt = (d: string) => d.split("-").reverse().join("/");
@@ -148,7 +150,7 @@ export default function Financeiro() {
           <div style={{ width: 160 }}><label htmlFor="ex-t">Data</label><input id="ex-t" type="date" required value={ex.date} onChange={(e) => setEx({ ...ex, date: e.target.value })} /></div>
           <button className="btn" style={{ alignSelf: "flex-end" }}>Registrar</button>
         </div>
-        {expenses.length > 0 && <table style={{ marginTop: 12 }}><tbody>{expenses.map((x) => <tr key={x.id}><td>{x.description}</td><td className="muted">{x.category}</td><td>{dt(x.date)}</td><td className="num">{brl(x.amountCents)}</td></tr>)}</tbody></table>}
+        {expenses.length > 0 && <table style={{ marginTop: 12 }}><thead><tr><th scope="col">Despesa</th><th scope="col">Categoria</th><th scope="col">Data</th><th scope="col">Valor</th></tr></thead><tbody>{expenses.map((x) => <tr key={x.id}><td>{x.description}</td><td className="muted">{x.category}</td><td>{dt(x.date)}</td><td className="num">{brl(x.amountCents)}</td></tr>)}</tbody></table>}
       </form>
 
       <details style={{ marginTop: 18 }}>
@@ -157,7 +159,7 @@ export default function Financeiro() {
           <table>
             <thead><tr><th>Quando</th><th>Evento</th><th>Resultado</th><th>Estado</th></tr></thead>
             <tbody>
-              {events.map((v) => <tr key={v.id}><td>{new Date(v.receivedAt).toLocaleString("pt-BR")}</td><td>{v.type}</td><td>{v.result}{v.reason ? ` · ${v.reason}` : ""}</td><td>{v.from && v.to ? `${STATUS_LABEL[v.from] ?? v.from} → ${STATUS_LABEL[v.to] ?? v.to}` : "—"}</td></tr>)}
+              {events.map((v) => <tr key={v.id}><td>{new Date(v.receivedAt).toLocaleString("pt-BR")}</td><td>{EVENT_LABEL[v.type] ?? v.type}</td><td>{RESULT_LABEL[v.result] ?? v.result}{v.reason ? ` · ${v.reason}` : ""}</td><td>{v.from && v.to ? `${STATUS_LABEL[v.from] ?? v.from} → ${STATUS_LABEL[v.to] ?? v.to}` : "—"}</td></tr>)}
               {events.length === 0 && <tr><td colSpan={4} className="muted">Nenhum evento recebido ainda.</td></tr>}
             </tbody>
           </table>

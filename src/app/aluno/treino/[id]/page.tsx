@@ -219,11 +219,11 @@ export default function Registro() {
     const waiting = pendingIds.has(`set:${f.setId}`);
     return (
       <div key={k} className="logset" style={{ gridTemplateColumns: `minmax(140px, 1.6fr) repeat(${cols - 1}, 1fr) auto`, marginTop: 12 }}>
-        <div className="ref muted">{label}{ref_}</div>
-        <div><label>Reps</label><input inputMode="numeric" disabled={readOnly} value={f.reps} onChange={(e) => patch(k, "reps", e.target.value)} /></div>
-        <div><label>Carga (kg)</label><input inputMode="decimal" disabled={readOnly} value={f.loadKg} onChange={(e) => patch(k, "loadKg", e.target.value)} /></div>
-        <div><label>RIR</label><input inputMode="numeric" disabled={readOnly} value={f.rir} onChange={(e) => patch(k, "rir", e.target.value)} /></div>
-        {perms?.adjustRest && <div><label>Desc. real (s)</label><input inputMode="numeric" disabled={readOnly} value={f.restS} onChange={(e) => patch(k, "restS", e.target.value)} /></div>}
+        <div className="ref muted" id={`${k}-ref`}>{label}{ref_}</div>
+        <div><label id={`${k}-reps-l`} htmlFor={`${k}-reps`}>Reps</label><input id={`${k}-reps`} aria-labelledby={`${k}-ref ${k}-reps-l`} inputMode="numeric" disabled={readOnly} value={f.reps} onChange={(e) => patch(k, "reps", e.target.value)} /></div>
+        <div><label id={`${k}-loadKg-l`} htmlFor={`${k}-loadKg`}>Carga (kg)</label><input id={`${k}-loadKg`} aria-labelledby={`${k}-ref ${k}-loadKg-l`} inputMode="decimal" disabled={readOnly} value={f.loadKg} onChange={(e) => patch(k, "loadKg", e.target.value)} /></div>
+        <div><label id={`${k}-rir-l`} htmlFor={`${k}-rir`}>RIR</label><input id={`${k}-rir`} aria-labelledby={`${k}-ref ${k}-rir-l`} inputMode="numeric" disabled={readOnly} value={f.rir} onChange={(e) => patch(k, "rir", e.target.value)} /></div>
+        {perms?.adjustRest && <div><label id={`${k}-restS-l`} htmlFor={`${k}-restS`}>Desc. real (s)</label><input id={`${k}-restS`} aria-labelledby={`${k}-ref ${k}-restS-l`} inputMode="numeric" disabled={readOnly} value={f.restS} onChange={(e) => patch(k, "restS", e.target.value)} /></div>}
         <button className="btn small" disabled={readOnly || (f.reps === "" && f.loadKg === "")} onClick={() => save(k, restS)}>
           {f.saved ? (waiting ? "Pendente…" : "Salvo ✓") : "Salvar"}
         </button>

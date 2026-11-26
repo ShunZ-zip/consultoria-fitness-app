@@ -106,7 +106,7 @@ export default function Treino() {
               <button className="btn ghost small" onClick={() => act(() => api(`/versions/${id}/duplicate`, "POST", { studentId: target }), (d) => router.push(`/personal/treinos/${d.id}`))}>Duplicar como rascunho</button>
             </div>
             <div className="row" style={{ marginTop: 12 }}>
-              <input style={{ maxWidth: 260 }} placeholder="Nome do modelo" value={tplName} onChange={(e) => setTplName(e.target.value)} />
+              <input style={{ maxWidth: 260 }} placeholder="Nome do modelo" aria-label="Nome do modelo" value={tplName} onChange={(e) => setTplName(e.target.value)} />
               <button className="btn ghost small" disabled={!tplName.trim()} onClick={() => act(() => api("/templates", "POST", { name: tplName, versionId: id }), () => { setInfo(`Modelo “${tplName}” salvo.`); setTplName(""); })}>Salvar como modelo</button>
             </div>
             {published && <p className="muted" style={{ marginBottom: 0 }}>Treino publicado é imutável. “Nova versão” cria um rascunho a partir deste; ao publicar, o aluno passa a ver a nova, e esta fica preservada com os registros.</p>}
