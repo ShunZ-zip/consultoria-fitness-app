@@ -40,7 +40,7 @@ export default function Home() {
         <header className="land-top wrap row between"><Wordmark /><ThemeToggle /></header>
 
         <section className="land-hero wrap" aria-labelledby="titulo">
-          <Fx animation="fade-up" stagger={110} distance={26} duration={650} className="land-hero-in">
+          <Fx animation="fade-up" stagger={110} distance={26} duration={650} once={false} className="land-hero-in">
             <p className="eyebrow">Plataforma privada de consultoria</p>
             <h1 id="titulo" className="land-h1">Musculação baseada em evidências.</h1>
             <p className="land-lead">Prescrição por série, registro do que você fez e evolução clara. O acesso é por convite do seu personal.</p>
@@ -53,8 +53,8 @@ export default function Home() {
         </section>
 
         <section className="land-section wrap" aria-labelledby="como">
-          <Fx animation="mask-up"><h2 id="como" className="land-h2">Como funciona</h2></Fx>
-          <Fx animation="fade-up" stagger={140} className="land-steps">
+          <Fx animation="mask-up" once={false}><h2 id="como" className="land-h2">Como funciona</h2></Fx>
+          <Fx animation="fade-up" stagger={140} once={false} className="land-steps">
             {STEPS.map((s, i) => (
               <article className="card step ic-host" key={s.title}>
                 <span className="step-n">0{i + 1}</span>
