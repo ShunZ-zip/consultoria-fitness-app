@@ -177,5 +177,5 @@ A lista de 9 permissões e os padrões vêm do protótipo. O protótipo não des
 - **E-mail só em desenvolvimento** (o link de recuperação aparece na tela); em produção nada é enviado.
 - Os limites dos planos da plataforma não bloqueiam o uso (propostas).
 - O botão "Simular pagamento" da assinatura só aparece quando há fatura da plataforma (após o fim do teste); não foi exercitado na interface, apenas nos testes.
-- Em carga completa da página o console mostra um aviso de hidratação do React causado pelos efeitos de rolagem; não afeta o uso e está na fila de ajustes.
+- O service worker (abrir telas já visitadas sem conexão) só é registrado em produção e **não foi verificado num navegador real**: no painel de navegador usado nos testes o registro falhou por limitação do próprio painel. O modo offline do registro de treino (fila no aparelho) foi verificado em desenvolvimento.
 - Com uma nova versão publicada, um registro em andamento na versão anterior pode ser concluído, mas não se abrem novos.
