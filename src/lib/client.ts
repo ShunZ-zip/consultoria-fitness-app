@@ -1,5 +1,5 @@
 "use client";
-import { useCallback, useEffect, useState } from "react";
+import { createContext, useCallback, useContext, useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 
 export interface Me { id: string; name: string; email: string; role: "trainer" | "student"; consultancyName: string }
@@ -34,19 +34,30 @@ export async function api<T = any>(path: string, method = "GET", body?: unknown)
   return { ok: res.ok, status: res.status, data };
 }
 
-/** Carrega o usuário; redireciona para /login sem sessão e para a área certa se o papel não bate. */
-export function useMe(role?: "trainer" | "student") {
+/** Quadro fixo (cabeçalho + abas) compartilhado pelas telas de uma área: o usuário é buscado UMA vez e as telas só trocam o conteúdo. */
+export const FrameContext = createContext<{ me: Me | null; logout: () => void } | null>(null);
+
+/** Busca o usuário; redireciona para /login sem sessão e para a área certa se o papel não bate. */
+export function useSession(role?: "trainer" | "student", enabled = true) {
   const router = useRouter();
   const [me, setMe] = useState<Me | null>(null);
   useEffect(() => {
+    if (!enabled) return;
     api<Me>("/me").then((r) => {
       if (!r.ok) return router.replace("/login");
       if (role && r.data.role !== role) return router.replace(r.data.role === "trainer" ? "/personal" : "/aluno");
       setMe(r.data);
     });
-  }, [role, router]);
+  }, [role, router, enabled]);
   const logout = useCallback(async () => { await api("/auth/logout", "POST"); await clearOfflineCache(); router.replace("/login"); }, [router]);
   return { me, logout };
+}
+
+/** Usuário da tela. Dentro do quadro fixo devolve o que já foi carregado (sem nova busca nem "carregando"). */
+export function useMe(role?: "trainer" | "student") {
+  const frame = useContext(FrameContext);
+  const own = useSession(role, !frame);
+  return frame ?? own;
 }
 
 export const fmt = (n: number | null | undefined, unit = "") => (n == null ? "—" : `${n}${unit}`);

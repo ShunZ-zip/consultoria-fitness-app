@@ -329,3 +329,13 @@ html.theme-anim, html.theme-anim *, html.theme-anim *::before, html.theme-anim *
 
 /* A frase final se revela com a rolagem e precisa terminar COMPLETA mesmo no fim da página (que limita até onde dá para rolar): folga embaixo. */
 .land-statement { margin-bottom: 16vh; }
+
+/* Aba ativa: o indicador desliza entre as abas (a barra não recarrega ao trocar de tela). */
+.mainnav { position: sticky; }
+.nav-pill { position: absolute; left: 0; top: 0; z-index: 0; border-radius: 6px; background: var(--panel2); border: 1px solid var(--line); pointer-events: none;
+  transition: transform .38s var(--ease-out), width .38s var(--ease-out), height .38s var(--ease-out); }
+.nav-pill::after { content: ""; position: absolute; left: 14px; right: 14px; bottom: 3px; height: 2px; background: var(--v); border-radius: 2px; }
+.navlink { z-index: 1; }
+.navlink.on { background: transparent !important; border-color: transparent; }
+.navlink.on::after { content: none; }
+@media (prefers-reduced-motion: reduce) { .nav-pill { transition: none; } }
