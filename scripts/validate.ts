@@ -369,6 +369,10 @@ async function main() {
   check("personal reordena os treinos; o aluno vê os seus (publicados) na mesma ordem relativa", before.length >= 2 && reo.status === 200 && trainerOrder.join() === reversed.join() && studentOrder.length >= 1 && studentOrder.join() === trainerOrder.filter((id) => studentOrder.includes(id)).join());
   check("ordenar: programa de outra consultoria 404, aluno 403, lista vazia 400", (await ana.post(`/students/${a1.id}/workouts/order`, { programIds: [] })).status === 400 && (await beta.post(`/students/${a1.id}/workouts/order`, { programIds: before })).status === 404 && (await a1.c.post(`/students/${a1.id}/workouts/order`, { programIds: before })).status === 403);
 
+  section("Perfil: nome, espaço e senha");
+  check("personal altera nome e nome do espaço; o aluno vê o espaço novo; aluno não renomeia o espaço (403)", (await ana.put("/me/profile", { name: "Personal Renomeado", consultancyName: "Espaço Renomeado" })).status === 200 && (await ana.get("/me")).body.name === "Personal Renomeado" && (await a2.c.get("/me")).body.consultancyName === "Espaço Renomeado" && (await a2.c.put("/me/profile", { name: "Aluno", consultancyName: "Invasão" })).status === 403);
+  check("trocar senha: atual errada 400, igual à atual 400, curta 400; correta 200", (await a2.c.post("/me/password", { currentPassword: "errada-12345", newPassword: "nova-senha-99" })).status === 400 && (await a2.c.post("/me/password", { currentPassword: "senha-segura-1", newPassword: "senha-segura-1" })).status === 400 && (await a2.c.post("/me/password", { currentPassword: "senha-segura-1", newPassword: "curta" })).status === 400 && (await a2.c.post("/me/password", { currentPassword: "senha-segura-1", newPassword: "nova-senha-99" })).status === 200 && (await a2.c.get("/me")).status === 200);
+
   console.log(`\n${pass} verificações ok, ${fail} falhas`);
   if (fail) { console.log("\nFalhas:\n" + failures.map((f) => " - " + f).join("\n")); process.exit(1); }
 }

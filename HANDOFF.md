@@ -33,7 +33,7 @@ Next.js 16 (App Router, Turbopack) + TypeScript 7 + PGlite (PostgreSQL embutido 
 | 5 | Operação comercial: assinatura SaaS e cobrança do aluno **separadas**, eventos assinados/idempotentes, painel básico | 🟡 **backend e libs prontos; faltam testes de API, telas e README** (ver §4) |
 | 6 | IA assistiva: sugestões com evidências, aprovação do personal | ✅ por regras, sem IA externa; aprovar cria só rascunho; verificada no navegador |
 
-Verificação atual: `npx tsc --noEmit` limpo; `npm test` = **320 testes passando (25 arquivos)**; `npm run validate` = **113 verificações, 0 falhas**.
+Verificação atual: `npx tsc --noEmit` limpo; `npm test` = **326 testes passando (26 arquivos)**; `npm run validate` = **115 verificações, 0 falhas**.
 
 ## 4. Fila de trabalho, NA ORDEM (continue daqui)
 
@@ -128,6 +128,11 @@ Sessões **concluídas** pelos alunos aparecem para o personal em `/personal/fee
 **Copiar de:** no editor de treino novo, o campo **"Copiar de outro treino"** lista os treinos atuais (publicados) e rascunhos da consultoria (`Aluno · Treino vN`, rascunho marcado) e carrega os exercícios e séries no editor; o nome vira "… (cópia)" e o original não muda (é conteúdo novo, salvo como treino novo).
 **Reordenar:** `MIGRATION_13_SQL` (`programs.position`, com preenchimento pela ordem de criação). Treino novo entra **no fim**; `POST /api/students/[id]/workouts/order` {programIds} coloca os citados primeiro, na ordem enviada, e mantém os demais (id repetido não duplica; programa de outro aluno ou de outra consultoria = 404; aluno 403; lista vazia ou id inválido 400; auditado `workout.reorder`). `listVersions` ordena por `position`, depois criação, e as versões do mesmo treino ficam juntas (mais nova primeiro). Perfil do aluno: ↑/↓ na primeira linha de cada treino. O aluno vê a mesma ordem (dentro das rotinas também). É só apresentação: não mexe na prescrição.
 **Testes:** `tests/order.test.ts` (4; mutação da checagem de posse detectada) e 2 verificações no `validate` (agora **113**); suíte **320 testes (25 arquivos)**. Verificado no navegador: trocar a ordem, persistir, desfazer; "Copiar de" carregando 2 exercícios com 3 séries cada.
+
+## 5p. Editar perfil e trocar senha (issue #12, "menu de perfil")
+**Telas:** `/personal/perfil` e `/aluno/perfil` (`ProfileForm.tsx`); o nome do usuário no cabeçalho é link (no celular vira um ícone de 44 px). **Seus dados:** nome (os dois papéis), **nome do espaço** (só o personal; o aluno vê o nome novo) e e-mail somente leitura (**trocar o e-mail não foi feito**: exigiria confirmação por e-mail, provedor não escolhido). **Trocar senha:** senha atual + nova (mín. 8) + confirmação, com o "olhinho".
+**Servidor (`handlers12.ts`):** `PUT /api/me/profile` (aluno que manda `consultancyName` = 403) e `POST /api/me/password`: exige a senha atual (errada = 400 "Senha atual incorreta"), nova diferente da atual, **derruba as OUTRAS sessões e mantém a atual**, **5 tentativas erradas em 15 min bloqueiam (429)** mesmo com a senha certa (contagem por usuário na auditoria: `password.change_failed`), tudo auditado (`profile.update`, `password.change`). Cada um só altera a própria conta. O cabeçalho atualiza sem recarregar (evento `cf-me-changed` no `useSession`).
+**Testes:** `tests/profile.test.ts` (6; mutações de "derrubar as outras sessões" e do limite de tentativas detectadas) e 2 verificações no `validate` (agora **115**); suíte **326 testes (26 arquivos)**. Verificado no navegador (desktop e 375 px): trocar nome (cabeçalho acompanha), senha atual errada, confirmação diferente, troca real e volta para a senha de demonstração.
 
 ## 6. Dados de demonstração
 **Conta de teste local (pedido do usuário): login `admin` / senha `admin`** (Consultoria Modelo: 6 alunos modelo `modelo1..6@demo.test` com senha `admin`, contratos, cobranças de 4 meses em vários status e despesas). Só existe no seed; o login aceita texto livre no campo de e-mail por causa disso.

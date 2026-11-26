@@ -49,6 +49,13 @@ export function useSession(role?: "trainer" | "student", enabled = true) {
       setMe(r.data);
     });
   }, [role, router, enabled]);
+  // O perfil avisa quando o nome muda, para o cabeçalho acompanhar sem recarregar.
+  useEffect(() => {
+    if (!enabled) return;
+    const h = () => { api<Me>("/me").then((r) => { if (r.ok) setMe(r.data); }); };
+    window.addEventListener("cf-me-changed", h);
+    return () => window.removeEventListener("cf-me-changed", h);
+  }, [enabled]);
   const logout = useCallback(async () => { await api("/auth/logout", "POST"); await clearOfflineCache(); router.replace("/login"); }, [router]);
   return { me, logout };
 }

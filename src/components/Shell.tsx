@@ -92,7 +92,7 @@ function ShellView({ me, logout, children, frame = false }: { me: Me | null; log
         <Wordmark />
         {me && (
           <div className="who">
-            <span className="who-name">{me.name} · {me.role === "trainer" ? "Personal" : "Aluno"}</span>
+            <Link className="who-name" href={me.role === "trainer" ? "/personal/perfil" : "/aluno/perfil"} aria-label={`Meu perfil: ${me.name}`}><Icon name="user" /><span className="who-text">{me.name} · {me.role === "trainer" ? "Personal" : "Aluno"}</span></Link>
             <ThemeToggle />
             <button className="btn ghost small" onClick={logout}>Sair</button>
           </div>

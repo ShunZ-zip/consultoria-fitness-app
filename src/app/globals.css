@@ -465,3 +465,9 @@ details.card.rt-notes { padding-top: 0; padding-bottom: 0; }
 .media-play { width: 30px; height: 30px; border-radius: 50%; background: var(--b); display: grid; place-items: center; }
 .media-play svg { width: 16px; height: 16px; }
 .media-cap { font-size: 11px; font-weight: 700; letter-spacing: .02em; }
+
+/* Nome do usuário no cabeçalho é link para o perfil */
+a.who-name { color: inherit; text-decoration: none; min-height: 44px; min-width: 44px; display: inline-flex; align-items: center; gap: 6px; max-width: 320px; }
+a.who-name .who-text { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+@media (max-width: 760px) { a.who-name .who-text { display: none; } }
+a.who-name:hover { text-decoration: underline; text-decoration-color: var(--v); text-underline-offset: 4px; }
