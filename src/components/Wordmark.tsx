@@ -1,11 +1,11 @@
 import Link from "next/link";
+import Logo from "./Logo";
 
-/** Wordmark: CAUÃ HENRY com a etiqueta MUSCULAÇÃO colada logo abaixo (brandbook). */
+/** Marca do app (logo FisIQ). Mantém o nome do componente para as telas que já o usam. */
 export default function Wordmark({ href = "/" }: { href?: string }) {
   return (
-    <Link href={href} className="wordmark" aria-label="Cauã Henry | Musculação">
-      <span className="wm-name">Cauã Henry</span>
-      <span className="wm-tag">Musculação</span>
+    <Link href={href} className="wordmark" aria-label="FisIQ, ir para o início">
+      <Logo className="logo" aria-hidden="true" role="presentation" />
     </Link>
   );
 }
