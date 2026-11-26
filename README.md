@@ -27,6 +27,8 @@ npm run seed     # dados fictícios (opcional)
 npm run dev      # http://localhost:3000
 ```
 
+**Testar no celular (mesma rede Wi-Fi):** com `npm run dev` rodando, abra no celular `http://<IP do computador>:3000` (ex.: `http://192.168.0.100:3000`; veja o IP com `ipconfig`, linha "IPv4"). O `next.config.mjs` já libera as faixas de rede local em desenvolvimento (`allowedDevOrigins`). Se o celular não abrir nem a tela inicial, é o **firewall do Windows**: permita o Node na rede privada com um PowerShell **como administrador**: `New-NetFirewallRule -DisplayName "Node dev 3000" -Direction Inbound -Protocol TCP -LocalPort 3000 -Action Allow -Profile Private`. Celular e computador precisam estar na mesma rede (não use dados móveis). O 3D e o tema funcionam igual no celular.
+
 Contas do seed (senha `demo12345`):
 
 | Quem | E-mail | Consultoria |
