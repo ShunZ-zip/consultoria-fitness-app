@@ -33,7 +33,7 @@ Next.js 16 (App Router, Turbopack) + TypeScript 7 + PGlite (PostgreSQL embutido 
 | 5 | Operação comercial: assinatura SaaS e cobrança do aluno **separadas**, eventos assinados/idempotentes, painel básico | 🟡 **backend e libs prontos; faltam testes de API, telas e README** (ver §4) |
 | 6 | IA assistiva: sugestões com evidências, aprovação do personal | ✅ por regras, sem IA externa; aprovar cria só rascunho; verificada no navegador |
 
-Verificação atual: `npx tsc --noEmit` limpo; `npm test` = **263 testes passando (18 arquivos)**.
+Verificação atual: `npx tsc --noEmit` limpo; `npm test` = **267 testes passando (19 arquivos)**.
 
 ## 4. Fila de trabalho, NA ORDEM (continue daqui)
 
@@ -81,6 +81,9 @@ Padrão = **claro** (`:root`: `--paper #E6EAED` fundo, `--ink #0E1B2B` texto, et
 
 ## 5f. Troca de abas fluida (pedido do usuário)
 `src/app/personal/layout.tsx` e `src/app/aluno/layout.tsx` montam `ShellFrame` (em `Shell.tsx`) UMA vez: cabeçalho, abas e o usuário (`/api/me`) ficam montados e só o conteúdo muda ao trocar de aba. `Shell` dentro de uma tela virou só o animador de entrada do conteúdo (as telas não mudaram); `useMe` devolve o usuário do quadro (contexto `FrameContext` em `lib/client.ts`; `useSession` faz a busca). O indicador da aba ativa desliza (`.nav-pill`). Verificado no navegador: cabeçalho e barra são os mesmos elementos antes e depois de trocar de aba (6 abas do personal, 6 do aluno), sem recarregar, sem esqueleto e sem nova chamada a `/api/me`. **Não verificado:** tempo de troca em produção/celular real; em desenvolvimento a primeira visita a cada tela ainda compila sob demanda (mais lenta). Cada tela ainda busca os próprios dados ao abrir (sem cache entre visitas): evolução possível.
+
+## 5g. Catálogo ampliado e vídeos de referência (pedido do usuário)
+Fonte: PDF "lista-de-videos-de-exercicios" (Leandro Twin, CREF 128544-G/SP, ~200 variações, 1 vídeo do YouTube por grupo). Catálogo oficial = **81** exercícios (`OFFICIAL_EXERCISES` em `schema.ts`; 65 novos, provisórios). `src/lib/referenceVideos.ts` mapeia 80 exercícios a vídeos (ids conferidos por oEmbed; links do PDF com erro de digitação foram corrigidos pelo texto real do PDF). `ensureOfficialMedia` registra vídeo (`kind='video'`, url do YouTube, licença/crédito) e a animação 3D; `MediaViewer` incorpora YouTube via `youtube-nocookie` (`youtubeId` em `lib/media.ts`, também vale para links do personal). **Não feito, por decisão:** as animações da imagem (modelo 3D realista com músculos em vermelho) são de bibliotecas comerciais/protegidas (ex.: Gym Visual vende licença; ExerciseDB é pago): não copiei nem raspei. O app já tem animações 3D originais para 16 exercícios; os outros 65 só têm o vídeo de referência. Caminho para 3D/GIF licenciado: comprar a licença e cadastrar as URLs como mídia oficial (`kind='animation'`, imagem https) no `ensureOfficialMedia`. **Não verificado:** reprodução do vídeo incorporado (o painel de navegador não carrega o YouTube); permissão do autor para exibir os vídeos num produto comercial.
 
 ## 6. Dados de demonstração
 **Conta de teste local (pedido do usuário): login `admin` / senha `admin`** (Consultoria Modelo: 6 alunos modelo `modelo1..6@demo.test` com senha `admin`, contratos, cobranças de 4 meses em vários status e despesas). Só existe no seed; o login aceita texto livre no campo de e-mail por causa disso.

@@ -3,6 +3,7 @@
 import { randomUUID } from "node:crypto";
 import type { PGlite } from "@electric-sql/pglite";
 import { has3D, modelUrl } from "../lib/exercise3d";
+import { REFERENCE_VIDEOS, youtubeWatchUrl } from "../lib/referenceVideos";
 import { OFFICIAL_EXERCISES } from "./schema";
 
 export const MEDIA_LICENSE = "Animação 3D original do projeto (gerada por código); sem material de terceiros";
@@ -23,6 +24,17 @@ export async function ensureOfficialMedia(db: PGlite): Promise<number> {
     }
     await db.query("insert into exercise_media (id, exercise_id, consultancy_id, kind, title, url, license) values ($1,$2,null,'animation',$3,$4,$5)",
       [randomUUID(), ex.rows[0].id, `${e.name} (animação 3D)`, modelUrl(e.name), MEDIA_LICENSE]);
+    changed++;
+  }
+  // Vídeos de referência (YouTube, de terceiros, com crédito ao autor): uma linha por exercício, sem repetir.
+  for (const [name, v] of Object.entries(REFERENCE_VIDEOS)) {
+    const ex = await db.query<{ id: string }>("select id from exercises where consultancy_id is null and name = $1", [name]);
+    if (!ex.rows[0]) continue;
+    const url = youtubeWatchUrl(v.id);
+    const has = await db.query("select 1 from exercise_media where exercise_id = $1 and consultancy_id is null and url = $2", [ex.rows[0].id, url]);
+    if (has.rows.length) continue;
+    await db.query("insert into exercise_media (id, exercise_id, consultancy_id, kind, title, url, license) values ($1,$2,null,'video',$3,$4,$5)",
+      [randomUUID(), ex.rows[0].id, v.title, url, `Vídeo de terceiros: ${v.author} (YouTube), exibido por link com crédito ao autor`]);
     changed++;
   }
   return changed;

@@ -75,6 +75,7 @@ Para recomeçar do zero: pare o servidor, apague a pasta `data` e rode `npm run 
 2. Com a permissão "Consultar treinos anteriores", o aluno vê **Evolução** (carga, 1RM, recordes, aderência). O personal vê a mesma tela no perfil do aluno. A aderência só existe se o treino tiver frequência semanal.
 
 **Entrega 4**
+00. **Catálogo e vídeos de referência:** o catálogo oficial passou de 16 para **81 exercícios**, a partir da lista "Vídeos dos Exercícios" de Leandro Twin (as variações de pegada e aparelho viram um exercício por movimento; **nomes e músculos são provisórios**, a validar). **80 exercícios** trazem um **vídeo de referência do YouTube** (de terceiros, do canal "Leandro Twin"), incorporado no app com crédito ao autor e link "Abrir no YouTube"; nada foi copiado para o servidor. Cada link foi conferido (oEmbed) e a lista fica em `src/lib/referenceVideos.ts`. Os 16 exercícios com animação 3D mostram o 3D e o vídeo. Ficaram de fora do catálogo as técnicas avançadas e os alongamentos da lista (não são exercícios de musculação). **Antes de divulgar o app, confirme com o autor que pode exibir os vídeos dele.**
 0. **Animações 3D dos exercícios:** os 16 exercícios oficiais têm uma animação **3D original** (boneco articulado em Three.js, sem material de terceiros). Em "Ver demonstração" o aluno pode **girar o boneco arrastando**, ver de **lado, de frente ou em 3/4**, pausar e usar câmera lenta; o músculo principal fica em **verde** e o equipamento em azul, com uma dica de execução. Código em `src/lib/exercise3d.ts` (poses e equipamento) e `src/components/Exercise3D.tsx` (desenho). Para adicionar um exercício, crie sua pose em `SPECS`. Se o aparelho não suportar WebGL, aparece um aviso. Com movimento reduzido ativado, começa pausado.
 1. **Mídia:** na biblioteca, adicione um vídeo próprio (só https) a um exercício e escolha "oficial", "própria" ou "ambas", para todos os alunos ou para um aluno. O aluno vê só o resultado.
 2. **Avaliações:** crie um modelo (medidas, anamnese, triagem, testes ou personalizado), registre ou envie ao aluno; o aluno responde uma vez. Leituras pelo personal vão para a auditoria, sem as respostas.
@@ -104,7 +105,7 @@ Para recomeçar do zero: pare o servidor, apague a pasta `data` e rode `npm run 
 ## Testes
 
 ```powershell
-npm test          # 263 testes em 18 arquivos, banco em memória
+npm test          # 267 testes em 19 arquivos, banco em memória
 npm run typecheck
 npm run validate  # validação HTTP ponta a ponta (entregas 1 a 5): exige o servidor rodando (npm run dev)
 ```
@@ -164,7 +165,7 @@ A lista de 9 permissões e os padrões vêm do protótipo. O protótipo não des
 
 ## Decisões em aberto (precisam de você)
 
-1. **Taxonomia muscular e catálogo:** 16 exercícios oficiais fictícios com músculos primários/secundários **provisórios**. Exercício com mais de um músculo primário conta uma direta em cada; o documento deixa isso para validação.
+1. **Taxonomia muscular e catálogo:** 81 exercícios oficiais com músculos primários/secundários **provisórios** (16 do protótipo + 65 da lista de vídeos). Exercício com mais de um músculo primário conta uma direta em cada; o documento deixa isso para validação.
 2. **Peso das indiretas:** padrão 0,5 (proposta), por consultoria e não por exercício.
 3. **Fonte condensada da marca:** instalar/licenciar Heros Condensed (ou aprovar TeX Gyre Heros Cn).
 4. **Provedor de pagamentos e de e-mail:** nenhum foi escolhido; sem eles não há cobrança real nem envio de e-mail.

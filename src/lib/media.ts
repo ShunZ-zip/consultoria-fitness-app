@@ -31,3 +31,18 @@ export function isSafeMediaUrl(raw: string): boolean {
 export const isDirectVideoFile = (url: string) => /\.(mp4|webm|mov)(\?.*)?$/i.test(url);
 
 export const isImageFile = (url: string) => /\.(svg|gif|webp|png)(\?.*)?$/i.test(url);
+
+/** Id de vídeo do YouTube (youtu.be/ID, youtube.com/watch?v=ID, /embed/ID, /shorts/ID) ou null. Só hosts do YouTube. */
+export function youtubeId(raw: string): string | null {
+  try {
+    const u = new URL(raw);
+    const host = u.hostname.replace(/^www\.|^m\./, "");
+    let id: string | null = null;
+    if (host === "youtu.be") id = u.pathname.slice(1).split("/")[0];
+    else if (host === "youtube.com" || host === "youtube-nocookie.com") {
+      if (u.pathname === "/watch") id = u.searchParams.get("v");
+      else { const m = u.pathname.match(/^\/(?:embed|shorts)\/([^/?]+)/); id = m ? m[1] : null; }
+    }
+    return id && /^[A-Za-z0-9_-]{11}$/.test(id) ? id : null;
+  } catch { return null; }
+}

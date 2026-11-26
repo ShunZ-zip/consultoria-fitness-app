@@ -2,6 +2,7 @@ import { beforeAll, describe, expect, it } from "vitest";
 import { has3D, jointsAt, LEN, modelUrl, nameFromModelUrl, repetition, SPECS, type Joints, type V3 } from "../src/lib/exercise3d";
 import { getDb, resetDb } from "../src/server/db";
 import * as h4 from "../src/server/handlers4";
+import { REFERENCE_VIDEOS, youtubeWatchUrl } from "../src/lib/referenceVideos";
 import { ensureOfficialMedia } from "../src/server/officialMedia";
 import { OFFICIAL_EXERCISES } from "../src/server/schema";
 import { call, h, inviteStudent, registerTrainer } from "./helpers";
@@ -10,13 +11,14 @@ const dist = (a: V3, b: V3) => Math.hypot(a[0] - b[0], a[1] - b[1], a[2] - b[2])
 const all = (j: Joints): V3[] => [j.hipC, j.shoulderC, j.head, j.neckTop, ...j.hip, ...j.shoulder, ...j.elbow, ...j.wrist, ...j.knee, ...j.ankle, ...j.toe];
 
 describe("animações 3D: cobertura e consistência do boneco", () => {
-  it("todo exercício do catálogo oficial tem animação 3D (e só eles)", () => {
-    expect(OFFICIAL_EXERCISES.every((e) => has3D(e.name))).toBe(true);
-    expect(Object.keys(SPECS).sort()).toEqual(OFFICIAL_EXERCISES.map((e) => e.name).sort());
+  it("os 16 exercícios com animação 3D existem no catálogo oficial", () => {
+    const names = new Set(OFFICIAL_EXERCISES.map((e) => e.name));
+    expect(Object.keys(SPECS)).toHaveLength(16);
+    for (const n of Object.keys(SPECS)) { expect(names.has(n), n).toBe(true); expect(has3D(n)).toBe(true); }
   });
   it("o músculo destacado corresponde ao músculo primário do catálogo (nenhum exercício sem destaque)", () => {
     const map: Record<string, string[]> = { Quadríceps: ["quad"], "Posterior de coxa": ["ham"], "Glúteo máximo": ["glute"], Panturrilha: ["calf"], Peitoral: ["chest"], Dorsais: ["back"], "Deltoide anterior": ["delt"], "Deltoide lateral": ["delt"], Bíceps: ["biceps"], Tríceps: ["triceps"], Abdômen: ["abs"] };
-    for (const e of OFFICIAL_EXERCISES) {
+    for (const e of OFFICIAL_EXERCISES.filter((x) => has3D(x.name))) {
       const wanted = e.primary.flatMap((p) => map[p] ?? []);
       expect(wanted.length, e.name).toBeGreaterThan(0);
       for (const w of wanted) expect(SPECS[e.name].muscles, `${e.name}: ${w}`).toContain(w);
@@ -77,14 +79,14 @@ describe("animações 3D: cobertura e consistência do boneco", () => {
 
 describe("registro das animações oficiais no banco", () => {
   beforeAll(async () => { await resetDb(); });
-  it("cria uma por exercício, uma vez só, e migra registros antigos em SVG 2D para 3D", async () => {
+  it("cria a animação 3D (16) e os vídeos de referência, uma vez só, e migra registros antigos em SVG 2D para 3D", async () => {
     const db = await getDb();
-    expect(await ensureOfficialMedia(db)).toBe(OFFICIAL_EXERCISES.length);
+    expect(await ensureOfficialMedia(db)).toBe(16 + Object.keys(REFERENCE_VIDEOS).length);
     expect(await ensureOfficialMedia(db)).toBe(0);
     const ex = (await db.query<{ id: string }>("select id from exercises where consultancy_id is null and name = 'Stiff'")).rows[0].id;
-    await db.query("update exercise_media set url = '/media/animations/stiff.svg' where exercise_id = $1", [ex]);
+    await db.query("update exercise_media set url = '/media/animations/stiff.svg' where exercise_id = $1 and kind = 'animation'", [ex]);
     expect(await ensureOfficialMedia(db)).toBe(1);
-    expect((await db.query<{ url: string }>("select url from exercise_media where exercise_id = $1", [ex])).rows.map((r) => r.url)).toEqual(["3d:stiff"]);
+    expect((await db.query<{ url: string }>("select url from exercise_media where exercise_id = $1 and kind = 'animation'", [ex])).rows.map((r) => r.url)).toEqual(["3d:stiff"]);
   });
   it("o aluno recebe a animação 3D oficial do exercício; outra consultoria vê a mesma (catálogo compartilhado), sem vazar mídia própria", async () => {
     const alfa = await registerTrainer("m3dA"); const beta = await registerTrainer("m3dB");
@@ -92,7 +94,9 @@ describe("registro das animações oficiais no banco", () => {
     const ex = ((await call(h.listExercises, { cookie: alfa })).body as any[]).find((e) => e.name === "Agachamento livre");
     await call(h4.addExerciseMedia, { cookie: alfa, params: { id: ex.id }, body: { title: "Meu agachamento", url: "https://exemplo.com/a.mp4" } });
     const r = await call(h4.getExerciseMedia, { cookie: a1.cookie, params: { id: ex.id } });
-    expect(r.body.resolved.items.map((i: any) => [i.source, i.url])).toEqual([["official", "3d:agachamento-livre"]]);
+    const items = r.body.resolved.items.map((i: any) => [i.source, i.kind, i.url]);
+    expect(items).toEqual(expect.arrayContaining([["official", "animation", "3d:agachamento-livre"], ["official", "video", youtubeWatchUrl(REFERENCE_VIDEOS["Agachamento livre"].id)]]));
+    expect(items).toHaveLength(2);
     const t = await call(h4.getExerciseMedia, { cookie: beta, params: { id: ex.id } });
     expect(t.body.own).toEqual([]);
   });

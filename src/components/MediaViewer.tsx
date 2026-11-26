@@ -1,6 +1,6 @@
 "use client";
 import { useState } from "react";
-import { isDirectVideoFile, isImageFile } from "../lib/media";
+import { isDirectVideoFile, isImageFile, youtubeId } from "../lib/media";
 import type { ResolvedMedia } from "../lib/media";
 import { api } from "../lib/client";
 import { nameFromModelUrl } from "../lib/exercise3d";
@@ -19,11 +19,22 @@ export function MediaItems({ resolved }: { resolved: ResolvedMedia }) {
             : isImageFile(m.url)
             // eslint-disable-next-line @next/next/no-img-element
             ? <img src={m.url} alt={m.title} style={{ width: "100%", maxHeight: 360, objectFit: "contain", background: "#0E1B2B" }} />
+            : youtubeId(m.url)
+            ? (
+              <div style={{ position: "relative", width: "100%", aspectRatio: "16 / 9", background: "#000", borderRadius: 6, overflow: "hidden" }}>
+                {/* Incorporação do YouTube com privacidade reforçada (youtube-nocookie); carrega só quando aparece na tela. */}
+                <iframe src={`https://www.youtube-nocookie.com/embed/${youtubeId(m.url)}?rel=0`} title={m.title} loading="lazy" allowFullScreen
+                  allow="accelerometer; encrypted-media; gyroscope; picture-in-picture" referrerPolicy="strict-origin-when-cross-origin"
+                  style={{ position: "absolute", inset: 0, width: "100%", height: "100%", border: 0 }} />
+              </div>
+            )
             : isDirectVideoFile(m.url)
             ? <video controls preload="none" playsInline style={{ width: "100%", maxHeight: 360, background: "#000" }} src={m.url} aria-label={m.title} />
             : <a href={m.url} target="_blank" rel="noopener noreferrer" className="btn ghost small">Abrir vídeo ↗</a>}
           <figcaption className="muted" style={{ marginTop: 4 }}>
-            <span className="tag" style={{ marginRight: 6 }}>{m.source === "official" ? (nameFromModelUrl(m.url) ? "Animação 3D" : "Animação oficial") : "Vídeo do seu personal"}</span>{m.title}
+            <span className="tag" style={{ marginRight: 6 }}>{m.source === "official" ? (nameFromModelUrl(m.url) ? "Animação 3D" : m.kind === "video" ? "Vídeo de referência" : "Animação oficial") : "Vídeo do seu personal"}</span>{m.title}
+            {m.source === "official" && m.kind === "video" && m.license && <span> · {m.license.replace(/^Vídeo de terceiros: /, "Crédito: ")}</span>}
+            {youtubeId(m.url) && <> · <a href={m.url} target="_blank" rel="noopener noreferrer">Abrir no YouTube ↗</a></>}
           </figcaption>
         </figure>
       ))}
