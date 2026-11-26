@@ -48,7 +48,15 @@ async function main() {
 
   const programId = uid(), versionId = uid();
   const start = new Date(Date.now() - 40 * DAY);
-  await db.query("insert into programs (id, consultancy_id, student_id, name, created_by, weekly_frequency) values ($1,$2,$3,'Superiores A',$4,2)", [programId, alfa.cid, studentId, trainerId]);
+  // Rotina de exemplo (metadados, orientações e período); o treino do Aluno Um pertence a ela.
+  const routineId = uid();
+  await db.query(
+    `insert into routines (id, consultancy_id, student_id, name, goal, level, notes, starts_on, ends_on, visibility, auto_archive, show_time, created_by)
+     values ($1,$2,$3,'Mesociclo 1',$4,$5,$6,$7,$8,'always',false,true,$9)`,
+    [routineId, alfa.cid, studentId, "Hipertrofia", "Intermediário",
+      "Aquecer 10 minutos antes de começar. Mantenha 2 repetições na reserva nas séries de trabalho e descanse o tempo indicado. Se algo incomodar, avise pelo chat antes da próxima sessão.",
+      new Date(start.getTime()).toISOString().slice(0, 10), new Date(start.getTime() + 70 * DAY).toISOString().slice(0, 10), trainerId]);
+  await db.query("insert into programs (id, consultancy_id, student_id, name, created_by, weekly_frequency, routine_id) values ($1,$2,$3,'Superiores A',$4,2,$5)", [programId, alfa.cid, studentId, trainerId, routineId]);
   await db.query("insert into program_versions (id, program_id, version) values ($1,$2,1)", [versionId, programId]);
   const prescribed: { ve: string; sets: string[] }[] = [];
   for (const [i, [ex, nm, reps]] of ([[supino, "Supino reto", 10], [remada, "Remada curvada", 10]] as const).entries()) {

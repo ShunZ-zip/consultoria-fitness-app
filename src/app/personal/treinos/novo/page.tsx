@@ -55,6 +55,7 @@ function Builder() {
   const editId = params.get("editar");       // editar rascunho existente
   const copyId = params.get("copiar");       // começar a partir de outro treino
   const tplId = params.get("modelo");        // começar a partir de um modelo
+  const routineParam = params.get("rotina"); // rotina escolhida ao vir do perfil do aluno
 
   const [students, setStudents] = useState<Student[]>([]);
   const [catalog, setCatalog] = useState<Exercise[]>([]);
@@ -69,6 +70,8 @@ function Builder() {
   const [info, setInfo] = useState("");
   const [busy, setBusy] = useState(false);
   const [picker, setPicker] = useState(false);
+  const [routineId, setRoutineId] = useState(routineParam ?? "");
+  const [routineOpts, setRoutineOpts] = useState<{ id: string; name: string }[]>([]);
   const [favorites, setFavorites] = useState<Set<string>>(new Set());
   const [myPresets, setMyPresets] = useState<MyPreset[]>([]);
   const [savingFor, setSavingFor] = useState(""); const [presetName, setPresetName] = useState("");
@@ -99,6 +102,15 @@ function Builder() {
       } else setItems(blank);
     })();
   }, [me, editId, copyId, tplId]);
+
+  useEffect(() => {
+    if (!me || !studentId || editId) { setRoutineOpts([]); return; }
+    api(`/students/${studentId}/routines`).then((r) => {
+      const ok = r.ok ? (r.data as { id: string; name: string; status: string }[]).filter((x) => x.status === "active") : [];
+      setRoutineOpts(ok);
+      setRoutineId((cur) => (ok.some((x) => x.id === cur) ? cur : ""));
+    });
+  }, [me, studentId, editId]);
 
   const list = items ?? [];
   const byId = useMemo(() => new Map(catalog.map((c) => [c.id, c])), [catalog]);
@@ -161,7 +173,7 @@ function Builder() {
       if (publish) { const p = await api(`/versions/${editId}/publish`, "POST"); if (!p.ok) return fail(p); }
       return router.replace(`/personal/treinos/${editId}`);
     }
-    const r = await api("/versions", "POST", { studentId, name, publish, weeklyFrequency: freq ? Number(freq) : null, exercises: toPayload(list) });
+    const r = await api("/versions", "POST", { studentId, name, publish, weeklyFrequency: freq ? Number(freq) : null, routineId: routineId || null, exercises: toPayload(list) });
     if (!r.ok) return fail(r);
     router.replace(`/personal/treinos/${r.data.id}`);
   }
@@ -205,6 +217,15 @@ function Builder() {
               {[1, 2, 3, 4, 5, 6, 7].map((n) => <option key={n} value={n}>{n}×</option>)}
             </select>
           </div>
+          {!editId && routineOpts.length > 0 && (
+            <div style={{ flex: 1, minWidth: 200 }}>
+              <label htmlFor="rot">Rotina (opcional)</label>
+              <select id="rot" value={routineId} onChange={(e) => setRoutineId(e.target.value)}>
+                <option value="">Sem rotina</option>
+                {routineOpts.map((r) => <option key={r.id} value={r.id}>{r.name}</option>)}
+              </select>
+            </div>
+          )}
           {!editId && templates.length > 0 && (
             <div style={{ flex: 1, minWidth: 200 }}>
               <label htmlFor="tp">Carregar modelo</label>

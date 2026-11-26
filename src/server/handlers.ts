@@ -6,6 +6,7 @@ import type { Actor } from "./auth";
 import type { Db } from "./db";
 import { body, HttpError, json, notFound, requireActor, route, type Ctx } from "./http";
 import { sendMail } from "./mailer";
+import { dayKey } from "../lib/engagement";
 import { ALLOWED_WEIGHTS, computeVolume, DEFAULT_INDIRECT_WEIGHT, type SetType } from "../lib/volume";
 import { mergePermissions, PERMISSION_KEYS, type PermKey, type Permissions } from "../lib/permissions";
 
@@ -269,7 +270,7 @@ const exercisesInput = z.array(
 export type ExercisesInput = z.infer<typeof exercisesInput>;
 
 const weeklyFrequency = z.number().int().min(1).max(7).nullable().optional();
-const createVersionInput = z.object({ studentId: uuid, name, publish: z.boolean().optional(), weeklyFrequency, exercises: exercisesInput });
+const createVersionInput = z.object({ studentId: uuid, name, publish: z.boolean().optional(), weeklyFrequency, routineId: uuid.nullish(), exercises: exercisesInput });
 
 type Q = Pick<Db, "query">;
 
@@ -323,6 +324,13 @@ function detailToInput(d: Detail): { items: ExercisesInput; names: Map<string, s
   return { items, names };
 }
 
+/** A rotina precisa existir na consultoria, ser do MESMO aluno e não estar excluída; senão 404 (sem revelar). */
+export async function assertRoutineFor(db: Db, a: Actor, routineId: string, studentId: string) {
+  const r = await db.query(
+    "select 1 from routines where id = $1 and consultancy_id = $2 and student_id = $3 and status <> 'deleted'", [routineId, a.consultancyId, studentId]);
+  if (r.rows.length === 0) notFound();
+}
+
 export async function audit(db: Q, a: Actor, action: string, detail: Record<string, unknown>) {
   await db.query(
     "insert into audit_log (id, consultancy_id, actor_id, action, detail) values ($1,$2,$3,$4,$5::jsonb)",
@@ -330,12 +338,12 @@ export async function audit(db: Q, a: Actor, action: string, detail: Record<stri
   );
 }
 
-async function newProgram(tx: Q, a: Actor, studentId: string, programName: string, items: ExercisesInput, names: Map<string, string>, publish: boolean, freq: number | null = null) {
+async function newProgram(tx: Q, a: Actor, studentId: string, programName: string, items: ExercisesInput, names: Map<string, string>, publish: boolean, freq: number | null = null, routineId: string | null = null) {
   const programId = uid();
   const versionId = uid();
   await tx.query(
-    "insert into programs (id, consultancy_id, student_id, name, created_by, weekly_frequency) values ($1,$2,$3,$4,$5,$6)",
-    [programId, a.consultancyId, studentId, programName, a.userId, freq],
+    "insert into programs (id, consultancy_id, student_id, name, created_by, weekly_frequency, routine_id) values ($1,$2,$3,$4,$5,$6,$7)",
+    [programId, a.consultancyId, studentId, programName, a.userId, freq, routineId],
   );
   await tx.query("insert into program_versions (id, program_id, version) values ($1,$2,1)", [versionId, programId]);
   await writeContent(tx, versionId, items, names);
@@ -350,9 +358,10 @@ export const createVersion = route(async (ctx) => {
   const a = await requireActor(ctx, "trainer");
   const input = await body(ctx, createVersionInput);
   await assertStudent(ctx.db, a, input.studentId);
+  if (input.routineId) await assertRoutineFor(ctx.db, a, input.routineId, input.studentId);
   const names = await resolveNames(ctx.db, a, input.exercises);
   const versionId = await ctx.db.transaction((tx) =>
-    newProgram(tx, a, input.studentId, input.name, input.exercises, names, !!input.publish, input.weeklyFrequency ?? null));
+    newProgram(tx, a, input.studentId, input.name, input.exercises, names, !!input.publish, input.weeklyFrequency ?? null, input.routineId ?? null));
   return json({ id: versionId, status: input.publish ? "published" : "draft" }, 201);
 });
 
@@ -429,7 +438,8 @@ export const listVersions = route(async (ctx) => {
   const a = await requireActor(ctx);
   const { rows } = await ctx.db.query(
     `select pv.id, p.name, pv.status, pv.published_at as "publishedAt", pv.version, pv.program_id as "programId",
-            p.student_id as "studentId", u.name as "studentName",
+            p.student_id as "studentId", u.name as "studentName", p.routine_id as "routineId",
+            (select r.name from routines r where r.id = p.routine_id) as "routineName",
             (pv.status = 'published' and pv.version = (select max(x.version) from program_versions x
                where x.program_id = pv.program_id and x.status = 'published')) as "isCurrent",
             (select count(*)::int from workout_logs l where l.version_id = pv.id
@@ -441,9 +451,13 @@ export const listVersions = route(async (ctx) => {
            or ($1 = 'student' and p.student_id = $3 and pv.status = 'published'
                and ( pv.version = (select max(x.version) from program_versions x
                                     where x.program_id = pv.program_id and x.status = 'published')
-                     or coalesce((select (sp.perms->>'viewHistory')::boolean from student_permissions sp where sp.student_id = $3), true) )) )
+                     or coalesce((select (sp.perms->>'viewHistory')::boolean from student_permissions sp where sp.student_id = $3), true) )
+               and ( p.routine_id is null or exists (
+                     select 1 from routines r where r.id = p.routine_id and r.status = 'active'
+                        and (r.visibility = 'always' or r.starts_on is null or r.starts_on <= $4)
+                        and not (r.auto_archive and r.ends_on is not null and r.ends_on < $4)) )) )
       order by pv.created_at desc`,
-    [a.role, a.consultancyId, a.userId],
+    [a.role, a.consultancyId, a.userId, dayKey(new Date())],
   );
   return json(rows);
 });
@@ -451,7 +465,9 @@ export const listVersions = route(async (ctx) => {
 export const getVersion = route(async (ctx) => {
   const a = await requireActor(ctx);
   const v = await loadVersion(ctx.db, a, ctx.params.id);
-  return json(await versionDetail(ctx.db, v));
+  const routine = (await ctx.db.query<{ id: string; name: string; show_time: boolean }>(
+    "select r.id, r.name, r.show_time from routines r join programs p on p.routine_id = r.id where p.id = $1", [v.program_id])).rows[0];
+  return json({ ...(await versionDetail(ctx.db, v)), routine: routine ? { id: routine.id, name: routine.name, showTime: routine.show_time } : null });
 });
 
 // -------------------------------------------------------------------- Modelos

@@ -339,6 +339,19 @@ async function main() {
     check("fatura da plataforma paga por webhook: valor errado rejeitado, evento repetido ignorado, assinatura ativa", !!inv && bad?.body.result === "rejected" && r1 === "applied" && r2 === "duplicate" && after.invoices.find((i: any) => i.id === inv.id).status === "paid" && after.subscription.status === "active" && (await beta.get("/saas")).body.invoices.length === 0);
   }
 
+  section("Rotinas (metadados, visibilidade para o aluno, isolamento)");
+  const rt = await ana.post(`/students/${a1.id}/routines`, { name: "Mesociclo HTTP", goal: "Hipertrofia", level: "Intermediário", notes: "Aquecer 10 min" });
+  check("criar rotina; nome vazio e datas incoerentes são 400", rt.status === 201 && (await ana.post(`/students/${a1.id}/routines`, { name: " " })).status === 400 && (await ana.post(`/students/${a1.id}/routines`, { name: "x", startsOn: "2026-05-10", endsOn: "2026-05-01" })).status === 400);
+  const rtWk = await ana.post("/versions", { studentId: a1.id, name: "Treino em rotina", publish: true, routineId: rt.body.id, exercises: [{ exerciseId: sup, sets: [wk()] }] });
+  const seeRt = async () => ((await a1.c.get("/versions")).body as any[]).some((v) => v.name === "Treino em rotina");
+  check("treino criado dentro da rotina; o aluno o vê e lê as orientações", rtWk.status === 201 && (await seeRt()) && (await a1.c.get("/me/routines")).body.some((r: any) => r.id === rt.body.id && r.notes === "Aquecer 10 min"));
+  check("arquivar esconde do aluno (e restaurar devolve); o personal continua vendo o treino", (await ana.post(`/routines/${rt.body.id}/status`, { status: "archived" })).status === 200 && !(await seeRt()) && !(await a1.c.get("/me/routines")).body.some((r: any) => r.id === rt.body.id) && ((await ana.get("/versions")).body as any[]).some((v) => v.name === "Treino em rotina" && v.routineName === "Mesociclo HTTP") && (await ana.post(`/routines/${rt.body.id}/status`, { status: "active" })).status === 200 && (await seeRt()));
+  const soon = new Date(Date.now() + 10 * 86400000).toISOString().slice(0, 10), later = new Date(Date.now() + 40 * 86400000).toISOString().slice(0, 10);
+  const fut = await ana.post(`/students/${a1.id}/routines`, { name: "Futura HTTP", startsOn: soon, endsOn: later, visibility: "from_start" });
+  await ana.post("/versions", { studentId: a1.id, name: "Treino da futura", publish: true, routineId: fut.body.id, exercises: [{ exerciseId: sup, sets: [wk()] }] });
+  check("rotina que começa no futuro com 'só a partir do início' não aparece para o aluno (nem as orientações); o personal vê o motivo", fut.status === 201 && !((await a1.c.get("/versions")).body as any[]).some((v) => v.name === "Treino da futura") && !(await a1.c.get("/me/routines")).body.some((r: any) => r.id === fut.body.id) && ((await ana.get(`/students/${a1.id}/routines`)).body as any[]).find((r) => r.id === fut.body.id)?.hiddenReason === "not_started");
+  check("ISOLAMENTO: outra consultoria 404 (listar e excluir rotina); aluno 403; treino em rotina de outro aluno 404", (await beta.get(`/students/${a1.id}/routines`)).status === 404 && (await beta.post(`/routines/${rt.body.id}/status`, { status: "deleted" })).status === 404 && (await a1.c.get(`/students/${a1.id}/routines`)).status === 403 && (await a1.c.post(`/routines/${rt.body.id}/status`, { status: "deleted" })).status === 403 && (await ana.post("/versions", { studentId: a2.id, name: "Rotina do outro aluno", routineId: rt.body.id, exercises: [{ exerciseId: sup, sets: [wk()] }] })).status === 404);
+
   console.log(`\n${pass} verificações ok, ${fail} falhas`);
   if (fail) { console.log("\nFalhas:\n" + failures.map((f) => " - " + f).join("\n")); process.exit(1); }
 }

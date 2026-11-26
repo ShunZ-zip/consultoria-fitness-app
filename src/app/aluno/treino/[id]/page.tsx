@@ -15,7 +15,7 @@ import type { MuscleVolume } from "../../../../lib/volume";
 
 interface PSet extends PrescribedSetView { id: string; position: number }
 interface PEx { id: string; exerciseId: string; name: string; alternatives: { id: string; name: string }[]; sets: PSet[] }
-interface Detail { id: string; name: string; isCurrent: boolean; version: number; exercises: PEx[] }
+interface Detail { id: string; name: string; isCurrent: boolean; version: number; exercises: PEx[]; routine?: { id: string; name: string; showTime: boolean } | null }
 interface Logged { id: string; versionSetId: string | null; versionExerciseId: string | null; extraExerciseId: string | null; position: number | null; reps: number | null; loadKg: number | null; rir: number | null; restS: number | null; note: string | null }
 interface Extra { id: string; exerciseId: string; name: string; position: number }
 interface Log { id: string; startedAt?: string | null; finishedAt: string | null; exerciseOrder: string[] | null; substitutions: { versionExerciseId: string; exerciseId: string; name: string }[]; extraExercises: Extra[]; sets: Logged[] }
@@ -214,6 +214,7 @@ export default function Registro() {
   const pendingCount = pendingIds.size;
   const conflicts = queue?.conflicts() ?? [];
   const finished = !!log?.finishedAt;
+  const showTime = detail?.routine?.showTime !== false;   // a rotina pode ocultar o tempo do treino para o aluno
   const readOnly = finished || (detail ? !detail.isCurrent && !log : false);
   const byId = new Map(detail?.exercises.map((e) => [e.id, e]) ?? []);
 
@@ -272,7 +273,7 @@ export default function Registro() {
           {finished && (
             <div className="card">
               <p className="okmsg"><b>Parabéns! Você concluiu seu treino.</b> Seu personal já pode ver o que você registrou{pendingCount > 0 ? " (assim que sincronizar)" : ""}.</p>
-              {summary && <p className="muted">Tempo de treino: {formatDuration(summary.minutes)}{summary.effort ? ` · Você achou: ${effortLabel(summary.effort)}` : ""}.</p>}
+              {summary && (showTime || summary.effort) && <p className="muted">{showTime ? `Tempo de treino: ${formatDuration(summary.minutes)}` : ""}{showTime && summary.effort ? " · " : ""}{summary.effort ? `Você achou: ${effortLabel(summary.effort)}` : ""}.</p>}
               {detail.isCurrent && <button className="btn ghost small" onClick={again}>Registrar outra execução</button>}
             </div>
           )}
@@ -363,7 +364,7 @@ export default function Registro() {
           )}
         </>
       )}
-      {finishing && <FinishDialog startedAt={log?.startedAt ?? null} onConfirm={finish} onClose={() => setFinishing(false)} />}
+      {finishing && <FinishDialog startedAt={log?.startedAt ?? null} showTime={showTime} onConfirm={finish} onClose={() => setFinishing(false)} />}
     </Shell>
   );
 }

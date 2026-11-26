@@ -481,6 +481,31 @@ alter table workout_logs add column if not exists feedback_resolved_by uuid refe
 create index if not exists workout_logs_feedback on workout_logs (finished_at desc) where finished_at is not null;
 `;
 
+// Rotinas: agrupam os treinos de um aluno e guardam metadados. NÃO é agenda (datas do período, em texto, sem horário).
+// "Excluída" só oculta (status 'deleted'); versões publicadas e registros nunca somem.
+export const MIGRATION_12_SQL = `
+create table if not exists routines (
+  id uuid primary key,
+  consultancy_id uuid not null references consultancies(id),
+  student_id uuid not null references users(id),
+  name text not null check (length(name) between 1 and 80),
+  goal text,
+  level text,
+  notes text check (notes is null or length(notes) <= 2000),
+  starts_on text check (starts_on is null or starts_on ~ '^[0-9]{4}-[0-9]{2}-[0-9]{2}$'),
+  ends_on text check (ends_on is null or ends_on ~ '^[0-9]{4}-[0-9]{2}-[0-9]{2}$'),
+  visibility text not null default 'always' check (visibility in ('always','from_start')),
+  auto_archive boolean not null default false,
+  show_time boolean not null default true,
+  status text not null default 'active' check (status in ('active','archived','deleted')),
+  created_by uuid not null references users(id),
+  created_at timestamptz not null default now(),
+  updated_at timestamptz not null default now()
+);
+create index if not exists routines_student on routines (consultancy_id, student_id, status);
+alter table programs add column if not exists routine_id uuid references routines(id);
+`;
+
 // Catálogo oficial inicial (nomes e músculos provisórios; vídeos de referência em src/lib/referenceVideos.ts).
 // Taxonomia muscular PROVISÓRIA: o documento deixa a taxonomia e a ponderação para validação.
 export interface OfficialExercise { name: string; equipment: string; primary: string[]; secondary: string[] }

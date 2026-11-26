@@ -8,8 +8,8 @@ import Icon from "./Icon";
 
 const hhmm = (d: Date) => d.toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" });
 
-export default function FinishDialog({ startedAt, onConfirm, onClose }: {
-  startedAt: string | null; onConfirm: (v: { effort: number | null; note: string }) => void; onClose: () => void;
+export default function FinishDialog({ startedAt, showTime = true, onConfirm, onClose }: {
+  startedAt: string | null; showTime?: boolean; onConfirm: (v: { effort: number | null; note: string }) => void; onClose: () => void;
 }) {
   const [now] = useState(() => new Date());
   const [effort, setEffort] = useState(""); const [note, setNote] = useState("");
@@ -38,11 +38,13 @@ export default function FinishDialog({ startedAt, onConfirm, onClose }: {
           <div className="fin-medal" aria-hidden="true"><Icon name="trophy" /></div>
           <h2 id="fin-title" className="fin-title">Concluir treino</h2>
           <p className="muted" style={{ textAlign: "center", margin: "0 0 14px" }}>Seu personal vai ver o que você registrou e a sua resposta abaixo.</p>
-          <dl className="fin-sum">
-            <div><dt>Início</dt><dd>{startedAt ? hhmm(new Date(startedAt)) : "—"}</dd></div>
-            <div><dt>Fim</dt><dd>{hhmm(now)}</dd></div>
-            <div><dt>Tempo de treino</dt><dd>{formatDuration(min)}</dd></div>
-          </dl>
+          {showTime && (
+            <dl className="fin-sum">
+              <div><dt>Início</dt><dd>{startedAt ? hhmm(new Date(startedAt)) : "—"}</dd></div>
+              <div><dt>Fim</dt><dd>{hhmm(now)}</dd></div>
+              <div><dt>Tempo de treino</dt><dd>{formatDuration(min)}</dd></div>
+            </dl>
+          )}
           <label htmlFor="fin-e">O que você achou dessa atividade? (opcional)</label>
           <select id="fin-e" value={effort} onChange={(e) => setEffort(e.target.value)}>
             <option value="">Selecione</option>

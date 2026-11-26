@@ -8,11 +8,13 @@ import StudentFollowUp from "../../../../components/StudentFollowUp";
 import StudentSuggestions from "../../../../components/StudentSuggestions";
 import EvolutionPanel, { type EvolutionData } from "../../../../components/EvolutionPanel";
 import EngagementPanel from "../../../../components/EngagementPanel";
+import RoutinesSection from "../../../../components/RoutinesSection";
 import { api, useMe } from "../../../../lib/client";
 import { PERMISSIONS, type Permissions } from "../../../../lib/permissions";
 
 interface Student { id: string; name: string; email: string }
-interface Version { id: string; name: string; status: "draft" | "published"; studentId: string; version: number; isCurrent: boolean; logCount: number }
+interface Version { id: string; name: string; status: "draft" | "published"; studentId: string; version: number; isCurrent: boolean; logCount: number; routineId: string | null; routineName: string | null }
+interface RoutineOpt { id: string; name: string; status: string }
 
 export default function PerfilAluno() {
   const { id } = useParams<{ id: string }>();
@@ -21,11 +23,13 @@ export default function PerfilAluno() {
   const [perms, setPerms] = useState<Permissions | null>(null);
   const [versions, setVersions] = useState<Version[]>([]);
   const [evo, setEvo] = useState<EvolutionData | null>(null);
+  const [routines, setRoutines] = useState<RoutineOpt[]>([]);
   const [error, setError] = useState("");
   const [saved, setSaved] = useState("");
 
   const load = useCallback(async () => {
-    const [s, p, v, e] = await Promise.all([api("/students"), api(`/students/${id}/permissions`), api("/versions"), api(`/students/${id}/evolution`)]);
+    const [s, p, v, e, rt] = await Promise.all([api("/students"), api(`/students/${id}/permissions`), api("/versions"), api(`/students/${id}/evolution`), api(`/students/${id}/routines`)]);
+    if (rt.ok) setRoutines((rt.data as RoutineOpt[]).filter((r) => r.status !== "deleted"));
     setStudent(s.ok ? (s.data as Student[]).find((x) => x.id === id) ?? null : null);
     if (p.ok) setPerms(p.data);
     if (e.ok) setEvo(e.data);
@@ -41,6 +45,13 @@ export default function PerfilAluno() {
     const r = await api(`/students/${id}/permissions`, "PUT", next);
     if (!r.ok) { setPerms(perms); return setError(r.data?.error ?? "Falha ao salvar"); }
     setSaved("Salvo e registrado na auditoria.");
+  }
+
+  async function moveWorkout(versionId: string, routineId: string) {
+    setError(""); setSaved("");
+    const r = await api(`/versions/${versionId}/routine`, "POST", { routineId: routineId || null });
+    if (!r.ok) return setError("Não foi possível mover o treino de rotina.");
+    setSaved("Treino movido. A prescrição não mudou."); load();
   }
 
   const enabled = perms ? Object.values(perms).filter(Boolean).length : 0;
@@ -82,12 +93,20 @@ export default function PerfilAluno() {
             {saved && <p className="okmsg">{saved}</p>}
           </div>
 
+          <RoutinesSection studentId={student.id} onChanged={load} />
+
           <h2>Treinos</h2>
           {versions.length === 0 && <p className="muted">Nenhum treino ainda.</p>}
           {versions.map((v) => (
             <div className="card row between" key={v.id}>
               <span><Link href={`/personal/treinos/${v.id}`}>{v.name}</Link> <span className="muted">v{v.version}</span></span>
               <span className="row">
+                {routines.length > 0 && (
+                  <select style={{ maxWidth: 200 }} aria-label={`Rotina do treino ${v.name}`} value={v.routineId ?? ""} onChange={(e) => moveWorkout(v.id, e.target.value)}>
+                    <option value="">Sem rotina</option>
+                    {routines.map((r) => <option key={r.id} value={r.id}>{r.name}{r.status !== "active" ? " (arquivada)" : ""}</option>)}
+                  </select>
+                )}
                 <span className={`tag ${v.status === "published" && v.isCurrent ? "pub" : ""}`}>{v.status === "draft" ? "Rascunho" : v.isCurrent ? "Publicado" : "Anterior"}</span>
                 {v.status === "published" && <span className="muted">{v.logCount} registro(s)</span>}
               </span>
