@@ -8,6 +8,8 @@
 - **Entrega 4:** acompanhamento: **mídia oficial ou própria** por exercício (regra geral e por aluno), **biblioteca privada** de exercícios, **avaliações** configuráveis, **check-ins** com painel e **chat** individual (texto).
 - **Entrega 5:** operação comercial: **cobrança dos alunos** (contratos mensais, cobranças avulsas, recebimento manual, cancelamento), **assinatura da plataforma** (planos propostos), **webhook assinado e idempotente**, **painel financeiro básico** e despesas. Tudo em **ambiente simulado**: nenhum valor real é cobrado.
 
+- **Organização do personal:** quadro de tarefas (A fazer / Em andamento / Concluído) com cartões arrastáveis, etiquetas, aluno e prazo opcional, e **sugestões automáticas** a partir de dados reais. **Não é agenda** (sem horários nem reservas).
+
 Telas novas das entregas 3 a 5: Financeiro e Assinatura (personal), Pagamentos (aluno), Avaliações, Mensagens, Evolução e check-in.
 
 Fora do escopo (conforme combinado): agenda profissional (etapa 4, tópico 7, **pendente**), **pagamentos reais** (provedor não escolhido), integração com **IA externa**, fotos corporais (exigem armazenamento privado e LGPD), upload de arquivos no chat e nutrição. Fluxo de caixa, DRE, margem, pró-labore, churn, CAC, LTV e projeções ficam para evolução futura. Todos os dados de exemplo são **fictícios**.
@@ -73,6 +75,11 @@ Para recomeçar do zero: pare o servidor, apague a pasta `data` e rode `npm run 
 3. **Check-ins:** o aluno responde o questionário (sono, fadiga, estresse, motivação, dor); o painel do personal mostra alertas primeiro. Frequência e perguntas se configuram por aluno ou como padrão. Sem finalidade diagnóstica.
 4. **Chat:** conversa individual, com não lidas, vínculo opcional com exercício e limite de mensagens por minuto.
 
+**Organização (quadro)**
+1. Em **Organização**, adicione tarefas (título, etiqueta, aluno, prazo opcional). Mova os cartões **arrastando** entre as colunas ou pelos botões **←** e **→** (teclado e celular). **Editar** e **Excluir** em cada cartão; a exclusão pede confirmação e fica na auditoria.
+2. **Sugestões:** check-in com sinal de atenção (últimos 14 dias), aluno sem treino publicado, mensagem do aluno sem resposta há mais de 24 h, avaliação enviada e pendente e cobrança em atraso. **Criar tarefa** transforma a sugestão em cartão; ela não volta enquanto a tarefa existir (mesmo concluída). Se a tarefa for excluída e a condição ainda valer, a sugestão reaparece.
+3. No celular, as colunas rolam na horizontal com encaixe. A animação de reordenação respeita "reduzir movimento".
+
 **Entrega 5** (ambiente simulado)
 1. Como `personal.alfa@demo.test` (ou `admin`), abra **Financeiro**: cartões do mês, cobranças por status, **Gerar cobranças do mês**, **Marcar paga** (com o método), **Cancelar**, contratos, cobrança avulsa, despesas e eventos de conciliação.
 2. Em **Assinatura**: planos Gratuito / Starter R$ 9,90 / Professional R$ 39,90 / Premium R$ 69,90, **marcados como proposta**; teste de 30 dias uma vez; o limite de alunos **não bloqueia** o uso.
@@ -82,7 +89,7 @@ Para recomeçar do zero: pare o servidor, apague a pasta `data` e rode `npm run 
 ## Testes
 
 ```powershell
-npm test          # 208 testes em 13 arquivos, banco em memória
+npm test          # 224 testes em 14 arquivos, banco em memória
 npm run typecheck
 npm run validate  # validação HTTP ponta a ponta (entregas 1 a 5): exige o servidor rodando (npm run dev)
 ```
@@ -95,6 +102,7 @@ npm run validate  # validação HTTP ponta a ponta (entregas 1 a 5): exige o ser
 - `volume.test.ts`: regra de volume (diretas, indiretas, peso, aquecimento e preparação fora do ponderado).
 - `delivery3.test.ts`, `evolution.test.ts`, `syncQueue.test.ts`: evolução e aderência, último treino, frequência semanal, fila de sincronização offline.
 - `delivery4.test.ts`, `followup-libs.test.ts`: biblioteca e mídia por escopo, avaliações, check-ins, chat e as regras puras de apoio.
+- `tasks.test.ts`: quadro de tarefas (criar, editar, mover, reordenar, excluir), sugestões corretas e sem duplicar, isolamento por consultoria (inclusive reordenar com cartão alheio), aluno 403 e sem sessão 401.
 - `delivery5.test.ts`, `billing-libs.test.ts`: webhook assinado, eventos idempotentes e fora de ordem, separação entre assinatura da plataforma e cobrança do aluno, ciclo de cobrança, recebimento manual, painel, despesas, simulador (404 em produção) e isolamento.
 
 `npm run validate` cria contas novas a cada execução e confere por HTTP o que os testes cobrem por chamada direta de handlers: 96 verificações nas entregas 1 a 5 e na recuperação de senha.

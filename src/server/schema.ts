@@ -410,6 +410,26 @@ create table if not exists expenses (
 );
 `;
 
+// Organização do personal (quadro de tarefas). Não é agenda: due_date é só um texto de data opcional.
+export const MIGRATION_8_SQL = `
+create table if not exists tasks (
+  id uuid primary key,
+  consultancy_id uuid not null references consultancies(id),
+  title text not null check (length(title) between 1 and 140),
+  tag text not null default 'Outro',
+  status text not null default 'todo' check (status in ('todo','in-progress','done')),
+  student_id uuid references users(id),
+  due_date text check (due_date is null or due_date ~ '^[0-9]{4}-[0-9]{2}-[0-9]{2}$'),
+  position int not null default 0,
+  source_key text,
+  created_by uuid not null references users(id),
+  created_at timestamptz not null default now(),
+  updated_at timestamptz not null default now()
+);
+create unique index if not exists tasks_source_key on tasks (consultancy_id, source_key) where source_key is not null;
+create index if not exists tasks_board on tasks (consultancy_id, status, position);
+`;
+
 // Catálogo oficial inicial (fictício, sem mídia).
 // Taxonomia muscular PROVISÓRIA: o documento deixa a taxonomia e a ponderação para validação.
 export interface OfficialExercise { name: string; equipment: string; primary: string[]; secondary: string[] }

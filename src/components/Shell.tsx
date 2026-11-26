@@ -15,6 +15,7 @@ const NAV: Record<Me["role"], NavItem[]> = {
     { href: "/personal/biblioteca", label: "Biblioteca", icon: "dumbbell", active: (p) => p.startsWith("/personal/biblioteca") },
     { href: "/personal/avaliacoes", label: "Avaliações", icon: "clipboard", active: (p) => p.startsWith("/personal/avaliacoes") },
     { href: "/personal/chat", label: "Mensagens", icon: "chat", active: (p) => p.startsWith("/personal/chat"), chat: true },
+    { href: "/personal/organizacao", label: "Organização", icon: "check", active: (p) => p.startsWith("/personal/organizacao") },
     { href: "/personal/financeiro", label: "Financeiro", icon: "card", active: (p) => p.startsWith("/personal/financeiro") || p.startsWith("/personal/assinatura") },
   ],
   student: [
