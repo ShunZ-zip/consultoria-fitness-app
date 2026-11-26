@@ -5,6 +5,7 @@ import { createContext, useCallback, useContext, useEffect, useRef, useState, ty
 // fecha com Esc ou pelo botão "Fechar" voltando ao botão, trava a rolagem da página e devolve o foco.
 // Sem dependências; com "reduzir movimento" abre e fecha sem animar. Mesma API do exemplo enviado.
 const EASE = "cubic-bezier(0.23, 1, 0.32, 1)";
+const GREEN = "#2AC38B"; // verde da marca = cor do botão que se expande
 
 interface Ctx {
   open: boolean; show: () => void; hide: () => void;
@@ -55,9 +56,17 @@ export function ExpandableScreenContent({ children, className = "", label = "Pai
     document.body.style.overflow = "hidden";
     if (reduce()) { el.style.clipPath = fullClip(); setShown(true); }
     else {
-      const a = el.animate([{ clipPath: from }, { clipPath: fullClip() }], { duration: 560, easing: EASE, fill: "forwards" });
+      // O painel nasce VERDE (a cor do botão) e vira a cor da página ao crescer: assim não aparece uma "pílula" vazia da cor do fundo sobre o botão.
+      const target = getComputedStyle(el).backgroundColor;
+      const a = el.animate([{ clipPath: from, backgroundColor: GREEN }, { clipPath: fullClip(), backgroundColor: target }], { duration: 560, easing: EASE, fill: "forwards" });
       setTimeout(() => setShown(true), 140); // o conteúdo entra enquanto o painel termina de abrir
       a.finished.catch(() => undefined);
+      // Segurança (navegadores de celular que atrasam ou ignoram a animação): depois da animação o painel fica em tela cheia de qualquer jeito.
+      window.setTimeout(() => {
+        if (closing.current || !panel.current) return;
+        try { a.cancel(); } catch { /* já terminou */ }
+        panel.current.style.clipPath = fullClip(); setShown(true);
+      }, 900);
     }
     el.querySelector<HTMLElement>("[data-autofocus]")?.focus({ preventScroll: true });
   }, [mounted, open, triggerRef, triggerRadius]);
@@ -74,7 +83,7 @@ export function ExpandableScreenContent({ children, className = "", label = "Pai
     };
     const trig = triggerRef.current;
     if (reduce() || !trig) return done();
-    const a = el.animate([{ clipPath: fullClip() }, { clipPath: clipFromRect(trig.getBoundingClientRect(), triggerRadius) }], { duration: 420, easing: EASE, fill: "forwards" });
+    const a = el.animate([{ clipPath: fullClip(), backgroundColor: getComputedStyle(el).backgroundColor }, { clipPath: clipFromRect(trig.getBoundingClientRect(), triggerRadius), backgroundColor: GREEN }], { duration: 420, easing: EASE, fill: "forwards" });
     a.finished.then(done, done);
     window.setTimeout(done, 900); // segurança: se a animação não reportar o fim (aba em segundo plano), fecha mesmo assim
   }, [hide, triggerRef, triggerRadius]);
