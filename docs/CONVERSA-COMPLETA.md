@@ -50,13 +50,29 @@ tsc, 244 testes, build, `validate` (96/0), produção (`next start`: cookie Secu
 1. **PDF da lista de exercícios** (Leandro Twin) + *"use os vídeos das animações dessa imagem"*: catálogo de **16 → 81 exercícios** (nomes e músculos provisórios) e vídeos do YouTube da própria lista incorporados com crédito (links do PDF conferidos pelo oEmbed e corrigidos). Recusei copiar/raspar as animações da imagem (bibliotecas comerciais: Gym Visual, ExerciseDB). Commit `a2a45ae`.
 2. **Pedido seguinte:** *"não quero os vídeos do Leandro Twin; quero vídeos dessa animação na internet; mantenha os exercícios da lista"* + *"antes de tudo, jogue no GitHub issues e faça um .md"*: criadas as **issues #10 e #11** e o `docs/PLANO-VIDEOS-ANIMACAO-3D.md` (commit `b69fa08`); depois, **52 exercícios com vídeo de animação 3D do YouTube** (18 canais, principalmente Muscle & Motion; ids conferidos), vídeos do Leandro Twin removidos do banco. Commit `e292f15`. 268 testes.
 
+## 10. Parte 2 da sessão (26/11/2026): decisões, melhorias do editor e fila da issue #12
+Cada item abaixo tem sua seção técnica no `HANDOFF.md` (§5h a §5r) e testes.
+1. **Verificações da issue #11** (sugestões na tela, fatura da plataforma por webhook assinado, tema claro nas demais telas, ordem do teclado). Correções: legenda do recorde (verde sobre cinza) e nome da aba "Mensagens1" para leitor de tela. `validate` passou a 97.
+2. **Decisões da issue #8** respondidas: IA só por regras locais; planos seguem como proposta; fonte **TeX Gyre Heros Cn** integrada; "Consultoria" saiu do texto público (virou "Acompanhamento"); fotos/arquivos no chat fora do escopo; taxonomia e peso das indiretas provisórios. **Pagamentos e e-mail: "ainda não decidi"** (seguem simulados/sem envio).
+3. **Biblioteca:** clicar no nome do exercício abre as informações; botão "Mídia" removido.
+4. **Seletor de exercícios do editor** (pedido: "pegar as melhores ideias" de um app de referência, sem mudar o plano): abas Favoritos/Exercícios do app/Seus exercícios, filtros, presets de séries (do app e do personal), gaveta "Exercícios adicionados", linhas recolhíveis e resumo. Migração 10. Ideias das demais telas viraram a issue **#12**.
+5. **Caixa de feedbacks do personal** + diálogo de conclusão do aluno (esforço em 8 níveis e comentário), resolver/reabrir, selo na navegação. Migração 11.
+6. **Nova logo "Selo IQ"** (PDF do usuário) recriada em vetor, ícone/favicon IQ; nome **FisIQ** nos títulos das abas.
+7. **Frequência semanal e engajamento** do aluno (faixa S T Q Q S S D; Engajado/Atenção/Parado, limites propostos).
+8. **Rotinas com metadados** (objetivo, nível, orientações, período, visibilidade, arquivar ao vencer, tempo do treino). Migração 12.
+9. **Aluno: Iniciar treino** (modo visualização, hora real de início, cronômetro, funciona sem rede) e atalho da demonstração.
+10. **Copiar de outro treino** e **reordenar treinos**. Migração 13.
+11. **Editar perfil e trocar senha** (senha atual obrigatória, limite de tentativas, derruba outras sessões).
+12. **Convite com dados do aluno** (nascimento, WhatsApp, gênero) e **anamnese automática** ao aceitar. Migração 14.
+13. **Instrução do usuário "faça tudo sem me perguntar":** decidi pelas regras já fixadas e **não fiz** o que conflitava ou era arriscado (link de cadastro público, bloquear inadimplentes, tipos de série/aeróbico, trocar e-mail, miniatura automática do YouTube, PDF do treino). Motivos no `HANDOFF.md` §5r e nas issues abertas.
+
 ---
 
 ## Estado final
-- **Testes:** `tsc` limpo; **268 testes em 19 arquivos**; `npm run validate` com 96 verificações.
+- **Testes:** `tsc` limpo; build de produção ok; **337 testes em 28 arquivos**; `npm run validate` com **117 verificações**; migrações aditivas 2 a 14.
 - **Catálogo:** 81 exercícios; 16 com 3D próprio; 52 com vídeo 3D do YouTube; 29 sem vídeo (lista no plano de vídeos).
 - **Logins de teste:** `admin`/`admin` (personal com dados de exemplo), `personal.alfa@demo.test` e `aluno1@demo.test` (senha `demo12345`), alunos modelo `modelo1..6@demo.test` (senha `admin`).
-- **Issues abertas:** #8 (decisões do usuário), #10 (revisão dos vídeos 3D), #11 (pendências de verificação).
+- **Issues abertas:** #8 (decisões do usuário), #10 (revisão dos vídeos 3D), #11 (pendências de verificação), #12 (ideias do app de referência, quase toda entregue) e as novas de decisão/pendência criadas ao final da sessão.
 
 ## O que NÃO foi verificado
 Service worker em navegador real e modo offline em produção; 3D e arrastar para girar em celular real; reprodução dos vídeos do YouTube (o painel do app não os carrega) e revisão **visual** de cada vídeo escolhido; demais telas no tema claro; teclado e leitor de tela reais; movimento reduzido real; tempo da troca de abas em produção; firewall e teste no celular real; recusar/"marcar como vista" das sugestões na tela; pagamento da fatura da plataforma via webhook fora dos testes. Nenhum pagamento, e-mail ou IA externa real existe (provedores não escolhidos).
