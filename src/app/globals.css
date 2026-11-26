@@ -316,3 +316,13 @@ html:not([data-theme="dark"]) .skeleton { background: linear-gradient(90deg, var
 .theme-toggle { display: inline-flex; align-items: center; gap: 6px; }
 .theme-float { position: fixed; top: 12px; right: 12px; z-index: 45; }
 @media (max-width: 640px) { .theme-toggle .tt-label { display: none; } }
+
+/* Troca de tema animada: a nova aparência "nasce" do botão como uma onda; a antiga fica por baixo sem animar por conta própria. */
+::view-transition-old(root), ::view-transition-new(root) { animation: none; mix-blend-mode: normal; }
+::view-transition-old(root) { z-index: 1; }
+::view-transition-new(root) { z-index: 2; }
+/* Alternativa sem View Transitions: cores mudam suavemente por meio segundo. */
+html.theme-anim, html.theme-anim *, html.theme-anim *::before, html.theme-anim *::after {
+  transition: background-color .45s ease, color .45s ease, border-color .45s ease, fill .45s ease, stroke .45s ease, box-shadow .45s ease !important;
+}
+@media (prefers-reduced-motion: reduce) { html.theme-anim, html.theme-anim * { transition: none !important; } }
