@@ -91,7 +91,7 @@ export default function EvolutionPanel({ data }: { data: EvolutionData }) {
               dotColors={chart.colors} pinnedIndices={chart.pinned} valueLabel={metric.valueLabel} gridLines={4}
               ariaLabel={`${ex.name}, ${metric.title}: ${chart.points.length} sessões`} />
             <p style={{ textAlign: "center", fontSize: 11, color: "var(--muted)", margin: "4px 0 0", fontWeight: 500 }}>
-              Passe o mouse ou toque nos pontos para ver os detalhes. <span style={{ color: RECORD_COLOR }}>●</span> recorde pessoal (1RM estimada)
+              Passe o mouse ou toque nos pontos para ver os detalhes. <span aria-hidden="true" style={{ display: "inline-block", width: 10, height: 10, borderRadius: "50%", background: RECORD_COLOR, border: "2px solid var(--ink)", verticalAlign: "-1px", marginRight: 4 }} />recorde pessoal (1RM estimada)
             </p>
           </div>
 

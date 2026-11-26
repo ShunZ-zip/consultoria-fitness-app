@@ -102,7 +102,7 @@ function ShellView({ me, logout, children, frame = false }: { me: Me | null; log
               <Link key={n.href} href={n.href} className={`navlink${on ? " on" : ""}`} aria-current={on ? "page" : undefined}>
                 <Icon name={n.icon} />
                 <span>{n.label}</span>
-                {n.chat && unread > 0 && <span className="navbadge" aria-label={`${unread} mensagens não lidas`}>{unread}</span>}
+                {n.chat && unread > 0 && <><span className="navbadge" aria-hidden="true">{unread}</span><span className="sr-only">, {unread} {unread === 1 ? "mensagem não lida" : "mensagens não lidas"}</span></>}
               </Link>
             );
           })}

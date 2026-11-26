@@ -309,6 +309,18 @@ async function main() {
   check("assinatura: plano gratuito por padrão e planos marcados como proposta", saas.subscription.planId === "free" && saas.plansAreProposal === true);
   check("trocar de plano inicia o teste; plano inválido 400; aluno 403; limite não bloqueia", (await ana.post("/saas/plan", { planId: "starter" })).status === 200 && (await ana.get("/saas")).body.subscription.status === "trialing" && (await ana.post("/saas/plan", { planId: "invalido" })).status === 400 && (await a1.c.post("/saas/plan", { planId: "premium" })).status === 403 && (await ana.post("/versions", { studentId: a1.id, name: "Sem bloqueio por limite", exercises: [{ exerciseId: sup, sets: [wk()] }] })).status === 201);
   check("assinatura de uma consultoria não aparece na outra", (await beta.get("/saas")).body.subscription.planId === "free");
+  if (probe.status !== 503) {
+    // Com o teste já usado, voltar a um plano pago gera a fatura da plataforma: ela é paga por webhook assinado (HTTP real).
+    await ana.post("/saas/plan", { planId: "free" });
+    await ana.post("/saas/plan", { planId: "starter" });
+    const inv = (await ana.get("/saas")).body.invoices.find((i: any) => i.status === "pending");
+    const ref = inv ? `sim_inv_${inv.id}` : "";
+    const bad = inv ? await hook(evt(ref, "payment.confirmed", { amount: 1 })) : null;
+    const ok = inv ? evt(ref, "payment.confirmed", { amount: inv.amountCents, method: "pix" }) : null;
+    const r1 = ok ? (await hook(ok)).body.result : "", r2 = ok ? (await hook(ok)).body.result : "";
+    const after = (await ana.get("/saas")).body;
+    check("fatura da plataforma paga por webhook: valor errado rejeitado, evento repetido ignorado, assinatura ativa", !!inv && bad?.body.result === "rejected" && r1 === "applied" && r2 === "duplicate" && after.invoices.find((i: any) => i.id === inv.id).status === "paid" && after.subscription.status === "active" && (await beta.get("/saas")).body.invoices.length === 0);
+  }
 
   console.log(`\n${pass} verificações ok, ${fail} falhas`);
   if (fail) { console.log("\nFalhas:\n" + failures.map((f) => " - " + f).join("\n")); process.exit(1); }
