@@ -135,7 +135,6 @@ export default function Biblioteca() {
           <div className="row between">
             <span><button type="button" className="ex-name" aria-expanded={open === x.id} aria-controls={`ex-${x.id}`} onClick={() => setOpen(open === x.id ? "" : x.id)}>{x.name}</button> <span className="tag">{x.official ? "Oficial" : "Próprio"}</span>
               <div className="muted">{x.primaryMuscles.join(", ")}{x.secondaryMuscles.length ? ` · secundários: ${x.secondaryMuscles.join(", ")}` : ""} · {x.equipment}</div></span>
-            <button className="btn ghost small" onClick={() => setOpen(open === x.id ? "" : x.id)}>{open === x.id ? "Fechar" : "Mídia"}</button>
           </div>
           {open === x.id && (
             <div id={`ex-${x.id}`}>
