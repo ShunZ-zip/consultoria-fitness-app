@@ -472,6 +472,15 @@ create table if not exists set_presets (
 create unique index if not exists set_presets_name on set_presets (consultancy_id, lower(name));
 `;
 
+// Caixa de feedbacks: esforço percebido da sessão (1 a 8, opcional, dado pelo aluno ao concluir) e o "resolvido" do personal.
+// O estado resolvido é interno do personal: o aluno nunca o vê.
+export const MIGRATION_11_SQL = `
+alter table workout_logs add column if not exists effort smallint check (effort is null or effort between 1 and 8);
+alter table workout_logs add column if not exists feedback_resolved_at timestamptz;
+alter table workout_logs add column if not exists feedback_resolved_by uuid references users(id);
+create index if not exists workout_logs_feedback on workout_logs (finished_at desc) where finished_at is not null;
+`;
+
 // Catálogo oficial inicial (nomes e músculos provisórios; vídeos de referência em src/lib/referenceVideos.ts).
 // Taxonomia muscular PROVISÓRIA: o documento deixa a taxonomia e a ponderação para validação.
 export interface OfficialExercise { name: string; equipment: string; primary: string[]; secondary: string[] }

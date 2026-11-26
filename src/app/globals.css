@@ -400,3 +400,18 @@ html.theme-anim, html.theme-anim *, html.theme-anim *::before, html.theme-anim *
 .ex-toggle:hover .ex-chev { color: var(--b); }
 .ex-toggle:focus-visible { outline: 3px solid var(--b); outline-offset: 2px; }
 .ex-chev { width: 20px; text-align: center; font-size: 16px; }
+
+/* Caixa de feedbacks (personal) e diálogo de conclusão do treino (aluno) */
+.fb-list { list-style: none; margin: 0 0 12px; padding: 0; display: grid; gap: 12px; }
+.fb-card { margin: 0; }
+.fb-name { font-size: 16px; }
+.fb-line { margin: 8px 0 0; }
+.fb-box, .fin-sum { margin: 12px 0 0; padding: 10px 14px; border-radius: 10px; background: var(--panel2); display: grid; gap: 6px; }
+.fb-box > div, .fin-sum > div { display: flex; justify-content: space-between; gap: 12px; }
+.fb-box dt, .fin-sum dt { font-weight: 700; }
+.fb-box dd, .fin-sum dd { margin: 0; font-variant-numeric: tabular-nums; text-align: right; }
+.fin-dialog { width: min(480px, 100%); }
+.fin-medal { width: 64px; height: 64px; margin: 4px auto 8px; border-radius: 50%; background: var(--b); color: var(--paper); display: grid; place-items: center; }
+.fin-medal svg { width: 32px; height: 32px; }
+.fin-title { text-align: center; margin: 0 0 4px; }
+.fin-sum { margin-bottom: 14px; }

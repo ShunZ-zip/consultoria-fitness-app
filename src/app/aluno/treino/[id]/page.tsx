@@ -2,10 +2,12 @@
 import Link from "next/link";
 import { useParams } from "next/navigation";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import FinishDialog from "../../../../components/FinishDialog";
 import Icon from "../../../../components/Icon";
 import MediaViewer from "../../../../components/MediaViewer";
 import Shell from "../../../../components/Shell";
 import { api, apiCached, useMe } from "../../../../lib/client";
+import { durationMinutes, effortLabel, formatDuration } from "../../../../lib/feedback";
 import { prescribedText, SET_TYPE_LABEL, type PrescribedSetView } from "../../../../lib/format";
 import type { Permissions } from "../../../../lib/permissions";
 import { SyncQueue, type QueuedOp, type Sender } from "../../../../lib/syncQueue";
@@ -16,7 +18,7 @@ interface PEx { id: string; exerciseId: string; name: string; alternatives: { id
 interface Detail { id: string; name: string; isCurrent: boolean; version: number; exercises: PEx[] }
 interface Logged { id: string; versionSetId: string | null; versionExerciseId: string | null; extraExerciseId: string | null; position: number | null; reps: number | null; loadKg: number | null; rir: number | null; restS: number | null; note: string | null }
 interface Extra { id: string; exerciseId: string; name: string; position: number }
-interface Log { id: string; finishedAt: string | null; exerciseOrder: string[] | null; substitutions: { versionExerciseId: string; exerciseId: string; name: string }[]; extraExercises: Extra[]; sets: Logged[] }
+interface Log { id: string; startedAt?: string | null; finishedAt: string | null; exerciseOrder: string[] | null; substitutions: { versionExerciseId: string; exerciseId: string; name: string }[]; extraExercises: Extra[]; sets: Logged[] }
 interface Form { setId: string; reps: string; loadKg: string; rir: string; restS: string; saved: boolean }
 interface CatalogItem { id: string; name: string; muscle: string }
 type LastMap = Record<string, { date: string; best: { reps: number | null; loadKg: number | null } | null; sets: { reps: number | null; loadKg: number | null; rir: number | null }[] }>;
@@ -53,7 +55,8 @@ export default function Registro() {
   const [subs, setSubs] = useState<Record<string, { id: string; name: string }>>({});
   const [extras, setExtras] = useState<Extra[]>([]);
   const [error, setError] = useState("");
-  const [note, setNote] = useState("");
+  const [finishing, setFinishing] = useState(false);
+  const [summary, setSummary] = useState<{ minutes: number | null; effort: number | null } | null>(null);
   const [addId, setAddId] = useState("");
   const [online, setOnline] = useState(true);
   const [tick, setTick] = useState(0);            // força atualização do estado da fila
@@ -97,7 +100,7 @@ export default function Registro() {
     let cur: Log | null = current && !current.finishedAt ? current : null;
     if (!cur) {
       const start = [...pend].reverse().find((o) => o.id.startsWith("log:"));
-      if (start) cur = { id: (start.body as any).id, finishedAt: null, exerciseOrder: null, substitutions: [], extraExercises: [], sets: [] };
+      if (start) cur = { id: (start.body as any).id, startedAt: typeof start.at === "number" ? new Date(start.at).toISOString() : null, finishedAt: null, exerciseOrder: null, substitutions: [], extraExercises: [], sets: [] };
     }
     if (!cur) cur = current; // concluído e sem novo registro pendente
     for (const op of pend) {
@@ -146,7 +149,7 @@ export default function Registro() {
   /** O registro é criado localmente (id gerado aqui) e enviado pela fila; funciona sem rede. */
   function ensureLog(): string {
     if (logRef.current && !logRef.current.finishedAt) return logRef.current.id;
-    const nl: Log = { id: crypto.randomUUID(), finishedAt: null, exerciseOrder: null, substitutions: [], extraExercises: [], sets: [] };
+    const nl: Log = { id: crypto.randomUUID(), startedAt: new Date().toISOString(), finishedAt: null, exerciseOrder: null, substitutions: [], extraExercises: [], sets: [] };
     logRef.current = nl; setLog(nl);
     enqueue({ id: `log:${nl.id}`, method: "POST", path: `/versions/${id}/logs`, body: { id: nl.id }, label: "Início do treino" });
     return nl.id;
@@ -193,11 +196,12 @@ export default function Registro() {
     setAddId("");
   }
 
-  function finish() {
+  function finish(v: { effort: number | null; note: string }) {
     if (!logRef.current) return;
     const done = { ...logRef.current, finishedAt: new Date().toISOString() };
-    logRef.current = done; setLog(done);
-    enqueue({ id: `finish:${done.id}`, method: "POST", path: `/logs/${done.id}/finish`, body: { note: note || null }, label: "Conclusão" });
+    setSummary({ minutes: durationMinutes(done.startedAt ?? null, done.finishedAt), effort: v.effort });
+    logRef.current = done; setLog(done); setFinishing(false);
+    enqueue({ id: `finish:${done.id}`, method: "POST", path: `/logs/${done.id}/finish`, body: { note: v.note || null, effort: v.effort }, label: "Conclusão" });
   }
 
   function again() {
@@ -267,7 +271,8 @@ export default function Registro() {
           <p className="muted">Registre o que você realmente fez. A prescrição do seu personal não é alterada; ajustes que você faz ficam como adaptações.</p>
           {finished && (
             <div className="card">
-              <p className="okmsg">Treino concluído. Seu personal já pode ver o que você registrou{pendingCount > 0 ? " (assim que sincronizar)" : ""}.</p>
+              <p className="okmsg"><b>Parabéns! Você concluiu seu treino.</b> Seu personal já pode ver o que você registrou{pendingCount > 0 ? " (assim que sincronizar)" : ""}.</p>
+              {summary && <p className="muted">Tempo de treino: {formatDuration(summary.minutes)}{summary.effort ? ` · Você achou: ${effortLabel(summary.effort)}` : ""}.</p>}
               {detail.isCurrent && <button className="btn ghost small" onClick={again}>Registrar outra execução</button>}
             </div>
           )}
@@ -352,13 +357,13 @@ export default function Registro() {
 
           {!readOnly && (
             <div className="card">
-              <label htmlFor="fn">Observação sobre o treino (opcional)</label>
-              <input id="fn" value={note} onChange={(e) => setNote(e.target.value)} />
-              <div style={{ marginTop: 12 }}><button className="btn" disabled={!log} onClick={finish}>Concluir treino</button></div>
+              <p className="muted" style={{ marginTop: 0 }}>Terminou? Ao concluir, você pode contar como foi o esforço e deixar um comentário para o seu personal.</p>
+              <button className="btn" disabled={!log} onClick={() => setFinishing(true)}>Concluir treino</button>
             </div>
           )}
         </>
       )}
+      {finishing && <FinishDialog startedAt={log?.startedAt ?? null} onConfirm={finish} onClose={() => setFinishing(false)} />}
     </Shell>
   );
 }

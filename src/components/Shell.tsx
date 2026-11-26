@@ -11,12 +11,13 @@ import ThemeToggle from "./ThemeToggle";
 import Wordmark from "./Wordmark";
 import { useTitleFromH1 } from "../lib/useTitle";
 
-interface NavItem { href: string; label: string; icon: IconName; active: (p: string) => boolean; chat?: boolean }
+interface NavItem { href: string; label: string; icon: IconName; active: (p: string) => boolean; chat?: boolean; fb?: boolean }
 const NAV: Record<Me["role"], NavItem[]> = {
   trainer: [
     { href: "/personal", label: "Alunos", icon: "user", active: (p) => p === "/personal" || p.startsWith("/personal/alunos") || p.startsWith("/personal/treinos") },
     { href: "/personal/biblioteca", label: "Biblioteca", icon: "dumbbell", active: (p) => p.startsWith("/personal/biblioteca") },
     { href: "/personal/avaliacoes", label: "Avaliações", icon: "clipboard", active: (p) => p.startsWith("/personal/avaliacoes") },
+    { href: "/personal/feedbacks", label: "Feedbacks", icon: "pulse", active: (p) => p.startsWith("/personal/feedbacks"), fb: true },
     { href: "/personal/chat", label: "Mensagens", icon: "chat", active: (p) => p.startsWith("/personal/chat"), chat: true },
     { href: "/personal/organizacao", label: "Organização", icon: "check", active: (p) => p.startsWith("/personal/organizacao") },
     { href: "/personal/financeiro", label: "Financeiro", icon: "card", active: (p) => p.startsWith("/personal/financeiro") || p.startsWith("/personal/assinatura") },
@@ -51,11 +52,15 @@ export default function Shell({ me, logout, children }: { me: Me | null; logout:
 function ShellView({ me, logout, children, frame = false }: { me: Me | null; logout: () => void; children: ReactNode; frame?: boolean }) {
   const path = usePathname();
   const [unread, setUnread] = useState(0);
+  const [fbOpen, setFbOpen] = useState(0);
 
   useEffect(() => {
     if (!me) return;
     const load = () => api("/chat/unread").then((r) => r.ok && setUnread(r.data.count)).catch(() => undefined);
-    load(); const t = setInterval(load, 20000); return () => clearInterval(t);
+    const loadFb = () => { if (me.role === "trainer") api("/feedbacks/count").then((r) => r.ok && setFbOpen(r.data.open)).catch(() => undefined); };
+    window.addEventListener("cf-feedbacks-changed", loadFb);
+    load(); loadFb(); const t = setInterval(() => { load(); loadFb(); }, 20000);
+    return () => { clearInterval(t); window.removeEventListener("cf-feedbacks-changed", loadFb); };
   }, [me, path]);
 
   useTitleFromH1();
@@ -102,6 +107,7 @@ function ShellView({ me, logout, children, frame = false }: { me: Me | null; log
               <Link key={n.href} href={n.href} className={`navlink${on ? " on" : ""}`} aria-current={on ? "page" : undefined}>
                 <Icon name={n.icon} />
                 <span>{n.label}</span>
+                {n.fb && fbOpen > 0 && <><span className="navbadge" aria-hidden="true">{fbOpen > 99 ? "99+" : fbOpen}</span><span className="sr-only">, {fbOpen} {fbOpen === 1 ? "feedback aberto" : "feedbacks abertos"}</span></>}
                 {n.chat && unread > 0 && <><span className="navbadge" aria-hidden="true">{unread}</span><span className="sr-only">, {unread} {unread === 1 ? "mensagem não lida" : "mensagens não lidas"}</span></>}
               </Link>
             );

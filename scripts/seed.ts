@@ -71,7 +71,12 @@ async function main() {
       if (week === 3 && dow === 3) continue; // uma sessão perdida
       const at = new Date(start.getTime() + (week * 7 + dow) * DAY + 18 * 3600000);
       const logId = uid();
-      await db.query("insert into workout_logs (id, student_id, version_id, started_at, finished_at) values ($1,$2,$3,$4,$5)", [logId, studentId, versionId, at, new Date(at.getTime() + 3600000)]);
+      // Caixa de feedbacks: esforço percebido e comentário; só as 2 últimas sessões ficam abertas.
+      const effort = [3, 4, 4, 5, 5, 5, 6, 5, 6, 6, 7][sessionIdx] ?? 5;
+      const comment = sessionIdx === 10 ? "Ombro direito incomodou no supino, reduzi a carga na última série." : null;
+      const finishedAt = new Date(at.getTime() + 3600000);
+      await db.query("insert into workout_logs (id, student_id, version_id, started_at, finished_at, effort, note, feedback_resolved_at) values ($1,$2,$3,$4,$5,$6,$7,$8)",
+        [logId, studentId, versionId, at, finishedAt, effort, comment, sessionIdx < 9 ? finishedAt : null]);
       const loads = [supinoLoads[sessionIdx], remadaLoads[sessionIdx]];
       for (const [k, p] of prescribed.entries()) {
         for (const [j, sid] of p.sets.entries()) {
@@ -180,7 +185,9 @@ async function main() {
     await db.query("update program_versions set status = 'published', published_at = $2 where id = $1", [vId, new Date(Date.now() - 20 * DAY)]);
     for (const days of [14, 7, 1]) {
       const at = new Date(Date.now() - days * DAY), logId = uid();
-      await db.query("insert into workout_logs (id, student_id, version_id, started_at, finished_at) values ($1,$2,$3,$4,$5)", [logId, sid, vId, at, new Date(at.getTime() + 3600000)]);
+      const finishedAt = new Date(at.getTime() + 3600000);
+      await db.query("insert into workout_logs (id, student_id, version_id, started_at, finished_at, effort, note, feedback_resolved_at) values ($1,$2,$3,$4,$5,$6,$7,$8)",
+        [logId, sid, vId, at, finishedAt, days === 14 ? 4 : days === 7 ? 5 : 6, days === 1 ? "Treino pesado, mas consegui terminar." : null, days > 1 ? finishedAt : null]);
       for (const vs of setIds) await db.query("insert into logged_sets (id, log_id, version_set_id, reps, load_kg, rir, created_at) values ($1,$2,$3,10,40,2,$4)", [uid(), logId, vs, at]);
     }
   }

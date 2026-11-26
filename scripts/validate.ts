@@ -87,6 +87,17 @@ async function main() {
   check("reenviar a mesma série não duplica (3 séries registradas)", logs[0].sets.length === 3, String(logs[0].sets.length));
   await a1.c.post(`/logs/${log}/finish`, { note: "ok" });
 
+  section("Caixa de feedbacks (esforço, comentário, resolver, isolamento)");
+  const fbLog = (await a1.c.post(`/versions/${v1}/logs`, {})).body.id as string;
+  await a1.c.put(`/logs/${fbLog}/sets/${uuid()}`, { versionSetId: sets[0], reps: 10, loadKg: 40, rir: 2 });
+  check("esforço fora da escala (0 e 9) é 400 e não conclui", (await a1.c.post(`/logs/${fbLog}/finish`, { effort: 9 })).status === 400 && (await a1.c.post(`/logs/${fbLog}/finish`, { effort: 0 })).status === 400);
+  check("aluno conclui com esforço e comentário", (await a1.c.post(`/logs/${fbLog}/finish`, { note: "Ombro cansou no fim", effort: 5 })).status === 200);
+  const fbList = (await ana.get("/feedbacks")).body;
+  const fbItem = fbList.items.find((i: any) => i.id === fbLog);
+  check("personal vê o feedback com esforço, comentário e séries registradas", !!fbItem && fbItem.effortLabel === "Intensa" && fbItem.note === "Ombro cansou no fim" && fbItem.setsDone === 1 && fbItem.resolved === false && fbList.counts.open >= 1);
+  check("outra consultoria não vê nem resolve (404); aluno 403", (await beta.get("/feedbacks")).body.items.length === 0 && (await beta.post(`/feedbacks/${fbLog}/resolve`, { resolved: true })).status === 404 && (await a1.c.get("/feedbacks")).status === 403 && (await a1.c.post(`/feedbacks/${fbLog}/resolve`, { resolved: true })).status === 403);
+  check("resolver tira da fila e reabrir devolve", (await ana.post(`/feedbacks/${fbLog}/resolve`, { resolved: true })).status === 200 && !(await ana.get("/feedbacks")).body.items.some((i: any) => i.id === fbLog) && (await ana.get("/feedbacks?status=resolved")).body.items.some((i: any) => i.id === fbLog) && (await ana.post(`/feedbacks/${fbLog}/resolve`, { resolved: false })).status === 200 && (await ana.get("/feedbacks")).body.items.some((i: any) => i.id === fbLog));
+
   const cmp = (await ana.get(`/versions/${v1}/comparison`)).body;
   const rows = cmp.logs[0].rows;
   check("comparação: prescrito e realizado lado a lado", rows.length === 3 && rows[1].prescribed.reps === 10 && rows[1].done.reps === 8);
@@ -130,7 +141,7 @@ async function main() {
   await ana.put(`/versions/${nv.body.id}`, { exercises: [{ exerciseId: ex["Supino reto"].id, sets: [wk({ loadKg: 45 }), wk({ loadKg: 45 }), wk({ loadKg: 45 })] }] });
   await ana.post(`/versions/${nv.body.id}/publish`);
   check("aluno passa a ver só a v2 (sem permissão de histórico)", JSON.stringify((await a1.c.get("/versions")).body.map((x: any) => x.version)) === "[2]");
-  check("v1 e o registro do aluno ficam preservados", (await ana.get(`/versions/${v1}/comparison`)).body.logs.length === 1 && (await ana.get(`/versions/${v1}`)).body.exercises[0].sets[0].loadKg === 40);
+  check("v1 e o registro do aluno ficam preservados", (await ana.get(`/versions/${v1}/comparison`)).body.logs.some((l: any) => l.id === log) && (await ana.get(`/versions/${v1}`)).body.exercises[0].sets[0].loadKg === 40);
   check("não se abre novo registro na versão anterior (409)", (await a1.c.post(`/versions/${v1}/logs`, {})).status === 409);
 
   const dup = await ana.post(`/versions/${v1}/duplicate`, { studentId: a2.id, name: "Cópia" });

@@ -754,10 +754,10 @@ export const putLoggedSet = route(async (ctx) => {
 export const finishLog = route(async (ctx) => {
   const a = await requireActor(ctx, "student");
   const log = await ownLog(ctx.db, a, ctx.params.id);
-  const input = await body(ctx, z.object({ note: z.string().max(1000).nullish() }));
+  const input = await body(ctx, z.object({ note: z.string().max(1000).nullish(), effort: z.number().int().min(1).max(8).nullish() }));
   await ctx.db.query(
-    "update workout_logs set finished_at = coalesce(finished_at, now()), note = coalesce($2, note) where id = $1",
-    [log.id, input.note ?? null],
+    "update workout_logs set finished_at = coalesce(finished_at, now()), note = coalesce($2, note), effort = coalesce($3, effort) where id = $1",
+    [log.id, input.note ?? null, input.effort ?? null],
   );
   return json({ ok: true });
 });
