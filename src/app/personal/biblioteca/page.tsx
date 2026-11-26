@@ -133,11 +133,21 @@ export default function Biblioteca() {
       {shown.map((x) => (
         <div className="card" key={x.id}>
           <div className="row between">
-            <span><b>{x.name}</b> <span className="tag">{x.official ? "Oficial" : "Próprio"}</span>
+            <span><button type="button" className="ex-name" aria-expanded={open === x.id} aria-controls={`ex-${x.id}`} onClick={() => setOpen(open === x.id ? "" : x.id)}>{x.name}</button> <span className="tag">{x.official ? "Oficial" : "Próprio"}</span>
               <div className="muted">{x.primaryMuscles.join(", ")}{x.secondaryMuscles.length ? ` · secundários: ${x.secondaryMuscles.join(", ")}` : ""} · {x.equipment}</div></span>
             <button className="btn ghost small" onClick={() => setOpen(open === x.id ? "" : x.id)}>{open === x.id ? "Fechar" : "Mídia"}</button>
           </div>
-          {open === x.id && <MediaManager ex={x} students={students} />}
+          {open === x.id && (
+            <div id={`ex-${x.id}`}>
+              <dl className="ex-info">
+                <div><dt>Músculos primários</dt><dd>{x.primaryMuscles.join(", ") || "—"}</dd></div>
+                <div><dt>Músculos secundários</dt><dd>{x.secondaryMuscles.join(", ") || "—"}</dd></div>
+                <div><dt>Equipamento</dt><dd>{x.equipment || "—"}</dd></div>
+                <div><dt>Origem</dt><dd>{x.official ? "Catálogo oficial (compartilhado)" : "Criado por você (privado)"}</dd></div>
+              </dl>
+              <MediaManager ex={x} students={students} />
+            </div>
+          )}
         </div>
       ))}
       {shown.length === 0 && <p className="muted">Nenhum exercício encontrado.</p>}

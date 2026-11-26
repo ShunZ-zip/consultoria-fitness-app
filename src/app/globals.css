@@ -345,3 +345,11 @@ html.theme-anim, html.theme-anim *, html.theme-anim *::before, html.theme-anim *
 .navlink.on { background: transparent !important; border-color: transparent; }
 .navlink.on::after { content: none; }
 @media (prefers-reduced-motion: reduce) { .nav-pill { transition: none; } }
+
+/* Biblioteca: nome do exercício clicável e resumo */
+.ex-name { all: unset; box-sizing: border-box; cursor: pointer; font-weight: 700; color: var(--g); padding: 6px 0; min-height: 44px; display: inline-flex; align-items: center; }
+.ex-name:hover { text-decoration: underline; text-decoration-color: var(--v); text-underline-offset: 4px; text-decoration-thickness: 2px; }
+.ex-name:focus-visible { outline: 3px solid var(--b); outline-offset: 2px; border-radius: 4px; }
+.ex-info { display: grid; grid-template-columns: repeat(auto-fit, minmax(170px, 1fr)); gap: 12px 16px; margin: 10px 0 0; padding-top: 10px; border-top: 1px solid var(--line); }
+.ex-info dt { font-size: 12px; color: var(--muted); }
+.ex-info dd { margin: 2px 0 0; font-weight: 600; }
