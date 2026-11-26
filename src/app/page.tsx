@@ -66,7 +66,7 @@ export default function Home() {
         </section>
 
         <section className="land-section wrap">
-          <Fx as="p" fx="linked" effect="text-reveal" start="top 90%" end="bottom 60%" className="land-statement">
+          <Fx as="p" fx="linked" effect="text-reveal" start="top 90%" end="bottom 85%" className="land-statement">
             Tornar a ciência do treinamento compreensível e aplicável na academia: cada afirmação importante com fonte, cada conceito explicado em linguagem simples, cada treino terminando em algo que você possa fazer.
           </Fx>
         </section>

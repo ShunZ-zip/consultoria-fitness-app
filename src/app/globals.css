@@ -326,3 +326,6 @@ html.theme-anim, html.theme-anim *, html.theme-anim *::before, html.theme-anim *
   transition: background-color .45s ease, color .45s ease, border-color .45s ease, fill .45s ease, stroke .45s ease, box-shadow .45s ease !important;
 }
 @media (prefers-reduced-motion: reduce) { html.theme-anim, html.theme-anim * { transition: none !important; } }
+
+/* A frase final se revela com a rolagem e precisa terminar COMPLETA mesmo no fim da página (que limita até onde dá para rolar): folga embaixo. */
+.land-statement { margin-bottom: 16vh; }
