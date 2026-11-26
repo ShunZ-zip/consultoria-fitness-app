@@ -2,6 +2,7 @@
 import Link from "next/link";
 import { useParams } from "next/navigation";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import Icon from "../../../../components/Icon";
 import MediaViewer from "../../../../components/MediaViewer";
 import Shell from "../../../../components/Shell";
 import { api, apiCached, useMe } from "../../../../lib/client";
@@ -225,7 +226,7 @@ export default function Registro() {
         <div><label id={`${k}-rir-l`} htmlFor={`${k}-rir`}>RIR</label><input id={`${k}-rir`} aria-labelledby={`${k}-ref ${k}-rir-l`} inputMode="numeric" disabled={readOnly} value={f.rir} onChange={(e) => patch(k, "rir", e.target.value)} /></div>
         {perms?.adjustRest && <div><label id={`${k}-restS-l`} htmlFor={`${k}-restS`}>Desc. real (s)</label><input id={`${k}-restS`} aria-labelledby={`${k}-ref ${k}-restS-l`} inputMode="numeric" disabled={readOnly} value={f.restS} onChange={(e) => patch(k, "restS", e.target.value)} /></div>}
         <button className="btn small" disabled={readOnly || (f.reps === "" && f.loadKg === "")} onClick={() => save(k, restS)}>
-          {f.saved ? (waiting ? "Pendente…" : "Salvo ✓") : "Salvar"}
+          {f.saved ? (waiting ? <><Icon name="refresh" spin />Pendente…</> : <><Icon name="check" enter />Salvo</>) : "Salvar"}
         </button>
       </div>
     );
@@ -240,7 +241,7 @@ export default function Registro() {
       <p><Link href="/aluno">← Meus treinos</Link></p>
       {(!online || pendingCount > 0) && (
         <div className="err" role="status" data-testid="sync-status" style={{ borderLeftColor: online ? "var(--v)" : "var(--b)" }}>
-          {!online ? "Sem conexão. " : "Sincronizando. "}
+          <Icon name="refresh" spin={online} />{!online ? " Sem conexão. " : " Sincronizando. "}
           {pendingCount > 0 ? `${pendingCount} alteração(ões) guardada(s) neste aparelho; serão enviadas quando houver internet.` : "Seus registros ficam guardados e serão enviados quando a conexão voltar."}
           {online && pendingCount > 0 && <> <button className="btn ghost small" onClick={() => flush()}>Enviar agora</button></>}
         </div>
@@ -254,7 +255,7 @@ export default function Registro() {
       {error && <p className="err">{error}</p>}
       {rest && rest.left >= 0 && !finished && (
         <div className="card row between" data-testid="rest-timer" style={{ position: "sticky", top: 8, zIndex: 5, background: "var(--n)" }}>
-          <span><b className="hf" style={{ fontSize: 12, letterSpacing: ".1em" }}>Descanso</b></span>
+          <span><b className="hf" style={{ fontSize: 12, letterSpacing: ".1em" }}><Icon name="timer" />Descanso</b></span>
           <b style={{ fontSize: 28, fontVariantNumeric: "tabular-nums", color: rest.left === 0 ? "var(--v)" : "var(--g)" }}>{rest.left === 0 ? "Pronto!" : mmss(rest.left)}</b>
           <button className="btn ghost small" onClick={() => setRest(null)}>{rest.left === 0 ? "Fechar" : "Pular"}</button>
         </div>

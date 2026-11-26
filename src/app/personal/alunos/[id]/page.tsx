@@ -54,7 +54,7 @@ export default function PerfilAluno() {
             <span className="row">
               <Link className="btn ghost small" href={`/personal/chat/${student.id}`}><Icon name="chat" />Conversa</Link>
               <Link className="btn ghost small" href="/personal/financeiro"><Icon name="card" />Cobranças</Link>
-              <Link className="btn small" href={`/personal/treinos/novo?aluno=${student.id}`}>Novo treino</Link>
+              <Link className="btn small" href={`/personal/treinos/novo?aluno=${student.id}`}><Icon name="plus" />Novo treino</Link>
             </span>
           </div>
           <p className="muted">{student.email}</p>

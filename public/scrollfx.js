@@ -170,7 +170,9 @@
     init(doc);
     if (doc.readyState === 'complete') warnMissing(); else global.addEventListener('load', warnMissing);
   }
-  if (doc.readyState === 'loading') doc.addEventListener('DOMContentLoaded', auto); else auto();
+  /* Início MANUAL: em React o componente Fx chama init(el) depois da hidratação. O início automático no carregamento alterava o HTML do
+     servidor antes do React hidratar (aviso de divergência de hidratação). Para uso fora do React, chame ScrollFX.init(document). */
+  if (global.__SFX_AUTO === true) { if (doc.readyState === 'loading') doc.addEventListener('DOMContentLoaded', auto); else auto(); }
 })(typeof window !== 'undefined' ? window : this);
 
 /* ===================== módulo "trigger" (Scroll-trigger) =====================

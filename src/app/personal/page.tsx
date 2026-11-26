@@ -1,6 +1,7 @@
 "use client";
 import Link from "next/link";
 import { useCallback, useEffect, useState, type FormEvent } from "react";
+import Icon from "../../components/Icon";
 import Shell from "../../components/Shell";
 import { api, useMe } from "../../lib/client";
 
@@ -117,8 +118,8 @@ export default function Personal() {
           <div className="row between">
             <div><b>{s.name}</b><div className="muted">{s.email}</div></div>
             <span className="row">
-              <Link className="btn ghost small" href={`/personal/alunos/${s.id}`}>Permissões</Link>
-              <Link className="btn small" href={`/personal/treinos/novo?aluno=${s.id}`}>Novo treino</Link>
+              <Link className="btn ghost small" href={`/personal/alunos/${s.id}`}><Icon name="shield" />Permissões</Link>
+              <Link className="btn small" href={`/personal/treinos/novo?aluno=${s.id}`}><Icon name="plus" />Novo treino</Link>
             </span>
           </div>
           {versions.filter((v) => v.studentId === s.id).map((v) => (

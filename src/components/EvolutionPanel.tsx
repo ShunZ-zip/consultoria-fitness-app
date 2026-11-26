@@ -2,6 +2,7 @@
 import { useEffect, useMemo, useState } from "react";
 import type { ExerciseEvolution } from "../lib/evolution";
 import { AnalyticsLineChart, DEFAULT_GRADIENT, EASE_OUT, type AnalyticsDataPoint, type AnalyticsGradientStop } from "./AnalyticsChart";
+import Icon, { type IconName } from "./Icon";
 
 export interface EvolutionData {
   exercises: ExerciseEvolution[];
@@ -15,6 +16,7 @@ const METRIC_SETS: Record<Metric, { title: string; sub: string; valueLabel: stri
   topLoad: { title: "Carga máxima", sub: "Maior carga usada em cada sessão", valueLabel: "kg" },
   volumeLoad: { title: "Volume de carga", sub: "Soma de repetições × carga em cada sessão", valueLabel: "kg" },
 };
+const TAB_ICON: Record<Metric, IconName> = { bestE1rm: "trophy", topLoad: "dumbbell", volumeLoad: "chart" };
 const RECORD_COLOR = "#2AC38B"; // verde = ponto de validação (recorde pessoal)
 const kg = (n: number | null | undefined) => (n == null ? "—" : `${n.toLocaleString("pt-BR")} kg`);
 
@@ -70,7 +72,7 @@ export default function EvolutionPanel({ data }: { data: EvolutionData }) {
                     flex: 1, border: "none", cursor: "pointer", fontSize: 13, fontWeight: 700, padding: "8px 14px", borderRadius: 6, fontFamily: "inherit",
                     background: on ? "var(--v)" : "transparent", color: on ? "var(--n)" : "var(--muted)", transition: `all 200ms ${EASE_OUT}`,
                   }}>
-                  {v.title}
+                  <Icon name={TAB_ICON[k]} />{v.title}
                 </button>
               );
             })}
