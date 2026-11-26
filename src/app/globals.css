@@ -418,3 +418,21 @@ html.theme-anim, html.theme-anim *, html.theme-anim *::before, html.theme-anim *
 .fin-medal svg { width: 32px; height: 32px; }
 .fin-title { text-align: center; margin: 0 0 4px; }
 .fin-sum { margin-bottom: 14px; }
+
+/* Frequência semanal e engajamento */
+.wk-strip { list-style: none; margin: 12px 0 0; padding: 0; display: flex; justify-content: space-between; gap: 6px; max-width: 460px; }
+.wk-day { display: flex; flex-direction: column; align-items: center; gap: 6px; flex: 1; min-width: 0; }
+.wk-dot { width: 34px; height: 34px; border-radius: 50%; border: 2px solid var(--b); display: grid; place-items: center; color: var(--paper); background: transparent; }
+.wk-dot svg { width: 18px; height: 18px; }
+.wk-day.done .wk-dot { background: var(--b); }
+.wk-day.today .wk-dot { border-width: 4px; }
+.wk-day.future .wk-dot { border-style: dashed; border-color: var(--line); }
+.wk-lb { font-size: 12px; font-weight: 800; color: var(--g); }
+.wk-day.future .wk-lb { color: var(--muted); }
+.eng-stats { margin: 12px 0 0; display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 10px 16px; }
+.eng-stats dt { font-size: 12px; color: var(--muted); }
+.eng-stats dd { margin: 2px 0 0; font-weight: 700; font-size: 16px; }
+.tag.eng-engaged { background: var(--v); color: var(--ink); }
+.tag.eng-attention { background: var(--b); color: var(--paper); }
+.tag.eng-stalled { background: var(--ink); color: var(--paper); }
+.tag.eng-none { background: var(--panel2); color: var(--g); }

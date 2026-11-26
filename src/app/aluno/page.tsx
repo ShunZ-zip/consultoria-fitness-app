@@ -1,6 +1,7 @@
 "use client";
 import Link from "next/link";
 import { useEffect, useState } from "react";
+import EngagementPanel from "../../components/EngagementPanel";
 import Shell from "../../components/Shell";
 import { api, useMe } from "../../lib/client";
 
@@ -14,6 +15,7 @@ export default function Aluno() {
   return (
     <Shell me={me} logout={logout}>
       <h1>Meus treinos</h1>
+      <EngagementPanel path="/me/engagement" who="aluno" />
       {list && list.length === 0 && <p className="muted">Seu personal ainda não publicou nenhum treino.</p>}
       {list?.filter((v) => v.isCurrent).map((v) => (
         <Link key={v.id} href={`/aluno/treino/${v.id}`} style={{ textDecoration: "none", color: "inherit" }}>

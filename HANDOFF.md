@@ -33,7 +33,7 @@ Next.js 16 (App Router, Turbopack) + TypeScript 7 + PGlite (PostgreSQL embutido 
 | 5 | Operação comercial: assinatura SaaS e cobrança do aluno **separadas**, eventos assinados/idempotentes, painel básico | 🟡 **backend e libs prontos; faltam testes de API, telas e README** (ver §4) |
 | 6 | IA assistiva: sugestões com evidências, aprovação do personal | ✅ por regras, sem IA externa; aprovar cria só rascunho; verificada no navegador |
 
-Verificação atual: `npx tsc --noEmit` limpo; `npm test` = **287 testes passando (21 arquivos)**; `npm run validate` = **102 verificações, 0 falhas**.
+Verificação atual: `npx tsc --noEmit` limpo; `npm test` = **298 testes passando (22 arquivos)**; `npm run validate` = **104 verificações, 0 falhas**.
 
 ## 4. Fila de trabalho, NA ORDEM (continue daqui)
 
@@ -104,6 +104,11 @@ Sessões **concluídas** pelos alunos aparecem para o personal em `/personal/fee
 ## 5k. Nova logo do app (arte "Selo IQ", conceito 1 de 5, enviada pelo usuário)
 **Logo:** FIS (azul-marinho no tema claro, cinza no escuro) + selo azul inclinado a 12° com IQ em cinza + ponto verde. Arte original guardada em `docs/brand/selo-iq-conceito-1.pdf`. Recriada em **vetor** a partir da imagem do PDF (contornos traçados e simplificados; selo e ponto verde são geometria exata): `src/components/Logo.tsx` (SVG com classes `lg-fis/lg-seal/lg-iq/lg-dot`, cores por variável de tema em `globals.css`), usado por `Wordmark.tsx` (cabeçalho, login, tela inicial, cadastro, convite e senha). **Ícone/favicon "IQ"** (quadrado azul-marinho arredondado): `src/app/icon.svg`, `src/app/apple-icon.png` (180), `src/app/favicon.ico` (16–64) e `public/icon-192.png`, `public/icon-512.png` (prontos para um manifest PWA, que ainda não existe). Verificado no navegador nos dois temas e nos `<link rel=icon>` da página.
 **Nome:** o usuário confirmou **FisIQ** como nome do app: títulos das abas agora são "… · FisIQ" (`layout.tsx`, `useTitle.ts`) e README. A assinatura de rodapé "Cauã Henry | Musculação baseada em evidências" foi mantida (é a assinatura do perfil do Henry, não o nome do app). **Atenção da própria arte:** depende de o público ler "IQ" como QI e o ícone se parece com o monograma CH.
+
+## 5l. Frequência semanal e engajamento (issue #12, 2ª ideia adotada)
+**Aluno** (`/aluno`, topo) e **personal** (perfil do aluno, abaixo do e-mail) veem a faixa **S T Q Q S S D** da semana (segunda a domingo; dia treinado = círculo azul com check; hoje = anel mais grosso; dias futuros tracejados; cada dia tem nome acessível, ex. "terça, 24/11: treinou"), "N dias de treino nesta semana (meta: N×)" (a meta vem de `weekly_frequency` da prescrição publicada), **último treino** (hoje/ontem/há N dias), **frequência média** (sessões por semana nos últimos 28 dias) e, só para o personal, a etiqueta de **engajamento** (Engajado: último treino há até 4 dias; Atenção: 5 a 9; Parado: 10 ou mais; Sem treinos) e o total de sessões. **Limites são propostas** (`src/lib/engagement.ts`, num só lugar). Só conta sessão **concluída**; dia civil pelo fuso do navegador (`?tz=`, padrão Brasília).
+**Servidor:** `handlers10.ts` (`GET /api/me/engagement` aluno; `GET /api/students/[id]/engagement` personal, aluno de outra consultoria ou id inválido = 404, papel errado 403); regras puras em `src/lib/engagement.ts`; componente `EngagementPanel.tsx`. Sem migração. 11 testes (`tests/engagement.test.ts`; um deles achou e corrigiu um 500 com id não-UUID; mutação do escopo detectada) e 2 verificações no `validate` (agora **104**); suíte **298 testes (22 arquivos)**.
+**Não feito:** etiqueta de engajamento na lista de alunos do personal (exigiria uma consulta para todos de uma vez; fica como evolução), aviso ao personal quando o aluno fica "parado" (sem provedor de e-mail/push). **Não verificado:** semana com virada de fuso em aparelho real.
 
 ## 6. Dados de demonstração
 **Conta de teste local (pedido do usuário): login `admin` / senha `admin`** (Consultoria Modelo: 6 alunos modelo `modelo1..6@demo.test` com senha `admin`, contratos, cobranças de 4 meses em vários status e despesas). Só existe no seed; o login aceita texto livre no campo de e-mail por causa disso.

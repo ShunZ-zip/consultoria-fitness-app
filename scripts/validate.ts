@@ -98,6 +98,12 @@ async function main() {
   check("outra consultoria não vê nem resolve (404); aluno 403", (await beta.get("/feedbacks")).body.items.length === 0 && (await beta.post(`/feedbacks/${fbLog}/resolve`, { resolved: true })).status === 404 && (await a1.c.get("/feedbacks")).status === 403 && (await a1.c.post(`/feedbacks/${fbLog}/resolve`, { resolved: true })).status === 403);
   check("resolver tira da fila e reabrir devolve", (await ana.post(`/feedbacks/${fbLog}/resolve`, { resolved: true })).status === 200 && !(await ana.get("/feedbacks")).body.items.some((i: any) => i.id === fbLog) && (await ana.get("/feedbacks?status=resolved")).body.items.some((i: any) => i.id === fbLog) && (await ana.post(`/feedbacks/${fbLog}/resolve`, { resolved: false })).status === 200 && (await ana.get("/feedbacks")).body.items.some((i: any) => i.id === fbLog));
 
+  section("Frequência semanal e engajamento");
+  const myEng = await a1.c.get("/me/engagement?tz=-180");
+  const prEng = await ana.get(`/students/${a1.id}/engagement?tz=-180`);
+  check("aluno vê a própria semana (7 dias) e o personal vê a do aluno, iguais", myEng.status === 200 && myEng.body.week.length === 7 && myEng.body.totalSessions >= 2 && prEng.status === 200 && prEng.body.totalSessions === myEng.body.totalSessions && prEng.body.week.some((d: any) => d.today && d.trained));
+  check("engajamento: sessão de hoje = engajado; id inválido 404; outra consultoria 404; aluno 403 na rota do personal; personal 403 na do aluno", prEng.body.status === "engaged" && (await ana.get("/students/nao-e-uuid/engagement")).status === 404 && (await beta.get(`/students/${a1.id}/engagement`)).status === 404 && (await a1.c.get(`/students/${a1.id}/engagement`)).status === 403 && (await ana.get("/me/engagement")).status === 403);
+
   const cmp = (await ana.get(`/versions/${v1}/comparison`)).body;
   const rows = cmp.logs[0].rows;
   check("comparação: prescrito e realizado lado a lado", rows.length === 3 && rows[1].prescribed.reps === 10 && rows[1].done.reps === 8);
