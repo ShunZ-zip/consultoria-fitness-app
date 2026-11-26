@@ -256,7 +256,7 @@ export default function Registro() {
       {rest && rest.left >= 0 && !finished && (
         <div className="card row between" data-testid="rest-timer" style={{ position: "sticky", top: 8, zIndex: 5, background: "var(--n)" }}>
           <span><b className="hf" style={{ fontSize: 12, letterSpacing: ".1em" }}><Icon name="timer" />Descanso</b></span>
-          <b style={{ fontSize: 28, fontVariantNumeric: "tabular-nums", color: rest.left === 0 ? "var(--v)" : "var(--g)" }}>{rest.left === 0 ? "Pronto!" : mmss(rest.left)}</b>
+          <b style={{ fontSize: 28, fontVariantNumeric: "tabular-nums", color: "var(--g)", ...(rest.left === 0 ? { borderBottom: "3px solid var(--v)" } : {}) }}>{rest.left === 0 ? "Pronto!" : mmss(rest.left)}</b>
           <button className="btn ghost small" onClick={() => setRest(null)}>{rest.left === 0 ? "Fechar" : "Pular"}</button>
         </div>
       )}

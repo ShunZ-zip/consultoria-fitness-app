@@ -70,7 +70,7 @@ export default function EvolutionPanel({ data }: { data: EvolutionData }) {
                   onMouseUp={(e) => { e.currentTarget.style.transform = ""; }} onMouseLeave={(e) => { e.currentTarget.style.transform = ""; }}
                   style={{
                     flex: 1, border: "none", cursor: "pointer", fontSize: 13, fontWeight: 700, padding: "8px 14px", borderRadius: 6, fontFamily: "inherit",
-                    background: on ? "var(--v)" : "transparent", color: on ? "var(--n)" : "var(--muted)", transition: `all 200ms ${EASE_OUT}`,
+                    background: on ? "var(--v)" : "transparent", color: on ? "var(--ink)" : "var(--muted)", transition: `all 200ms ${EASE_OUT}`,
                   }}>
                   <Icon name={TAB_ICON[k]} />{v.title}
                 </button>

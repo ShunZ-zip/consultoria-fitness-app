@@ -191,7 +191,7 @@ export default function Exercise3D({ name }: { name: string }) {
         {btn("Frente", () => api.current?.view("front"))}
         {btn("3/4", () => api.current?.view("three"))}
       </div>
-      <p className="muted" style={{ margin: "6px 0 0" }}>Arraste para girar o boneco. <b style={{ color: "var(--v)" }}>Verde</b> = músculo principal; <b style={{ color: "var(--b)" }}>azul</b> = equipamento. {spec.tip}{reduced ? " Movimento reduzido: toque em Reproduzir para ver o movimento." : ""}</p>
+      <p className="muted" style={{ margin: "6px 0 0" }}>Arraste para girar o boneco. <b style={{ borderBottom: "3px solid var(--v)" }}>Verde</b> = músculo principal; <b style={{ borderBottom: "3px solid var(--b)" }}>azul</b> = equipamento. {spec.tip}{reduced ? " Movimento reduzido: toque em Reproduzir para ver o movimento." : ""}</p>
     </div>
   );
 }

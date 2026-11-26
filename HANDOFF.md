@@ -33,7 +33,7 @@ Next.js 16 (App Router, Turbopack) + TypeScript 7 + PGlite (PostgreSQL embutido 
 | 5 | Operação comercial: assinatura SaaS e cobrança do aluno **separadas**, eventos assinados/idempotentes, painel básico | 🟡 **backend e libs prontos; faltam testes de API, telas e README** (ver §4) |
 | 6 | IA assistiva: sugestões com evidências, aprovação do personal | ✅ por regras, sem IA externa; aprovar cria só rascunho; verificada no navegador |
 
-Verificação atual: `npx tsc --noEmit` limpo; `npm test` = **259 testes passando (17 arquivos)**.
+Verificação atual: `npx tsc --noEmit` limpo; `npm test` = **263 testes passando (18 arquivos)**.
 
 ## 4. Fila de trabalho, NA ORDEM (continue daqui)
 
@@ -75,6 +75,9 @@ Método: script de auditoria injetado no navegador (alvos de toque, rótulos, no
 
 ## 5d. Animações 3D dos exercícios (pedido do usuário)
 Substituem as animações 2D: `src/lib/exercise3d.ts` (cinemática por ângulos, 16 `SPECS`, equipamento 3D, músculo destacado) + `src/components/Exercise3D.tsx` (Three.js, OrbitControls, vistas lado/frente/3/4, pausa, câmera lenta) + `src/server/officialMedia.ts` (registra cada exercício como mídia oficial `3d:<slug>` ao abrir o banco; migra registros 2D antigos). Pesquisei material pronto: o **OpenGym3D** (MIT) usa parte de movimentos do Mixamo (termos da Adobe não permitem redistribuir os arquivos) e destaca em vermelho, então **não foi usado**; tudo aqui é original. Dependência nova: `three` (MIT). 11 testes (comprimento dos segmentos, pé no chão, movimento existe, braços laterais, registro/migração). Verificado no navegador: os 16 renderizam. **Não verificado:** desempenho em celular real, arrastar para girar com toque, WebGL indisponível. Estilo é de boneco articulado (não anatômico realista); evolução possível: modelo humano rigged com licença CC0.
+
+## 5e. Temas claro e escuro (pedido do usuário)
+Padrão = **claro** (`:root`: `--paper #E6EAED` fundo, `--ink #0E1B2B` texto, etiquetas/botões secundários em azul-marinho); **escuro** = `html[data-theme="dark"]` (visual anterior). Variáveis legadas: `--n` = fundo, `--g` = texto; `--ink`/`--paper` são constantes; `--vt` = verde como texto (só no escuro); `--fg-rgb` para transparências. Seletor: `ThemeToggle` (Shell, Stage e tela inicial), salvo em `localStorage["cf-theme"]` e aplicado por script inline no `<head>` (sem piscar). O visualizador 3D mantém palco azul-marinho nos dois temas. Verificado no navegador: tela inicial e Financeiro nos dois temas; contraste calculado sem falhas em 4 telas × 2 temas. **Não verificado:** as demais telas (aluno, chat, avaliações, editor de treino, assinatura) em visual claro; impressão; 375 px no claro.
 
 ## 6. Dados de demonstração
 **Conta de teste local (pedido do usuário): login `admin` / senha `admin`** (Consultoria Modelo: 6 alunos modelo `modelo1..6@demo.test` com senha `admin`, contratos, cobranças de 4 meses em vários status e despesas). Só existe no seed; o login aceita texto livre no campo de e-mail por causa disso.

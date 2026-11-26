@@ -40,7 +40,7 @@ export default function FinanceChart({ endMonth, refreshKey = 0 }: { endMonth: s
           return (
             <button key={k} type="button" role="tab" aria-selected={on} onClick={() => { setTab(k); setEpoch((e) => e + 1); }}
               style={{ flex: 1, border: "none", cursor: "pointer", fontSize: 13, fontWeight: 700, padding: "8px 10px", borderRadius: 6, fontFamily: "inherit", minHeight: 40,
-                background: on ? "var(--v)" : "transparent", color: on ? "var(--n)" : "var(--muted)", transition: `all 200ms ${EASE_OUT}` }}>
+                background: on ? "var(--v)" : "transparent", color: on ? "var(--ink)" : "var(--muted)", transition: `all 200ms ${EASE_OUT}` }}>
               <Icon name={METRICS[k].icon} />{METRICS[k].tab}
             </button>
           );

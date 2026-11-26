@@ -7,6 +7,7 @@ import { ExpandableScreen, ExpandableScreenContent, ExpandableScreenTrigger } fr
 import Fx from "../components/Fx";
 import Icon, { type IconName } from "../components/Icon";
 import LoginForm from "../components/LoginForm";
+import ThemeToggle from "../components/ThemeToggle";
 import Wordmark from "../components/Wordmark";
 import { api, type Me } from "../lib/client";
 
@@ -36,7 +37,7 @@ export default function Home() {
         <Fx fx="linked" effect="bar" target="body" start="top top" end="bottom bottom" className="read-progress" />
         <Backdrop />
 
-        <header className="land-top wrap"><Wordmark /></header>
+        <header className="land-top wrap row between"><Wordmark /><ThemeToggle /></header>
 
         <section className="land-hero wrap" aria-labelledby="titulo">
           <Fx animation="fade-up" stagger={110} distance={26} duration={650} className="land-hero-in">

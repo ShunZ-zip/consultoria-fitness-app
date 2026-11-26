@@ -102,7 +102,7 @@ Para recomeçar do zero: pare o servidor, apague a pasta `data` e rode `npm run 
 ## Testes
 
 ```powershell
-npm test          # 259 testes em 17 arquivos, banco em memória
+npm test          # 263 testes em 18 arquivos, banco em memória
 npm run typecheck
 npm run validate  # validação HTTP ponta a ponta (entregas 1 a 5): exige o servidor rodando (npm run dev)
 ```
@@ -124,6 +124,8 @@ npm run validate  # validação HTTP ponta a ponta (entregas 1 a 5): exige o ser
 Os testes chamam os handlers da API (`Request` → `Response`), a mesma camada das rotas do Next. Não há teste automatizado de navegador; as telas foram verificadas manualmente (as telas financeiras em desktop; a verificação em 375 px cobriu só o Financeiro).
 
 ## Identidade visual
+
+- **Temas:** o padrão é o **tema claro** (fundo cinza `#E6EAED`, texto azul-marinho, como as peças do Instagram); há uma opção de **tema escuro** (o visual anterior, fundo azul-marinho) no botão "Escuro/Claro" do cabeçalho e das telas públicas. A escolha fica salva no aparelho e é aplicada antes da primeira pintura. Regras de marca nos dois: só as 4 cores; **verde nunca é texto no tema claro** (o texto fica azul-marinho e o verde marca a função, com sublinhado ou borda); botões e etiquetas secundários no claro são azul-marinho com texto claro. Contraste medido (4,5:1 texto / 3:1 títulos grandes) em Painel, Financeiro, Organização e Biblioteca nos dois temas.
 
 Segue o brandbook v1.1 "Identidade Visual Instagram 2026" (resumo do brandbook consultado; o PDF não pôde ser renderizado diretamente neste ambiente):
 

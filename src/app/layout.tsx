@@ -11,12 +11,15 @@ export const metadata: Metadata = {
   title: "Cauã Henry | Musculação — Consultoria",
   description: "Plataforma privada de consultoria: prescrição, execução e evolução.",
 };
-export const viewport: Viewport = { width: "device-width", initialScale: 1, themeColor: "#0E1B2B" };
+export const viewport: Viewport = { width: "device-width", initialScale: 1, themeColor: [{ media: "(prefers-color-scheme: light)", color: "#E6EAED" }] };
 
 export default function RootLayout({ children }: { children: ReactNode }) {
   return (
     <html lang="pt-BR" suppressHydrationWarning>
-      <head><Script src="/scrollfx.js" strategy="beforeInteractive" /></head>
+      <head>
+        <script dangerouslySetInnerHTML={{ __html: `try{var t=localStorage.getItem("cf-theme");document.documentElement.dataset.theme=t==="dark"?"dark":"light";}catch(e){document.documentElement.dataset.theme="light";}` }} />
+        <Script src="/scrollfx.js" strategy="beforeInteractive" />
+      </head>
       <body>
         {children}
         <ServiceWorker />

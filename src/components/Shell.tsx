@@ -7,6 +7,7 @@ import Backdrop from "./Backdrop";
 import Fx from "./Fx";
 import Icon, { type IconName } from "./Icon";
 import Skeleton from "./Skeleton";
+import ThemeToggle from "./ThemeToggle";
 import Wordmark from "./Wordmark";
 import { useTitleFromH1 } from "../lib/useTitle";
 
@@ -52,6 +53,7 @@ export default function Shell({ me, logout, children }: { me: Me | null; logout:
         {me && (
           <div className="who">
             <span className="who-name">{me.name} · {me.role === "trainer" ? "Personal" : "Aluno"}</span>
+            <ThemeToggle />
             <button className="btn ghost small" onClick={logout}>Sair</button>
           </div>
         )}

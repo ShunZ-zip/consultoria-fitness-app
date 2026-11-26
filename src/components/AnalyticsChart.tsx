@@ -116,8 +116,8 @@ export function AnalyticsLineChart({ data, gradientStops = DEFAULT_GRADIENT, dot
 
         {geo.ticks.map((t, k) => (
           <g key={k}>
-            <line x1={L} x2={W - R} y1={geo.Y(t)} y2={geo.Y(t)} stroke="rgba(230,234,237,.12)" />
-            <text x={L - 8} y={geo.Y(t) + 4} textAnchor="end" fontSize="11" fill="rgba(230,234,237,.72)" style={{ fontVariantNumeric: "tabular-nums" }}>{formatTick ? formatTick(t) : fmtNum(Math.round(t * 10) / 10)}</text>
+            <line x1={L} x2={W - R} y1={geo.Y(t)} y2={geo.Y(t)} style={{ stroke: "rgb(var(--fg-rgb) / .14)" }} />
+            <text x={L - 8} y={geo.Y(t) + 4} textAnchor="end" fontSize="11" style={{ fontVariantNumeric: "tabular-nums", fill: "rgb(var(--fg-rgb) / .74)" }}>{formatTick ? formatTick(t) : fmtNum(Math.round(t * 10) / 10)}</text>
           </g>
         ))}
 
@@ -131,9 +131,9 @@ export function AnalyticsLineChart({ data, gradientStops = DEFAULT_GRADIENT, dot
           return (
             <g key={i}>
               {(i % labelEvery === 0 || i === data.length - 1) && (
-                <text x={p.x} y={H - 12} textAnchor="middle" fontSize="11" fill="rgba(230,234,237,.72)">{dShort(d.date)}</text>
+                <text x={p.x} y={H - 12} textAnchor="middle" fontSize="11" style={{ fill: "rgb(var(--fg-rgb) / .74)" }}>{dShort(d.date)}</text>
               )}
-              <circle className="cf-dot" cx={p.x} cy={p.y} r={on ? 7 : 4.5} fill="#0E1B2B" stroke={color} strokeWidth={2.5}
+              <circle className="cf-dot" cx={p.x} cy={p.y} r={on ? 7 : 4.5} style={{ fill: "var(--n)" }} stroke={color} strokeWidth={2.5}
                 tabIndex={0} role="img" aria-label={`${dLong(d.date)}: ${val(d.value)}`}
                 onMouseEnter={() => setActive(i)} onFocus={() => setActive(i)} onBlur={() => setActive(null)} onTouchStart={() => setActive(i)} />
               {/* área de toque maior, sem aparecer */}
@@ -150,12 +150,12 @@ export function AnalyticsLineChart({ data, gradientStops = DEFAULT_GRADIENT, dot
         return (
           <div key={i} role="status" data-testid="chart-tooltip" style={{
             position: "absolute", left: `${left}%`, top: `${(p.y / H) * 100}%`, transform: "translate(-50%, calc(-100% - 14px))",
-            pointerEvents: "none", background: "#0E1B2B", border: `1px solid ${dotColors[i] ?? "rgba(230,234,237,.3)"}`, borderRadius: 6,
+            pointerEvents: "none", background: "var(--n)", color: "var(--g)", border: `1px solid ${dotColors[i] ?? "rgb(var(--fg-rgb) / .35)"}`, borderRadius: 6,
             padding: "5px 9px", fontSize: 12, lineHeight: 1.25, whiteSpace: "nowrap", zIndex: active === i ? 3 : 2,
             transition: `opacity 160ms ${EASE_OUT}`,
           }}>
             <div style={{ fontWeight: 700, fontVariantNumeric: "tabular-nums" }}>{val(d.value)}</div>
-            <div style={{ color: "rgba(230,234,237,.72)" }}>{dShort(d.date)}{d.label ? ` · ${d.label}` : ""}</div>
+            <div style={{ color: "var(--muted)" }}>{dShort(d.date)}{d.label ? ` · ${d.label}` : ""}</div>
           </div>
         );
       })}
