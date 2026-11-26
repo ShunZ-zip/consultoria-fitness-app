@@ -22,6 +22,8 @@ export const DEFAULT_DATA: AnalyticsDataPoint[] = [
 const W = 600, H = 260, L = 52, R = 18, T = 20, B = 36;
 const fmtNum = (n: number) => n.toLocaleString("pt-BR", { maximumFractionDigits: 1 });
 const fmtDate = (iso: string) => new Date(iso).toLocaleDateString("pt-BR", { day: "2-digit", month: "2-digit" });
+const fmtMonth = (iso: string) => new Date(iso).toLocaleDateString("pt-BR", { month: "short", year: "2-digit", timeZone: "UTC" }).replace(" de ", "/").replace(".", "");
+const fmtMonthLong = (iso: string) => new Date(iso).toLocaleDateString("pt-BR", { month: "long", year: "numeric", timeZone: "UTC" });
 const fmtDateLong = (iso: string) => new Date(iso).toLocaleDateString("pt-BR", { day: "2-digit", month: "long", year: "numeric" });
 
 /** Curva suave que não ultrapassa os dados (interpolação monotônica), em coordenadas já projetadas. */
@@ -57,9 +59,20 @@ export interface AnalyticsLineChartProps {
   pinnedIndices?: number[];
   valueLabel?: string;
   ariaLabel?: string;
+  /** Formata o valor no balão e na descrição acessível (ex.: moeda). Padrão: número + valueLabel. */
+  formatValue?: (n: number) => string;
+  /** Formata os números do eixo vertical (curtos). */
+  formatTick?: (n: number) => string;
+  /** Pontos mensais: o eixo mostra "nov/26" e o balão "novembro de 2026" (datas AAAA-MM-01). */
+  monthly?: boolean;
+  /** Se nenhum valor é negativo, o eixo começa em zero. */
+  floorZero?: boolean;
 }
 
-export function AnalyticsLineChart({ data, gradientStops = DEFAULT_GRADIENT, dotColors = {}, gridLines = 4, pinnedIndices = [], valueLabel = "", ariaLabel }: AnalyticsLineChartProps) {
+export function AnalyticsLineChart({ data, gradientStops = DEFAULT_GRADIENT, dotColors = {}, gridLines = 4, pinnedIndices = [], valueLabel = "", ariaLabel, formatValue, formatTick, monthly = false, floorZero = false }: AnalyticsLineChartProps) {
+  const val = (n: number) => (formatValue ? formatValue(n) : `${fmtNum(n)} ${valueLabel}`.trim());
+  const dShort = (iso: string) => (monthly ? fmtMonth(iso) : fmtDate(iso));
+  const dLong = (iso: string) => (monthly ? fmtMonthLong(iso) : fmtDateLong(iso));
   const uid = useId().replace(/:/g, "");
   const [active, setActive] = useState<number | null>(null);
 
@@ -68,7 +81,9 @@ export function AnalyticsLineChart({ data, gradientStops = DEFAULT_GRADIENT, dot
     let lo = Math.min(...ys), hi = Math.max(...ys);
     if (!isFinite(lo)) { lo = 0; hi = 1; }
     if (lo === hi) { lo -= 1; hi += 1; }
+    const nonNegative = lo >= 0;
     const pad = (hi - lo) * 0.18; lo -= pad; hi += pad;
+    if (floorZero && nonNegative) lo = 0; // valores que nunca são negativos (ex.: dinheiro) não ganham eixo abaixo de zero
     const X = (i: number) => (data.length === 1 ? (L + W - R) / 2 : L + (i * (W - L - R)) / (data.length - 1));
     const Y = (v: number) => T + ((hi - v) / (hi - lo)) * (H - T - B);
     const pts = data.map((d, i) => ({ x: X(i), y: Y(d.value) }));
@@ -76,13 +91,13 @@ export function AnalyticsLineChart({ data, gradientStops = DEFAULT_GRADIENT, dot
     const line = smoothPath(pts);
     const area = pts.length > 1 ? `${line} L${pts.at(-1)!.x.toFixed(1)},${H - B} L${pts[0].x.toFixed(1)},${H - B} Z` : "";
     return { pts, ticks, line, area, Y };
-  }, [data, gridLines]);
+  }, [data, gridLines, floorZero]);
 
   if (data.length === 0) return <p className="muted">Sem dados suficientes para este gráfico.</p>;
 
   const labelEvery = data.length > 9 ? Math.ceil(data.length / 9) : 1;
   const shown = new Set([...pinnedIndices, ...(active !== null ? [active] : [])]);
-  const summary = ariaLabel ?? `Gráfico de linha com ${data.length} pontos: ${data.map((d) => `${fmtDate(d.date)} ${fmtNum(d.value)} ${valueLabel}`).join("; ")}`;
+  const summary = ariaLabel ?? `Gráfico de linha com ${data.length} pontos: ${data.map((d) => `${dShort(d.date)} ${val(d.value)}`).join("; ")}`;
   const gid = `g${uid}`, ag = `a${uid}`;
 
   return (
@@ -102,7 +117,7 @@ export function AnalyticsLineChart({ data, gradientStops = DEFAULT_GRADIENT, dot
         {geo.ticks.map((t, k) => (
           <g key={k}>
             <line x1={L} x2={W - R} y1={geo.Y(t)} y2={geo.Y(t)} stroke="rgba(230,234,237,.12)" />
-            <text x={L - 8} y={geo.Y(t) + 4} textAnchor="end" fontSize="11" fill="rgba(230,234,237,.72)" style={{ fontVariantNumeric: "tabular-nums" }}>{fmtNum(Math.round(t * 10) / 10)}</text>
+            <text x={L - 8} y={geo.Y(t) + 4} textAnchor="end" fontSize="11" fill="rgba(230,234,237,.72)" style={{ fontVariantNumeric: "tabular-nums" }}>{formatTick ? formatTick(t) : fmtNum(Math.round(t * 10) / 10)}</text>
           </g>
         ))}
 
@@ -116,10 +131,10 @@ export function AnalyticsLineChart({ data, gradientStops = DEFAULT_GRADIENT, dot
           return (
             <g key={i}>
               {(i % labelEvery === 0 || i === data.length - 1) && (
-                <text x={p.x} y={H - 12} textAnchor="middle" fontSize="11" fill="rgba(230,234,237,.72)">{fmtDate(d.date)}</text>
+                <text x={p.x} y={H - 12} textAnchor="middle" fontSize="11" fill="rgba(230,234,237,.72)">{dShort(d.date)}</text>
               )}
               <circle className="cf-dot" cx={p.x} cy={p.y} r={on ? 7 : 4.5} fill="#0E1B2B" stroke={color} strokeWidth={2.5}
-                tabIndex={0} role="img" aria-label={`${fmtDateLong(d.date)}: ${fmtNum(d.value)} ${valueLabel}`}
+                tabIndex={0} role="img" aria-label={`${dLong(d.date)}: ${val(d.value)}`}
                 onMouseEnter={() => setActive(i)} onFocus={() => setActive(i)} onBlur={() => setActive(null)} onTouchStart={() => setActive(i)} />
               {/* área de toque maior, sem aparecer */}
               <circle cx={p.x} cy={p.y} r={16} fill="transparent" onMouseEnter={() => setActive(i)} onTouchStart={() => setActive(i)} />
@@ -139,8 +154,8 @@ export function AnalyticsLineChart({ data, gradientStops = DEFAULT_GRADIENT, dot
             padding: "5px 9px", fontSize: 12, lineHeight: 1.25, whiteSpace: "nowrap", zIndex: active === i ? 3 : 2,
             transition: `opacity 160ms ${EASE_OUT}`,
           }}>
-            <div style={{ fontWeight: 700, fontVariantNumeric: "tabular-nums" }}>{fmtNum(d.value)} {valueLabel}</div>
-            <div style={{ color: "rgba(230,234,237,.72)" }}>{fmtDate(d.date)}{d.label ? ` · ${d.label}` : ""}</div>
+            <div style={{ fontWeight: 700, fontVariantNumeric: "tabular-nums" }}>{val(d.value)}</div>
+            <div style={{ color: "rgba(230,234,237,.72)" }}>{dShort(d.date)}{d.label ? ` · ${d.label}` : ""}</div>
           </div>
         );
       })}

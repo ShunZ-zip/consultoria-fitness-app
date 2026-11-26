@@ -2,7 +2,7 @@
 // despesas e painel financeiro básico. Sem provedor escolhido: nada aqui cobra de verdade (ver payments.ts).
 import { z } from "zod";
 import { brl, dateKey, EVENT_TYPES, firstDueDate, dueDateFor, isPastDue, monthKey, planById, PLANS, PLANS_ARE_PROPOSAL, TRIAL_DAYS, type ChargeStatus } from "../lib/billing";
-import { summarizeMonth } from "../lib/finance";
+import { monthsEnding, summarizeMonth } from "../lib/finance";
 import { uid } from "./auth";
 import type { Actor } from "./auth";
 import type { Db } from "./db";
@@ -231,6 +231,22 @@ export const dashboard = route(async (ctx) => {
   const students = (await ctx.db.query<{ n: number }>("select count(*)::int as n from memberships where consultancy_id = $1 and role = 'student'", [a.consultancyId])).rows[0].n;
   return json({ ...summary, activeContracts: co.filter((c) => c.active).length, students,
     notIncluded: "Fluxo de caixa, DRE, margem, pró-labore, churn, CAC, LTV, metas e projeções ficam para evolução futura." });
+});
+
+/** Série mensal para o gráfico do painel: recebido, líquido, despesas, resultado e faturado dos últimos N meses. */
+export const financeSeries = route(async (ctx) => {
+  const a = await requireActor(ctx, "trainer");
+  const end = ctx.url.searchParams.get("end") ?? monthKey(new Date());
+  if (!/^\d{4}-\d{2}$/.test(end)) throw new HttpError(400, "Mês no formato AAAA-MM");
+  const n = Math.min(24, Math.max(1, Number(ctx.url.searchParams.get("months") ?? 6) || 6));
+  const ch = (await ctx.db.query<{ amount_cents: number; fee_cents: number; status: ChargeStatus; method: string | null; due_date: string; paid_at: string | null }>(
+    "select amount_cents, fee_cents, status, method, due_date, paid_at from student_charges where consultancy_id = $1", [a.consultancyId])).rows
+    .map((c) => ({ amountCents: c.amount_cents, feeCents: c.fee_cents, status: c.status, method: c.method, dueDate: c.due_date, paidAt: c.paid_at ? new Date(c.paid_at).toISOString() : null }));
+  const ex = (await ctx.db.query<{ amount_cents: number; date: string }>("select amount_cents, date from expenses where consultancy_id = $1", [a.consultancyId])).rows.map((e) => ({ amountCents: e.amount_cents, date: e.date }));
+  return json(monthsEnding(end, n).map((month) => {
+    const s = summarizeMonth(ch, ex, [], month);
+    return { month, receivedCents: s.receivedCents, netReceivedCents: s.netReceivedCents, expensesCents: s.expensesCents, resultCents: s.resultCents, billedCents: s.billedCents };
+  }));
 });
 
 /** Conciliação: eventos recebidos do intermediador (e mudanças de estado) ligados às cobranças da consultoria. */

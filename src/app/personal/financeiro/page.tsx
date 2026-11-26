@@ -2,6 +2,7 @@
 import Link from "next/link";
 import { useCallback, useEffect, useState, type FormEvent } from "react";
 import Icon from "../../../components/Icon";
+import FinanceChart from "../../../components/FinanceChart";
 import Shell from "../../../components/Shell";
 import { brl, monthKey } from "../../../lib/billing";
 import { api, useMe } from "../../../lib/client";
@@ -81,6 +82,7 @@ export default function Financeiro() {
           </div>
           {Object.keys(dash.byMethod).length > 0 && <p className="muted">Por método: {Object.entries(dash.byMethod).map(([m, v]) => `${METHOD_LABEL[m] ?? m} ${brl(v)}`).join(" · ")}</p>}
           <p className="muted">{dash.notIncluded}</p>
+          <FinanceChart endMonth={month} refreshKey={charges.length + expenses.length} />
         </>
       )}
 

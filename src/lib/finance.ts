@@ -45,3 +45,12 @@ export function summarizeMonth(charges: FinCharge[], expenses: FinExpense[], con
     byMethod,
   };
 }
+
+/** Os N meses (AAAA-MM) terminando em `end`, do mais antigo ao mais recente. */
+export function monthsEnding(end: string, n: number): string[] {
+  const [y, m] = end.split("-").map(Number);
+  return Array.from({ length: n }, (_, i) => {
+    const d = new Date(Date.UTC(y, m - 1 - (n - 1 - i), 1));
+    return `${d.getUTCFullYear()}-${String(d.getUTCMonth() + 1).padStart(2, "0")}`;
+  });
+}

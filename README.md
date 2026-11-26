@@ -91,7 +91,7 @@ Para recomeçar do zero: pare o servidor, apague a pasta `data` e rode `npm run 
 3. No celular, as colunas rolam na horizontal com encaixe. A animação de reordenação respeita "reduzir movimento".
 
 **Entrega 5** (ambiente simulado)
-1. Como `personal.alfa@demo.test` (ou `admin`), abra **Financeiro**: cartões do mês, cobranças por status, **Gerar cobranças do mês**, **Marcar paga** (com o método), **Cancelar**, contratos, cobrança avulsa, despesas e eventos de conciliação.
+1. Como `personal.alfa@demo.test` (ou `admin`), abra **Financeiro**: cartões do mês, **gráfico dos últimos 6 meses** (abas Recebido, Despesas, Resultado e Faturado; o ponto fixo é o mês selecionado; passe o mouse ou toque nos pontos para ver os valores em R$), cobranças por status, **Gerar cobranças do mês**, **Marcar paga** (com o método), **Cancelar**, contratos, cobrança avulsa, despesas e eventos de conciliação.
 2. Em **Assinatura**: planos Gratuito / Starter R$ 9,90 / Professional R$ 39,90 / Premium R$ 69,90, **marcados como proposta**; teste de 30 dias uma vez; o limite de alunos **não bloqueia** o uso.
 3. Como `aluno1@demo.test`, abra **Pagamentos**: contratação e cobranças com status em texto e **Simular pagamento** (só fora de produção).
 4. O webhook (`POST /api/webhooks/payments`) exige assinatura HMAC-SHA256 no cabeçalho `x-signature`. Fora de produção o segredo padrão é `dev-webhook-secret`; em produção é obrigatório definir `PAYMENT_WEBHOOK_SECRET` (sem ele o webhook responde 503). O mesmo evento repetido não repete o efeito.
@@ -99,7 +99,7 @@ Para recomeçar do zero: pare o servidor, apague a pasta `data` e rode `npm run 
 ## Testes
 
 ```powershell
-npm test          # 244 testes em 15 arquivos, banco em memória
+npm test          # 248 testes em 16 arquivos, banco em memória
 npm run typecheck
 npm run validate  # validação HTTP ponta a ponta (entregas 1 a 5): exige o servidor rodando (npm run dev)
 ```
