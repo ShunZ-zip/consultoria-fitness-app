@@ -2,9 +2,10 @@ import type { ReactNode } from "react";
 
 // Ícones de traço (24×24, currentColor) com microanimações: reagem ao hover/foco/toque do botão ou link que os contém
 // (a animação está no CSS e respeita "reduzir movimento"). `enter` desenha o ícone ao aparecer; `spin` gira (sincronizando).
-export type IconName = "dumbbell" | "chart" | "chat" | "clipboard" | "pulse" | "book" | "eye" | "eye-off" | "check" | "refresh" | "timer" | "trophy" | "play" | "card" | "shield" | "user" | "arrow-left" | "plus" | "sparkle" | "sun" | "moon";
+export type IconName = "dumbbell" | "chart" | "chat" | "clipboard" | "pulse" | "book" | "eye" | "eye-off" | "check" | "refresh" | "timer" | "trophy" | "play" | "card" | "shield" | "user" | "arrow-left" | "plus" | "sparkle" | "sun" | "moon" | "trash";
 
 const P: Record<IconName, ReactNode> = {
+  trash: <><path d="M4 7h16M10 11v6M14 11v6M6 7l1 13h10l1-13M9 7V4h6v3" /></>,
   sun: <><circle cx="12" cy="12" r="4" /><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4" /></>,
   moon: <path d="M20 14.5A8.5 8.5 0 0 1 9.5 4 8.5 8.5 0 1 0 20 14.5z" />,
   dumbbell: <g className="i-wiggle"><path d="M6.5 6.5v11M17.5 6.5v11M3.5 9v6M20.5 9v6M6.5 12h11" /></g>,

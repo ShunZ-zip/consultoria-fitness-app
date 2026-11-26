@@ -1,28 +1,34 @@
 "use client";
 import { useRouter, useSearchParams } from "next/navigation";
 import { cloneElement, Suspense, useEffect, useId, useMemo, useState } from "react";
+import ExercisePicker, { type MyPreset } from "../../../../components/ExercisePicker";
 import Shell from "../../../../components/Shell";
 import { api, useMe } from "../../../../lib/client";
+import { APP_PRESETS, appPreset, cloneSets, type PresetSet } from "../../../../lib/setPresets";
 import { computeVolume, DEFAULT_INDIRECT_WEIGHT, type SetType } from "../../../../lib/volume";
 
 interface Student { id: string; name: string }
-interface Exercise { id: string; name: string; muscle: string; primaryMuscles: string[]; secondaryMuscles: string[] }
+interface Exercise { id: string; name: string; muscle: string; equipment: string; official: boolean; primaryMuscles: string[]; secondaryMuscles: string[] }
 interface SetForm {
   setType: SetType; reps: string; repsMax: string; loadKg: string; loadPct: string;
   rir: string; rpe: string; restS: string; tempo: string; note: string;
 }
-interface ExForm { exerciseId: string; alternativeIds: string[]; sets: SetForm[] }
+// key e open são só da tela (identidade estável e linha recolhida); não vão para o servidor.
+interface ExForm { key: string; open: boolean; exerciseId: string; alternativeIds: string[]; sets: SetForm[] }
 
 const emptySet = (o: Partial<SetForm> = {}): SetForm => ({
   setType: "work", reps: "10", repsMax: "", loadKg: "", loadPct: "", rir: "", rpe: "", restS: "60", tempo: "", note: "", ...o,
 });
 const num = (v: string) => (v.trim() === "" ? null : Number(v.replace(",", ".")));
 const txt = (n: number | null | undefined) => (n == null ? "" : String(n));
+let seq = 0; const nk = () => `k${++seq}`;
+const fromPreset = (s: PresetSet): SetForm => ({ setType: s.setType, reps: txt(s.reps), repsMax: txt(s.repsMax), loadKg: txt(s.loadKg), loadPct: txt(s.loadPct), rir: txt(s.rir), rpe: txt(s.rpe), restS: txt(s.restS), tempo: s.tempo ?? "", note: s.note ?? "" });
+const toPreset = (s: SetForm): PresetSet => ({ setType: s.setType, reps: num(s.reps), repsMax: num(s.repsMax), loadKg: num(s.loadKg), loadPct: num(s.loadPct), rir: num(s.rir), rpe: num(s.rpe), restS: num(s.restS), tempo: s.tempo.trim() || null, note: s.note.trim() || null });
 
 /** Converte o que a API devolve (treino ou modelo) para o formulário. */
 function fromApi(exercises: any[]): ExForm[] {
   return exercises.map((e) => ({
-    exerciseId: e.exerciseId, alternativeIds: e.alternativeIds ?? [],
+    key: nk(), open: exercises.length <= 3, exerciseId: e.exerciseId, alternativeIds: e.alternativeIds ?? [],
     sets: e.sets.map((s: any) => ({
       setType: s.setType ?? "work", reps: txt(s.reps), repsMax: txt(s.repsMax), loadKg: txt(s.loadKg), loadPct: txt(s.loadPct),
       rir: txt(s.rir), rpe: txt(s.rpe), restS: txt(s.restS), tempo: s.tempo ?? "", note: s.note ?? "",
@@ -62,17 +68,23 @@ function Builder() {
   const [error, setError] = useState("");
   const [info, setInfo] = useState("");
   const [busy, setBusy] = useState(false);
+  const [picker, setPicker] = useState(false);
+  const [favorites, setFavorites] = useState<Set<string>>(new Set());
+  const [myPresets, setMyPresets] = useState<MyPreset[]>([]);
+  const [savingFor, setSavingFor] = useState(""); const [presetName, setPresetName] = useState("");
 
   useEffect(() => {
     if (!me) return;
     (async () => {
-      const [s, c, t, st] = await Promise.all([api("/students"), api("/exercises"), api("/templates"), api("/settings")]);
+      const [s, c, t, st, fv, pr] = await Promise.all([api("/students"), api("/exercises"), api("/templates"), api("/settings"), api("/exercises/favorites"), api("/set-presets")]);
+      if (fv.ok) setFavorites(new Set(fv.data as string[]));
+      if (pr.ok) setMyPresets(pr.data.mine);
       if (s.ok) setStudents(s.data);
       if (t.ok) setTemplates(t.data);
       if (st.ok) setWeight(st.data.indirectWeight);
       const cat: Exercise[] = c.ok ? c.data : [];
       setCatalog(cat);
-      const blank = [{ exerciseId: cat[0]?.id ?? "", alternativeIds: [] as string[], sets: [emptySet(), emptySet(), emptySet()] }];
+      const blank: ExForm[] = [];
       if (editId || copyId) {
         const v = await api(`/versions/${editId ?? copyId}`);
         if (!v.ok) { setError("Treino não encontrado."); setItems(blank); return; }
@@ -103,6 +115,34 @@ function Builder() {
     const k = i + d; if (k < 0 || k >= xs.length) return xs;
     const c = [...xs]; [c[i], c[k]] = [c[k], c[i]]; return c;
   });
+
+  const addExercise = (exerciseId: string, sets: PresetSet[] | null) => setList((xs) => [...xs, {
+    key: nk(), open: true, exerciseId, alternativeIds: [], sets: sets ? sets.map(fromPreset) : [emptySet(), emptySet(), emptySet()],
+  }]);
+  const reloadCatalog = async () => { const c = await api("/exercises"); if (c.ok) setCatalog(c.data); };
+  async function toggleFavorite(id: string) {
+    const on = !favorites.has(id);
+    setFavorites((f) => { const n = new Set(f); if (on) n.add(id); else n.delete(id); return n; });
+    const r = await api(`/exercises/${id}/favorite`, "PUT", { favorite: on });
+    if (!r.ok) setFavorites((f) => { const n = new Set(f); if (on) n.delete(id); else n.add(id); return n; });
+  }
+  function applyPreset(i: number, value: string) {
+    if (!value) return;
+    const [kind, id] = value.split(":");
+    const found = kind === "app" ? appPreset(id) : myPresets.find((p) => p.id === id);
+    if (!found) return;
+    setList((xs) => xs.map((x, y) => (y === i ? { ...x, sets: cloneSets(found.sets).map(fromPreset) } : x)));
+    setError(""); setInfo(`Preset “${found.name}” aplicado: as séries deste exercício foram substituídas. Ajuste se quiser.`);
+  }
+  async function savePreset(i: number) {
+    setError(""); setInfo("");
+    const r = await api("/set-presets", "POST", { name: presetName, sets: list[i].sets.map(toPreset) });
+    if (!r.ok) return setError(r.data?.issues?.[0]?.message ? `${r.data.error}: ${r.data.issues[0].message}` : r.data?.error ?? "Não foi possível salvar o preset");
+    setMyPresets((m) => [...m, { id: r.data.id, name: r.data.name, sets: r.data.sets }]);
+    setInfo(`Preset “${r.data.name}” salvo em Seus presets.`); setSavingFor(""); setPresetName("");
+  }
+  const workSets = list.reduce((n, e) => n + e.sets.filter((s) => s.setType === "work").length, 0);
+  const setAllOpen = (open: boolean) => setList((xs) => xs.map((x) => ({ ...x, open })));
 
   const invalid = list.length === 0 || list.some((e) => e.sets.length === 0 || !e.exerciseId);
 
@@ -177,18 +217,44 @@ function Builder() {
         </div>
       </div>
 
+      <div className="card row between" data-testid="summary" style={{ marginTop: 12 }}>
+        <span><b>{list.length}</b> {list.length === 1 ? "exercício" : "exercícios"} · <b>{workSets}</b> {workSets === 1 ? "série de trabalho" : "séries de trabalho"}</span>
+        <span className="row" style={{ gap: 6 }}>
+          {volume.filter((m) => m.direct > 0).slice(0, 6).map((m) => <span className="tag" key={m.muscle}>{m.muscle} {m.direct}</span>)}
+        </span>
+      </div>
+      <div className="row between" style={{ margin: "12px 0" }}>
+        <button type="button" className="btn small" onClick={() => setPicker(true)}>+ Adicionar exercício</button>
+        {list.length > 1 && (
+          <span className="row">
+            <button type="button" className="btn ghost small" onClick={() => setAllOpen(true)}>Expandir todos</button>
+            <button type="button" className="btn ghost small" onClick={() => setAllOpen(false)}>Recolher todos</button>
+          </span>
+        )}
+      </div>
+      {list.length === 0 && <p className="muted">Nenhum exercício ainda. Toque em “Adicionar exercício” para abrir a biblioteca.</p>}
+
       {list.map((it, i) => (
-        <div className="card" key={i}>
+        <div className="card" key={it.key}>
           <div className="row between">
-            <select aria-label="Exercício" style={{ maxWidth: 380 }} value={it.exerciseId} onChange={(e) => setList((xs) => xs.map((x, y) => (y === i ? { ...x, exerciseId: e.target.value, alternativeIds: x.alternativeIds.filter((z) => z !== e.target.value) } : x)))}>
-              {catalog.map((c) => <option key={c.id} value={c.id}>{c.name} · {c.muscle}</option>)}
-            </select>
+            <button type="button" className="ex-toggle" aria-expanded={it.open} onClick={() => setList((xs) => xs.map((x, y) => (y === i ? { ...x, open: !x.open } : x)))}>
+              <span className="ex-chev" aria-hidden="true">{it.open ? "▾" : "▸"}</span>
+              <span><b>{i + 1}. {byId.get(it.exerciseId)?.name ?? "Exercício"}</b>
+                <span className="muted"> · {it.sets.length} {it.sets.length === 1 ? "série" : "séries"}{byId.get(it.exerciseId) ? ` · ${byId.get(it.exerciseId)!.muscle}` : ""}</span></span>
+            </button>
             <span className="row">
               <button className="btn ghost small" aria-label="Subir exercício" disabled={i === 0} onClick={() => move(i, -1)}>↑</button>
               <button className="btn ghost small" aria-label="Descer exercício" disabled={i === list.length - 1} onClick={() => move(i, 1)}>↓</button>
-              <button className="btn ghost small" onClick={() => setList((xs) => [...xs.slice(0, i + 1), { ...it, sets: it.sets.map((s) => ({ ...s })) }, ...xs.slice(i + 1)])}>Duplicar</button>
+              <button className="btn ghost small" onClick={() => setList((xs) => [...xs.slice(0, i + 1), { ...it, key: nk(), sets: it.sets.map((s) => ({ ...s })) }, ...xs.slice(i + 1)])}>Duplicar</button>
               <button className="btn ghost small" onClick={() => setList((xs) => xs.filter((_, y) => y !== i))}>Remover</button>
             </span>
+          </div>
+          {it.open && (<>
+          <div style={{ marginTop: 10 }}>
+            <label htmlFor={`ex-${it.key}`} style={{ margin: "0 0 4px", fontSize: 11 }}>Exercício</label>
+            <select id={`ex-${it.key}`} style={{ maxWidth: 380 }} value={it.exerciseId} onChange={(e) => setList((xs) => xs.map((x, y) => (y === i ? { ...x, exerciseId: e.target.value, alternativeIds: x.alternativeIds.filter((z) => z !== e.target.value) } : x)))}>
+              {catalog.map((c) => <option key={c.id} value={c.id}>{c.name} · {c.muscle}</option>)}
+            </select>
           </div>
           <div style={{ marginTop: 10 }}>
             <label style={{ margin: "0 0 4px", fontSize: 11 }}>Alternativas autorizadas (o aluno só as usa se a permissão estiver liberada)</label>
@@ -238,13 +304,25 @@ function Builder() {
               </div>
             </div>
           ))}
-          <div style={{ marginTop: 12 }}>
+          <div className="row" style={{ marginTop: 12 }}>
             <button className="btn ghost small" onClick={() => setList((xs) => xs.map((x, y) => (y === i ? { ...x, sets: [...x.sets, emptySet(x.sets.at(-1) ?? {})] } : x)))}>+ Série</button>
+            <select style={{ maxWidth: 220 }} aria-label={`Aplicar preset de séries em ${byId.get(it.exerciseId)?.name ?? "exercício"}`} value="" onChange={(e) => applyPreset(i, e.target.value)}>
+              <option value="">Aplicar preset…</option>
+              <optgroup label="Presets do app">{APP_PRESETS.map((p) => <option key={p.id} value={`app:${p.id}`}>{p.name}</option>)}</optgroup>
+              {myPresets.length > 0 && <optgroup label="Seus presets">{myPresets.map((p) => <option key={p.id} value={`mine:${p.id}`}>{p.name}</option>)}</optgroup>}
+            </select>
+            {savingFor === it.key ? (
+              <>
+                <input style={{ maxWidth: 200 }} placeholder="Nome do preset" aria-label="Nome do preset" value={presetName} onChange={(e) => setPresetName(e.target.value)} />
+                <button className="btn small" disabled={!presetName.trim()} onClick={() => savePreset(i)}>Salvar</button>
+                <button className="btn ghost small" onClick={() => { setSavingFor(""); setPresetName(""); }}>Cancelar</button>
+              </>
+            ) : <button className="btn ghost small" onClick={() => { setSavingFor(it.key); setPresetName(""); }}>Salvar como preset</button>}
           </div>
+          </>)}
         </div>
       ))}
 
-      <button className="btn ghost" onClick={() => setList((xs) => [...xs, { exerciseId: catalog[0]?.id ?? "", alternativeIds: [], sets: [emptySet(), emptySet(), emptySet()] }])}>+ Exercício</button>
 
       <h2>Volume desta sessão</h2>
       <div className="card" data-testid="volume">
@@ -273,6 +351,11 @@ function Builder() {
         <button className="btn ghost small" disabled={invalid} onClick={saveTemplate}>Salvar como modelo</button>
       </div>
       <p className="muted">Depois de publicado, o treino não pode mais ser editado: mudanças geram uma nova versão e a anterior fica preservada.</p>
+      {picker && (
+        <ExercisePicker catalog={catalog} favorites={favorites} myPresets={myPresets} added={list}
+          onToggleFavorite={toggleFavorite} onAdd={addExercise} onRemoveAt={(i) => setList((xs) => xs.filter((_, y) => y !== i))}
+          onCatalogChanged={reloadCatalog} onClose={() => setPicker(false)} />
+      )}
     </Shell>
   );
 }

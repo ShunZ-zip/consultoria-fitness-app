@@ -453,6 +453,25 @@ create table if not exists suggestions (
 create index if not exists suggestions_student on suggestions (consultancy_id, student_id, status);
 `;
 
+// Seletor de exercícios do editor: favoritos (por usuário) e presets de séries do personal (por consultoria).
+export const MIGRATION_10_SQL = `
+create table if not exists exercise_favorites (
+  user_id uuid not null references users(id),
+  exercise_id uuid not null references exercises(id),
+  created_at timestamptz not null default now(),
+  primary key (user_id, exercise_id)
+);
+create table if not exists set_presets (
+  id uuid primary key,
+  consultancy_id uuid not null references consultancies(id),
+  name text not null check (length(name) between 1 and 60),
+  sets jsonb not null,
+  created_by uuid not null references users(id),
+  created_at timestamptz not null default now()
+);
+create unique index if not exists set_presets_name on set_presets (consultancy_id, lower(name));
+`;
+
 // Catálogo oficial inicial (nomes e músculos provisórios; vídeos de referência em src/lib/referenceVideos.ts).
 // Taxonomia muscular PROVISÓRIA: o documento deixa a taxonomia e a ponderação para validação.
 export interface OfficialExercise { name: string; equipment: string; primary: string[]; secondary: string[] }

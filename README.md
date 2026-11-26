@@ -105,7 +105,7 @@ Para recomeçar do zero: pare o servidor, apague a pasta `data` e rode `npm run 
 ## Testes
 
 ```powershell
-npm test          # 268 testes em 19 arquivos, banco em memória
+npm test          # 276 testes em 20 arquivos, banco em memória
 npm run typecheck
 npm run validate  # validação HTTP ponta a ponta (entregas 1 a 5): exige o servidor rodando (npm run dev)
 ```

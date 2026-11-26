@@ -246,7 +246,7 @@ export async function versionDetail(db: Db, v: VersionRow) {
 
 type Detail = Awaited<ReturnType<typeof versionDetail>>;
 
-const setInput = z.object({
+export const setInput = z.object({
   setType: z.enum(["warmup", "prep", "work"]).default("work"),
   reps: z.number().int().min(1).max(100).nullish(),
   repsMax: z.number().int().min(1).max(100).nullish(),
