@@ -26,7 +26,11 @@ export async function ensureOfficialMedia(db: PGlite): Promise<number> {
       [randomUUID(), ex.rows[0].id, `${e.name} (animação 3D)`, modelUrl(e.name), MEDIA_LICENSE]);
     changed++;
   }
-  // Vídeos de referência (YouTube, de terceiros, com crédito ao autor): uma linha por exercício, sem repetir.
+  // Vídeos de referência (animações 3D no YouTube, de terceiros, com crédito ao canal). Primeiro sai o que não está mais na lista
+  // (ex.: os vídeos da lista anterior), depois entra o que falta: uma linha por exercício, sem repetir.
+  const current = Object.values(REFERENCE_VIDEOS).map((v) => youtubeWatchUrl(v.id));
+  const removed = await db.query("delete from exercise_media where consultancy_id is null and kind = 'video' and not (url = any($1::text[])) returning id", [current]);
+  changed += removed.rows.length;
   for (const [name, v] of Object.entries(REFERENCE_VIDEOS)) {
     const ex = await db.query<{ id: string }>("select id from exercises where consultancy_id is null and name = $1", [name]);
     if (!ex.rows[0]) continue;
@@ -34,7 +38,7 @@ export async function ensureOfficialMedia(db: PGlite): Promise<number> {
     const has = await db.query("select 1 from exercise_media where exercise_id = $1 and consultancy_id is null and url = $2", [ex.rows[0].id, url]);
     if (has.rows.length) continue;
     await db.query("insert into exercise_media (id, exercise_id, consultancy_id, kind, title, url, license) values ($1,$2,null,'video',$3,$4,$5)",
-      [randomUUID(), ex.rows[0].id, v.title, url, `Vídeo de terceiros: ${v.author} (YouTube), exibido por link com crédito ao autor`]);
+      [randomUUID(), ex.rows[0].id, v.title, url, `Vídeo de terceiros: ${v.author} (YouTube), exibido por incorporação com crédito ao canal`]);
     changed++;
   }
   return changed;

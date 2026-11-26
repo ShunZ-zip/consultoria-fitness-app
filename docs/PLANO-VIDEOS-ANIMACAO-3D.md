@@ -84,7 +84,10 @@ Script local (`yt_search`), 3 consultas em inglês por exercício (`<nome> 3D mu
 ### Sem candidato (18)
 Supino inclinado com halteres, Crucifixo declinado, Cross-over, Peck deck, Pull-down, Elevação frontal com barra, Tríceps testa com barra, Tríceps testa com halteres, Tríceps unilateral na polia, Rosca alternada, Hand grip, Panturrilha no leg press, Abdominal supra, Abdominal infra, Abdominal oblíquo, Vácuo abdominal, Extensão de pescoço, Abdominal na máquina
 
-## Passos
+## Execução (26/11/2026)
+Aplicado: `src/lib/referenceVideos.ts` agora tem **52 exercícios / 49 vídeos / 18 canais**, todos conferidos por oEmbed; os vídeos do Leandro Twin saem do banco no próximo início do servidor. A tabela acima é a **busca automática bruta**; a seleção final foi revisada pelos títulos (descartei os que eram de outro exercício, ex.: "Supino reto" → "Close Grip Bench Press") e complementada por uma busca dirigida para os exercícios principais. **Falta:** revisão visual assistindo cada vídeo e a permissão dos canais.
+
+## Passos (checklist original)
 1. Revisar visualmente os candidatos (miniaturas/abrir o vídeo) e descartar os de outro exercício.
 2. Substituir `referenceVideos.ts` pelos escolhidos (id, título e canal vindos do oEmbed) e remover a atribuição ao Leandro Twin do README/HANDOFF.
 3. `ensureOfficialMedia`: remover do banco os vídeos antigos (url dos ids do Leandro Twin) e registrar os novos (idempotente).

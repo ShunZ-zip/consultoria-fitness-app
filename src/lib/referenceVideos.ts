@@ -1,407 +1,268 @@
-// Vídeos de referência de execução dos exercícios do catálogo (lista "Vídeos dos Exercícios", de Leandro Twin, CREF 128544-G/SP).
-// São vídeos de TERCEIROS no YouTube, exibidos por link/incorporação com crédito ao autor; nada foi copiado para o servidor.
-// Cada id foi conferido (oEmbed do YouTube) e o título/autor vêm de lá. Fonte: https://www.leandrotwin.com.br/assessoria/arquivos/lista-de-videos-de-exercicios.pdf
+// Vídeos de referência de execução: animações 3D de exercícios (boneco 3D com os músculos em destaque), de CANAIS DO YOUTUBE de terceiros
+// (principalmente Muscle & Motion). São exibidos por incorporação oficial com crédito ao canal; nada é copiado para o servidor.
+// Cada id foi conferido pelo oEmbed do YouTube (existe e permite incorporar); título e canal vêm de lá. Seleção em docs/PLANO-VIDEOS-ANIMACAO-3D.md.
+// Exercícios sem entrada aqui não têm vídeo (os 16 com animação 3D própria continuam com ela).
 export interface ReferenceVideo { id: string; title: string; author: string }
 export const REFERENCE_VIDEOS: Record<string, ReferenceVideo> = {
   "Supino reto": {
-    "id": "EZMYCLKuGow",
-    "title": "Como fazer supino reto",
-    "author": "Leandro Twin"
-  },
-  "Supino inclinado com halteres": {
-    "id": "WP1VLAt8hbM",
-    "title": "Como fazer supino inclinado",
-    "author": "Leandro Twin"
-  },
-  "Supino declinado": {
-    "id": "J2g6qPBJfqo",
-    "title": "Como fazer supino declinado",
-    "author": "Leandro Twin"
+    "id": "vunUexdi6NI",
+    "title": "3D Anatomy of the Barbell Bench Press | Chest & Triceps Muscle Activation💪🔥#PectoralisMajor#Triceps#",
+    "author": "Muscle Science 3D"
   },
   "Crucifixo": {
-    "id": "uDMmccuPVPQ",
-    "title": "Como fazer crucifixo reto",
-    "author": "Leandro Twin"
-  },
-  "Crucifixo inclinado": {
-    "id": "uy9Xk3SVrms",
-    "title": "Como fazer crucifixo inclinado",
-    "author": "Leandro Twin"
-  },
-  "Crucifixo declinado": {
-    "id": "zdkX5_Gcdq8",
-    "title": "Como fazer crucifixo declinado",
-    "author": "Leandro Twin"
-  },
-  "Cross-over": {
-    "id": "jqTlJt3JXzQ",
-    "title": "Como fazer cross over",
-    "author": "Leandro Twin"
+    "id": "M2fNYfym6Eo",
+    "title": "Cable Fly vs Dumbbell Fly: Which Builds More Chest? | 3D Anatomical Fitness Guide",
+    "author": "Fit Anatomy 3D"
   },
   "Flexão de braço": {
-    "id": "dHgoYiCraCw",
-    "title": "Como fazer flexão de braço",
-    "author": "Leandro Twin"
-  },
-  "Peck deck": {
-    "id": "FzCnfD0gOXo",
-    "title": "Como fazer peck deck ou crucifixo na máquina",
-    "author": "Leandro Twin"
+    "id": "qpcBos-EUug",
+    "title": "How to do a Proper Push Up: Watch the muscles in 3D & learn to avoid a common mistake.",
+    "author": "Muscle & Motion"
   },
   "Pull-over": {
-    "id": "-KaMXMMIVrU",
-    "title": "Como fazer pull over",
-    "author": "Leandro Twin"
+    "id": "ZmijCSRBW5E",
+    "title": "Dumbbell Pullover",
+    "author": "Muscle & Motion"
   },
   "Barra fixa": {
-    "id": "thg6cGXSlvY",
-    "title": "Como fazer barra fixa",
-    "author": "Leandro Twin"
+    "id": "swLoMW9WFZI",
+    "title": "Pull Ups & Dips with Muscular Analysis",
+    "author": "Muscle & Motion"
   },
   "Levantamento terra": {
-    "id": "50AkPBZwACQ",
-    "title": "Como fazer levantamento terra",
-    "author": "Leandro Twin"
+    "id": "o5FvhPAZ_yw",
+    "title": "How to Deadlift Properly: 3D Animation of Muscles in Motion",
+    "author": "Muscle & Motion"
   },
   "Puxada frontal": {
-    "id": "pJM_rHhluK8",
-    "title": "Como fazer puxada vertical",
-    "author": "Leandro Twin"
+    "id": "or-b1psncs4",
+    "title": "Mastering the Lat Pulldown for a Stronger Back",
+    "author": "Muscle & Motion"
   },
   "Remada curvada": {
-    "id": "TfxJMertfsw",
-    "title": "Como fazer remada curvada barra",
-    "author": "Leandro Twin"
-  },
-  "Remada curvada com halteres": {
-    "id": "Vk6c7CjtM14",
-    "title": "Como fazer remada curvada halteres",
-    "author": "Leandro Twin"
-  },
-  "Remada na máquina": {
-    "id": "QyvIEdEHzHc",
-    "title": "Como fazer remada máquina",
-    "author": "Leandro Twin"
-  },
-  "Remada no cross": {
-    "id": "HpWWreyaBN0",
-    "title": "Como fazer remada cross",
-    "author": "Leandro Twin"
+    "id": "jOr03vOvMH0",
+    "title": "Smith Machine Bent-Over Row: Strengthen Your Back with Control",
+    "author": "Muscle & Motion"
   },
   "Remada unilateral com halter": {
-    "id": "m4h4jT9patY",
-    "title": "Como fazer remada halteres unilateral",
-    "author": "Leandro Twin"
+    "id": "xIjW4nmaIOo",
+    "title": "How to One Arm Dumbbell Row, 3d animation, gif",
+    "author": "Planfit"
   },
-  "Pull-down": {
-    "id": "v6-QIOY0nW0",
-    "title": "Como fazer pull down",
-    "author": "Leandro Twin"
+  "Remada na máquina": {
+    "id": "Ly0TerDmMuI",
+    "title": "How to Seated Row Machine, 3D animation,gif",
+    "author": "Planfit"
+  },
+  "Remada no cross": {
+    "id": "K-h-DFseHfk",
+    "title": "Seated Cable Row Male – What Muscles Actually Work 3D Anatomy – TrainHive",
+    "author": "TrainHive"
   },
   "Elevação lateral": {
-    "id": "IwWvZ0rlNXs",
-    "title": "Como fazer elevação lateral",
-    "author": "Leandro Twin"
-  },
-  "Elevação lateral no cross": {
-    "id": "sKPJdvVvHuI",
-    "title": "Como fazer elevação lateral cross",
-    "author": "Leandro Twin"
+    "id": "WtP691z7Wz8",
+    "title": "Dumbbell Side Lateral Raise",
+    "author": "Muscle & Motion"
   },
   "Elevação frontal": {
-    "id": "NxSuojHZa8k",
-    "title": "Como fazer elevação frontal halteres",
-    "author": "Leandro Twin"
-  },
-  "Elevação frontal com barra": {
-    "id": "_ZQhDiONpZA",
-    "title": "Como fazer elevação frontal barra",
-    "author": "Leandro Twin"
+    "id": "1FRgeRRCi0g",
+    "title": "3D Dumbbell Front Raise Animation | Realistic Fitness Exercise",
+    "author": "JOHN OLUWASEMILORE"
   },
   "Elevação frontal no cross": {
-    "id": "S7B5LwWrLA0",
-    "title": "Como fazer elevação frontal cross",
-    "author": "Leandro Twin"
+    "id": "YpYHhw4Jhrs",
+    "title": "Cable One Arm Front Raise",
+    "author": "Gym Animations"
   },
   "Crucifixo inverso": {
-    "id": "5HDkxzxe400",
-    "title": "Como fazer crucifixo inverso",
-    "author": "Leandro Twin"
-  },
-  "Desenvolvimento com halteres": {
-    "id": "EuQAfhXBEvs",
-    "title": "Como fazer desenvolvimento",
-    "author": "Leandro Twin"
+    "id": "bKu9Ys175VY",
+    "title": "Maximize Posterior Deltoid Gains with the Machine Reverse Fly",
+    "author": "Muscle & Motion"
   },
   "Desenvolvimento militar": {
-    "id": "EuQAfhXBEvs",
-    "title": "Como fazer desenvolvimento",
-    "author": "Leandro Twin"
+    "id": "XJGvZbDM8iY",
+    "title": "Anatomy and Biomechanics of the Military Press",
+    "author": "Kinetic Library"
   },
   "Manguito rotador (rotação externa)": {
-    "id": "AevNFIX7lV4",
-    "title": "Como fazer manguito rotador externo",
-    "author": "Leandro Twin"
-  },
-  "Manguito rotador (rotação interna)": {
-    "id": "vN9_Bw_yZGA",
-    "title": "Como fazer manguito rotador interno",
-    "author": "Leandro Twin"
+    "id": "lw5jkvrLwVw",
+    "title": "Strengthen Your Rotator Cuff: Shoulder External Rotation with Mini Band",
+    "author": "Muscle & Motion"
   },
   "Encolhimento": {
-    "id": "RhGjwIUe16E",
-    "title": "Como fazer encolhimento",
-    "author": "Leandro Twin"
+    "id": "RwX1K9Qn4Uk",
+    "title": "AOVALO dumbbell shrug fitness exercise workout animation video male",
+    "author": "AOVALO"
   },
   "Remada alta": {
-    "id": "tm0IywBhIYM",
-    "title": "Como fazer remada alta",
-    "author": "Leandro Twin"
+    "id": "pT4njrC59fk",
+    "title": "Upright Row - Good or Bad?",
+    "author": "Muscle & Motion"
   },
   "Paralelas": {
-    "id": "LJz40nTE_sI",
-    "title": "Como fazer paralelas",
-    "author": "Leandro Twin"
+    "id": "rZl4D4p_nO4",
+    "title": "Dips - Variations with Target Muscles and Synergists",
+    "author": "Muscle & Motion"
   },
   "Mergulho": {
-    "id": "TCVj8cliLNo",
-    "title": "Como fazer mergulho",
-    "author": "Leandro Twin"
+    "id": "arZWKRN9PJY",
+    "title": "Bench Dip - Dangerous Zone",
+    "author": "Muscle & Motion"
   },
   "Supino fechado": {
-    "id": "ZiemT4r4DcU",
-    "title": "Como fazer supino fechado",
-    "author": "Leandro Twin"
+    "id": "1cFDN5aSKtw",
+    "title": "Barbell Close Grip Bench Press",
+    "author": "Muscle & Motion"
   },
   "Tríceps testa com barra": {
-    "id": "zznCYBVZOVA",
-    "title": "Como fazer rosca testa barra",
-    "author": "Leandro Twin"
-  },
-  "Tríceps testa com halteres": {
-    "id": "SbAykzCE-xk",
-    "title": "Como fazer rosca testa halteres",
-    "author": "Leandro Twin"
+    "id": "vYZVUUS-72Q",
+    "title": "Arms: Lying Tricep Bar Extension - Triceps (Exercise/Anatomy)",
+    "author": "FitAnatomy"
   },
   "Tríceps na polia": {
-    "id": "dTqDKC0D6P4",
-    "title": "Como fazer tríceps pulley bilateral",
-    "author": "Leandro Twin"
+    "id": "4r3GdBAnHqc",
+    "title": "Work on your Triceps with Cable One Arm Push-down",
+    "author": "Muscle & Motion"
   },
   "Tríceps unilateral na polia": {
-    "id": "nTTTjbA0TSU",
-    "title": "Como fazer tríceps pulley unilateral",
-    "author": "Leandro Twin"
-  },
-  "Tríceps francês": {
-    "id": "YJ4kGE3eemY",
-    "title": "Como fazer rosca francesa",
-    "author": "Leandro Twin"
+    "id": "4r3GdBAnHqc",
+    "title": "Work on your Triceps with Cable One Arm Push-down",
+    "author": "Muscle & Motion"
   },
   "Tríceps coice": {
-    "id": "PyKv23F-fVM",
-    "title": "Como fazer tríceps coice",
-    "author": "Leandro Twin"
-  },
-  "Flexão de braço fechada": {
-    "id": "HM9DUyI4d-g",
-    "title": "Como fazer flexão de braço fechada",
-    "author": "Leandro Twin"
+    "id": "IQzfREbIfVg",
+    "title": "\"Triceps Kickback\" Exercise (Learn the Muscles!)",
+    "author": "Dance Cube"
   },
   "Rosca direta": {
-    "id": "Q8TqfD8E7BU",
-    "title": "Como fazer rosca direta",
-    "author": "Leandro Twin"
+    "id": "Qe16Y1ZJkyY",
+    "title": "Barbell Curl Male – What Muscles Actually Work 3D Anatomy – TrainHive",
+    "author": "TrainHive"
   },
   "Rosca martelo": {
-    "id": "0qkQy8V2FC0",
-    "title": "Como fazer rosca martelo",
-    "author": "Leandro Twin"
-  },
-  "Rosca alternada": {
-    "id": "S1HAcTVQVYE",
-    "title": "Como fazer rosca alternada",
-    "author": "Leandro Twin"
+    "id": "2HPs8LYJNYM",
+    "title": "4K Hammer Curls Stock Animation",
+    "author": "D3igital"
   },
   "Rosca scott": {
-    "id": "zpTK6eihdSA",
-    "title": "Como fazer rosca scott",
-    "author": "Leandro Twin"
+    "id": "_O1rZ7ghM3c",
+    "title": "How to Do One-Arm Preacher Curls and a Common mistake",
+    "author": "Muscle & Motion"
   },
   "Rosca concentrada": {
-    "id": "EEpvOQAAtRo",
-    "title": "Como fazer rosca concentrada",
-    "author": "Leandro Twin"
+    "id": "NiWoiu7WL-Y",
+    "title": "Dumbbell Concentration Curl | 3D Anatomy",
+    "author": "Muscle & Motion"
   },
   "Flexão de punho": {
-    "id": "3PDPiCoWF-Y",
-    "title": "Como fazer flexão de punho",
-    "author": "Leandro Twin"
-  },
-  "Extensão de punho": {
-    "id": "Kx8rg0MJX_c",
-    "title": "Como fazer extensão de punho",
-    "author": "Leandro Twin"
-  },
-  "Rosca inversa": {
-    "id": "jbSr9CzJPmA",
-    "title": "Como fazer rosca inversa",
-    "author": "Leandro Twin"
-  },
-  "Hand grip": {
-    "id": "XVlGHmeISEQ",
-    "title": "Como fazer hand grip",
-    "author": "Leandro Twin"
+    "id": "DQPkmTJpnk4",
+    "title": "3D Animation of Wrist Curls Exercise with Anatomical Muscle Highlight",
+    "author": "SHABBIR 45"
   },
   "Agachamento livre": {
-    "id": "zgk71dUUt0Y",
-    "title": "Como fazer agachamento",
-    "author": "Leandro Twin"
+    "id": "eb4rKCM3BKM",
+    "title": "How to do a Squat Properly: Watch the Muscles in 3D",
+    "author": "Muscle & Motion"
   },
   "Agachamento frontal": {
-    "id": "syfDrU220FU",
-    "title": "Como fazer agachamento frontal",
-    "author": "Leandro Twin"
+    "id": "7jbJq5am4sw",
+    "title": "Front Squat Anatomy",
+    "author": "BSU Masters Degree - Strength & Conditioning"
   },
   "Agachamento sumô": {
-    "id": "O6Cmxez6D0k",
-    "title": "Como fazer agachamento sumo",
-    "author": "Leandro Twin"
+    "id": "BE_9UDq5X5k",
+    "title": "\"Sumo Squat\" Exercise (Learn the Muscles!)",
+    "author": "Dance Cube"
   },
   "Agachamento búlgaro": {
-    "id": "IGf9fR4Y7Iw",
-    "title": "Como fazer agachamento búlgaro",
-    "author": "Leandro Twin"
+    "id": "xyn1-o3NkLg",
+    "title": "Bulgarian Split Squat Vs. Skater Squat",
+    "author": "Muscle & Motion"
   },
   "Passada": {
-    "id": "sQ5RjbpPirY",
-    "title": "Como fazer passada",
-    "author": "Leandro Twin"
+    "id": "5DadWZno5N0",
+    "title": "Weighted walking lunge (kettlebell)",
+    "author": "Muscle & Motion"
   },
   "Afundo": {
-    "id": "Umzor-_g-tQ",
-    "title": "Como fazer afundos",
-    "author": "Leandro Twin"
+    "id": "SGwpAzYVNfc",
+    "title": "Overhead Lunge I Anatomical analysis & Mistakes to avoid",
+    "author": "Muscle & Motion"
   },
   "Avanço": {
-    "id": "XBJtM2phDDM",
-    "title": "Como fazer avanço",
-    "author": "Leandro Twin"
+    "id": "te8GLt4IpZo",
+    "title": "Forward lunges | Tutorial | The Muscle Movement",
+    "author": "The Muscle Movement"
   },
   "Leg press 45°": {
-    "id": "nY8UsiAqwds",
-    "title": "Como fazer leg press",
-    "author": "Leandro Twin"
+    "id": "QDnCR1eOOPw",
+    "title": "Leg Press Anatomy",
+    "author": "Muscle & Motion"
   },
   "Stiff": {
-    "id": "u1E3_u2gJYE",
-    "title": "Como fazer stiff",
-    "author": "Leandro Twin"
-  },
-  "Cadeira extensora": {
-    "id": "el3oHblB5DM",
-    "title": "Como fazer cadeira extensora",
-    "author": "Leandro Twin"
-  },
-  "Mesa flexora": {
-    "id": "2-ULaRrQa7c",
-    "title": "Como fazer mesa flexora",
-    "author": "Leandro Twin"
+    "id": "W40UxQXeaFE",
+    "title": "Lifting Injury Risk, Stiff-leg Deadlift and more.",
+    "author": "Muscle & Motion"
   },
   "Cadeira flexora": {
-    "id": "Zss6E3VU6X0",
-    "title": "Como fazer cadeira flexora",
-    "author": "Leandro Twin"
-  },
-  "Flexora vertical": {
-    "id": "KomsEmm5oxA",
-    "title": "Como fazer flexora vertical",
-    "author": "Leandro Twin"
-  },
-  "Cadeira adutora": {
-    "id": "Wf602gn_9zU",
-    "title": "Como fazer cadeira adutora",
-    "author": "Leandro Twin"
+    "id": "PvkDCShhyL0",
+    "title": "AOVALO seated leg curl machine fitness exercise workout animation",
+    "author": "AOVALO"
   },
   "Glúteo em 4 apoios": {
-    "id": "e4RuZ1NVYqA",
-    "title": "Como fazer 4 apoios",
-    "author": "Leandro Twin"
-  },
-  "Glúteo na máquina": {
-    "id": "JhodVO0l1vw",
-    "title": "Como fazer glúteos máquina",
-    "author": "Leandro Twin"
+    "id": "_VPHlGhgYdg",
+    "title": "Gluteus Maximus - Kickback",
+    "author": "Muscle & Motion"
   },
   "Glúteo no cross": {
-    "id": "JdHbXlggr6Q",
-    "title": "Como fazer glúteos cross (4 apoios)",
-    "author": "Leandro Twin"
+    "id": "_VPHlGhgYdg",
+    "title": "Gluteus Maximus - Kickback",
+    "author": "Muscle & Motion"
   },
   "Elevação pélvica": {
-    "id": "ptK0azwOXwM",
-    "title": "Como fazer elevação pélvica",
-    "author": "Leandro Twin"
+    "id": "3PY_WZ2xS10",
+    "title": "Single-Leg Hip Thrust: Build Stronger Glutes Without Adding Weight",
+    "author": "Muscle & Motion"
   },
-  "Cadeira abdutora": {
-    "id": "e2gmqTG1OgQ",
-    "title": "Como fazer cadeira abdutora",
-    "author": "Leandro Twin"
+  "Cadeira adutora": {
+    "id": "DzXN930lttA",
+    "title": "Exercise for Building Hip Adductor Strength and Preventing Injury",
+    "author": "Muscle & Motion"
   },
   "Panturrilha em pé": {
-    "id": "824pMjvGXgc",
-    "title": "Como fazer gêmeos em pé",
-    "author": "Leandro Twin"
+    "id": "NNy8-kDjyXo",
+    "title": "BIGGER CALVES: Standing vs Seated Calf Raise | Which One Builds More Muscle? | Dr. HealthoraCare",
+    "author": "🩺 Dr. HealthoraCare"
   },
   "Panturrilha sentado": {
-    "id": "jMWs_p-W9gY",
-    "title": "Como fazer gêmeos sentado",
-    "author": "Leandro Twin"
+    "id": "NNy8-kDjyXo",
+    "title": "BIGGER CALVES: Standing vs Seated Calf Raise | Which One Builds More Muscle? | Dr. HealthoraCare",
+    "author": "🩺 Dr. HealthoraCare"
   },
   "Panturrilha no leg press": {
-    "id": "wCXvfH_-BLg",
-    "title": "Como fazer gêmeos leg press",
-    "author": "Leandro Twin"
+    "id": "cPt_Op0uh5k",
+    "title": "AOVALO bodyweight calf raise fitness exercise workout animation",
+    "author": "AOVALO"
   },
   "Abdominal supra": {
-    "id": "7YxVRiATugo",
-    "title": "Como fazer abdominal supra",
-    "author": "Leandro Twin"
-  },
-  "Abdominal infra": {
-    "id": "ixJcUH8AlL8",
-    "title": "Como fazer abdominal infra",
-    "author": "Leandro Twin"
-  },
-  "Abdominal oblíquo": {
-    "id": "Smr8ipkN5A0",
-    "title": "Como fazer abdominal oblíquo",
-    "author": "Leandro Twin"
+    "id": "-T-HCBDSNRw",
+    "title": "Crunch Female – What Muscles Actually Work 3D Anatomy – TrainHive",
+    "author": "TrainHive"
   },
   "Prancha": {
-    "id": "qNRqGqESAWU",
-    "title": "Como fazer abdominal prancha",
-    "author": "Leandro Twin"
+    "id": "AwFaqk3kNJk",
+    "title": "Plank Exercise Explained in 3D Anatomy  Correct Form, Core Muscles & Injury Prevention",
+    "author": "Biomech Body3D"
   },
   "Extensão lombar": {
-    "id": "z0rx9swRDR0",
-    "title": "Como fazer extensão lombar",
-    "author": "Leandro Twin"
-  },
-  "Vácuo abdominal": {
-    "id": "qvdiga5sQvQ",
-    "title": "Como fazer vácuo de estômago",
-    "author": "Leandro Twin"
+    "id": "XI6G2ZP_Y8w",
+    "title": "45 Degree Back Extension Male – What Muscles Actually Work 3D Anatomy – TrainHive",
+    "author": "TrainHive"
   },
   "Flexão de pescoço": {
-    "id": "FTkrC44gNIU",
-    "title": "Como fazer exercício de pescoço",
-    "author": "Leandro Twin"
-  },
-  "Extensão de pescoço": {
-    "id": "FTkrC44gNIU",
-    "title": "Como fazer exercício de pescoço",
-    "author": "Leandro Twin"
+    "id": "jGV_RTfRGF4",
+    "title": "Head/Neck Flexion with 3D animation",
+    "author": "Amir nawaz Khan"
   }
 };
 export const youtubeWatchUrl = (id: string) => `https://www.youtube.com/watch?v=${id}`;

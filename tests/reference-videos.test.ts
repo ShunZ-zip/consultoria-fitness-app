@@ -11,8 +11,14 @@ describe("catálogo ampliado e vídeos de referência", () => {
     for (const e of OFFICIAL_EXERCISES) { expect(e.primary.length, e.name).toBeGreaterThan(0); expect(e.primary.some((p) => e.secondary.includes(p)), e.name).toBe(false); }
     expect(OFFICIAL_EXERCISES.length).toBeGreaterThanOrEqual(80);
   });
-  it("todo exercício do catálogo tem demonstração: vídeo de referência e/ou animação 3D", () => {
-    for (const e of OFFICIAL_EXERCISES) expect(REFERENCE_VIDEOS[e.name] || has3D(e.name), e.name).toBeTruthy();
+  it("cobertura: ao menos 45 exercícios com vídeo e nenhum vídeo é do Leandro Twin (pedido do usuário)", () => {
+    expect(Object.keys(REFERENCE_VIDEOS).length).toBeGreaterThanOrEqual(45);
+    for (const [name, v] of Object.entries(REFERENCE_VIDEOS)) expect(v.author.toLowerCase(), name).not.toContain("leandro");
+    const withDemo = OFFICIAL_EXERCISES.filter((e) => REFERENCE_VIDEOS[e.name] || has3D(e.name)).length;
+    expect(withDemo).toBeGreaterThanOrEqual(50);
+  });
+  it("os exercícios principais têm o vídeo do canal Muscle & Motion ou outro canal de animação 3D", () => {
+    for (const n of ["Supino reto", "Agachamento livre", "Levantamento terra", "Puxada frontal", "Leg press 45°", "Rosca direta"]) expect(REFERENCE_VIDEOS[n], n).toBeTruthy();
   });
   it("cada vídeo aponta para um exercício existente, com id válido do YouTube e crédito ao autor", () => {
     const names = new Set(OFFICIAL_EXERCISES.map((e) => e.name));
