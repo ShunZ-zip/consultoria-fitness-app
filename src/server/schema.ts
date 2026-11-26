@@ -430,6 +430,29 @@ create unique index if not exists tasks_source_key on tasks (consultancy_id, sou
 create index if not exists tasks_board on tasks (consultancy_id, status, position);
 `;
 
+// Entrega 6: sugestões assistivas por regras. A decisão é do personal; aprovar cria RASCUNHO de nova versão.
+export const MIGRATION_9_SQL = `
+create table if not exists suggestions (
+  id uuid primary key,
+  consultancy_id uuid not null references consultancies(id),
+  student_id uuid not null references users(id),
+  version_id uuid not null references program_versions(id),   -- versão publicada analisada
+  kind text not null,
+  dedupe_key text not null,
+  status text not null default 'pending' check (status in ('pending','approved','rejected')),
+  title text not null,
+  rationale text not null,
+  evidence jsonb not null,
+  proposal jsonb,
+  result_version_id uuid references program_versions(id),     -- rascunho criado ao aprovar
+  created_at timestamptz not null default now(),
+  decided_at timestamptz,
+  decided_by uuid references users(id),
+  unique (consultancy_id, student_id, version_id, kind, dedupe_key)
+);
+create index if not exists suggestions_student on suggestions (consultancy_id, student_id, status);
+`;
+
 // Catálogo oficial inicial (fictício, sem mídia).
 // Taxonomia muscular PROVISÓRIA: o documento deixa a taxonomia e a ponderação para validação.
 export interface OfficialExercise { name: string; equipment: string; primary: string[]; secondary: string[] }

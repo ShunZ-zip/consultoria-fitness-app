@@ -5,6 +5,7 @@ import { useCallback, useEffect, useState } from "react";
 import Shell from "../../../../components/Shell";
 import Icon from "../../../../components/Icon";
 import StudentFollowUp from "../../../../components/StudentFollowUp";
+import StudentSuggestions from "../../../../components/StudentSuggestions";
 import EvolutionPanel, { type EvolutionData } from "../../../../components/EvolutionPanel";
 import { api, useMe } from "../../../../lib/client";
 import { PERMISSIONS, type Permissions } from "../../../../lib/permissions";
@@ -62,6 +63,8 @@ export default function PerfilAluno() {
           {evo && <EvolutionPanel data={evo} />}
 
           <StudentFollowUp studentId={student.id} />
+
+          <StudentSuggestions studentId={student.id} />
 
           <h2>Permissões do aluno</h2>
           <div className="card" data-testid="permissions">

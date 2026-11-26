@@ -162,7 +162,7 @@ export const listExercises = route(async (ctx) => {
 
 // ---------------------------------------------------------------------- Treinos
 
-interface VersionRow {
+export interface VersionRow {
   id: string; name: string; status: "draft" | "published"; published_at: string | null;
   student_id: string; student_name: string; program_id: string; version: number; is_current: boolean; weekly_frequency: number | null;
 }
@@ -266,7 +266,7 @@ const exercisesInput = z.array(
   z.object({ exerciseId: uuid, alternativeIds: z.array(uuid).max(8).optional(), sets: z.array(setInput).min(1).max(30) })
     .refine((e) => !(e.alternativeIds ?? []).includes(e.exerciseId), { message: "A alternativa deve ser outro exercício" }),
 ).min(1).max(30);
-type ExercisesInput = z.infer<typeof exercisesInput>;
+export type ExercisesInput = z.infer<typeof exercisesInput>;
 
 const weeklyFrequency = z.number().int().min(1).max(7).nullable().optional();
 const createVersionInput = z.object({ studentId: uuid, name, publish: z.boolean().optional(), weeklyFrequency, exercises: exercisesInput });
@@ -385,24 +385,32 @@ export const publishVersion = route(async (ctx) => {
 });
 
 /** Nova versão (rascunho) a partir da versão atual publicada; a anterior fica preservada. */
+/** Cria o RASCUNHO da próxima versão a partir de uma versão publicada e atual (opcionalmente transformando o conteúdo).
+ *  Nunca altera a versão publicada. Devolve o rascunho existente, se houver. */
+export async function createDraftFromVersion(db: Db, a: Actor, v: VersionRow, transform?: (items: ExercisesInput) => ExercisesInput, auditExtra: Record<string, unknown> = {}) {
+  if (v.status !== "published") throw new HttpError(409, "Só é possível criar nova versão a partir de um treino publicado");
+  if (!v.is_current) throw new HttpError(409, "Crie a nova versão a partir da versão atual");
+  const draft = await db.query<{ id: string; version: number }>(
+    "select id, version from program_versions where program_id = $1 and status = 'draft'", [v.program_id]);
+  if (draft.rows[0]) return { id: draft.rows[0].id, version: draft.rows[0].version, existing: true };
+
+  const base = detailToInput(await versionDetail(db, v));
+  const items = transform ? transform(base.items) : base.items;
+  const newId = uid();
+  const next = v.version + 1;
+  await db.transaction(async (tx) => {
+    await tx.query("insert into program_versions (id, program_id, version, based_on) values ($1,$2,$3,$4)", [newId, v.program_id, next, v.id]);
+    await writeContent(tx, newId, items, base.names);
+    await audit(tx, a, "version.create", { versionId: newId, programId: v.program_id, version: next, basedOn: v.id, ...auditExtra });
+  });
+  return { id: newId, version: next, existing: false };
+}
+
 export const newVersion = route(async (ctx) => {
   const a = await requireActor(ctx, "trainer");
   const v = await loadVersion(ctx.db, a, ctx.params.id);
-  if (v.status !== "published") throw new HttpError(409, "Só é possível criar nova versão a partir de um treino publicado");
-  if (!v.is_current) throw new HttpError(409, "Crie a nova versão a partir da versão atual");
-  const draft = await ctx.db.query<{ id: string; version: number }>(
-    "select id, version from program_versions where program_id = $1 and status = 'draft'", [v.program_id]);
-  if (draft.rows[0]) return json({ id: draft.rows[0].id, status: "draft", version: draft.rows[0].version, existing: true });
-
-  const { items, names } = detailToInput(await versionDetail(ctx.db, v));
-  const newId = uid();
-  const next = v.version + 1;
-  await ctx.db.transaction(async (tx) => {
-    await tx.query("insert into program_versions (id, program_id, version, based_on) values ($1,$2,$3,$4)", [newId, v.program_id, next, v.id]);
-    await writeContent(tx, newId, items, names);
-    await audit(tx, a, "version.create", { versionId: newId, programId: v.program_id, version: next, basedOn: v.id });
-  });
-  return json({ id: newId, status: "draft", version: next, existing: false }, 201);
+  const r = await createDraftFromVersion(ctx.db, a, v);
+  return json({ id: r.id, status: "draft", version: r.version, existing: r.existing }, r.existing ? 200 : 201);
 });
 
 /** Duplica para um novo programa em rascunho (mesmo aluno ou outro aluno da mesma consultoria). */
@@ -488,7 +496,7 @@ export const getTemplate = route(async (ctx) => {
 
 // ------------------------------------------------- Volume, configuração e auditoria
 
-async function indirectWeight(db: Db, consultancyId: string): Promise<number> {
+export async function indirectWeight(db: Db, consultancyId: string): Promise<number> {
   const { rows } = await db.query<{ indirect_weight: number }>(
     "select indirect_weight from consultancy_settings where consultancy_id = $1", [consultancyId]);
   return rows[0]?.indirect_weight ?? DEFAULT_INDIRECT_WEIGHT;

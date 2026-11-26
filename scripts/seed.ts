@@ -163,6 +163,28 @@ async function main() {
   for (const [d, cat, desc, cents, back] of [[3, "Espaço", "Aluguel do espaço", 60000, 0], [12, "Software", "Ferramentas e hospedagem", 8900, 0], [18, "Marketing", "Anúncios", 25000, 0], [5, "Espaço", "Aluguel do espaço", 60000, 1]] as const) {
     await db.query("insert into expenses (id, consultancy_id, description, category, amount_cents, date, created_by) values ($1,$2,$3,$4,$5,$6,$7)", [uid(), adm, desc, cat, cents, `${monthOf(back)}-${String(d).padStart(2, "0")}`, admTrainer]);
   }
+  // Aluno Modelo 1: treino publicado e 3 sessões no topo da faixa de reps com RIR na meta (dispara a sugestão "avaliar aumento de carga").
+  {
+    const sid = (await db.query<{ id: string }>("select id from users where email = 'modelo1@demo.test'")).rows[0].id;
+    const pId = uid(), vId = uid();
+    await db.query("insert into programs (id, consultancy_id, student_id, name, created_by, weekly_frequency) values ($1,$2,$3,'Superiores (modelo)',$4,2)", [pId, adm, sid, admTrainer]);
+    await db.query("insert into program_versions (id, program_id, version) values ($1,$2,1)", [vId, pId]);
+    const setIds: string[] = [];
+    for (const [i, [ex, nm]] of ([[supino, "Supino reto"], [remada, "Remada curvada"]] as const).entries()) {
+      const ve = uid();
+      await db.query("insert into version_exercises (id, version_id, position, exercise_id, exercise_name) values ($1,$2,$3,$4,$5)", [ve, vId, i + 1, ex, nm]);
+      for (let j = 0; j < 3; j++) {
+        const vs = uid(); if (i === 0) setIds.push(vs);
+        await db.query("insert into version_sets (id, version_exercise_id, position, reps, reps_max, load_kg, rir, rest_s) values ($1,$2,$3,8,10,$4,2,90)", [vs, ve, j + 1, i === 0 ? 40 : 50]);
+      }
+    }
+    await db.query("update program_versions set status = 'published', published_at = $2 where id = $1", [vId, new Date(Date.now() - 20 * DAY)]);
+    for (const days of [14, 7, 1]) {
+      const at = new Date(Date.now() - days * DAY), logId = uid();
+      await db.query("insert into workout_logs (id, student_id, version_id, started_at, finished_at) values ($1,$2,$3,$4,$5)", [logId, sid, vId, at, new Date(at.getTime() + 3600000)]);
+      for (const vs of setIds) await db.query("insert into logged_sets (id, log_id, version_set_id, reps, load_kg, rir, created_at) values ($1,$2,$3,10,40,2,$4)", [uid(), logId, vs, at]);
+    }
+  }
   // Mensagem e check-in de exemplo para o painel do personal não ficar vazio.
   const firstModel = (await db.query<{ id: string }>("select id from users where email = 'modelo1@demo.test'")).rows[0].id;
   await db.query("insert into messages (id, consultancy_id, student_id, sender_id, body, created_at, read_at) values ($1,$2,$3,$4,'Posso trocar o treino de quinta?', now() - interval '3 hours', null)", [uid(), adm, firstModel, firstModel]);

@@ -31,13 +31,13 @@ Next.js 16 (App Router, Turbopack) + TypeScript 7 + PGlite (PostgreSQL embutido 
 | 3 | Registro robusto: **offline + fila de sincronização**, histórico, **evolução** (carga, 1RM Epley, recordes, aderência), cronômetro de descanso, último treino | ✅ feita; verificada no navegador (offline simulado e sincronização) |
 | 4 | Acompanhamento: **mídia oficial/própria** (regras por aluno), **avaliações** configuráveis, **check-ins**, **chat** (texto) | ✅ feita; 26 testes de API; telas verificadas |
 | 5 | Operação comercial: assinatura SaaS e cobrança do aluno **separadas**, eventos assinados/idempotentes, painel básico | 🟡 **backend e libs prontos; faltam testes de API, telas e README** (ver §4) |
-| 6 | IA assistiva: sugestões com evidências, aprovação do personal | ⏳ não iniciada |
+| 6 | IA assistiva: sugestões com evidências, aprovação do personal | ✅ por regras, sem IA externa; aprovar cria só rascunho; verificada no navegador |
 
-Verificação atual: `npx tsc --noEmit` limpo; `npm test` = **224 testes passando (14 arquivos)**.
+Verificação atual: `npx tsc --noEmit` limpo; `npm test` = **244 testes passando (15 arquivos)**.
 
 ## 4. Fila de trabalho, NA ORDEM (continue daqui)
 
-> **Issues #2 (telas da entrega 5) e #3 (validate.ts 1–5 com 96 verificações + README) concluídas.** #4 (kanban `/personal/organizacao`, `handlers6.ts`, `MIGRATION_8_SQL`, 16 testes) concluída. Próximo: #5 (entrega 6, IA por regras) → #6 → #7 → #9. Observação: o DnD nativo não dispara com o arrastar sintético do painel do navegador; a lógica de soltar foi verificada despachando DragEvent via JS e os botões ← → com cliques reais. Pendência conhecida para #6/#7: aviso de hidratação do React em carga completa (ScrollFX altera estilos antes da hidratação) e "Simular pagamento" da assinatura sem fatura para testar na UI.
+> **Issues #2 (telas da entrega 5) e #3 (validate.ts 1–5 com 96 verificações + README) concluídas.** #4 (kanban `/personal/organizacao`, `handlers6.ts`, `MIGRATION_8_SQL`, 16 testes) concluída. #5 (entrega 6: `src/lib/suggestions.ts`, `handlers7.ts`, `MIGRATION_9_SQL`, `StudentSuggestions.tsx`, 20 testes) concluída. Próximo: #6 (auditoria de UI/UX) → #7 → #9. Observação: o DnD nativo não dispara com o arrastar sintético do painel do navegador; a lógica de soltar foi verificada despachando DragEvent via JS e os botões ← → com cliques reais. Pendência conhecida para #6/#7: aviso de hidratação do React em carga completa (ScrollFX altera estilos antes da hidratação) e "Simular pagamento" da assinatura sem fatura para testar na UI.
 
 > **A fila detalhada agora vive nas Issues do GitHub** (cada uma com desenho, casos de teste e critério de pronto). Trabalhe nesta ordem e feche cada issue ao terminar (`gh issue close N --comment "..."`):
 > #1 testes da entrega 5 → #2 telas da entrega 5 → #3 validate.ts + README → #4 kanban do personal → #5 entrega 6 (IA por regras) → #6 auditoria de UI/UX → #7 pendências de animações/tela inicial → #9 validação final. **#8 = decisões em aberto com o usuário** (não bloqueiam).

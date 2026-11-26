@@ -8,6 +8,7 @@
 - **Entrega 4:** acompanhamento: **mídia oficial ou própria** por exercício (regra geral e por aluno), **biblioteca privada** de exercícios, **avaliações** configuráveis, **check-ins** com painel e **chat** individual (texto).
 - **Entrega 5:** operação comercial: **cobrança dos alunos** (contratos mensais, cobranças avulsas, recebimento manual, cancelamento), **assinatura da plataforma** (planos propostos), **webhook assinado e idempotente**, **painel financeiro básico** e despesas. Tudo em **ambiente simulado**: nenhum valor real é cobrado.
 
+- **Entrega 6 (IA assistiva, opção B, por regras):** o personal pede **Analisar registros** no perfil do aluno e recebe sugestões com **evidências em tabela e justificativa**, ou "dados insuficientes" quando faltam sessões. **A prescrição só muda se o personal aprovar, e aprovar cria apenas um rascunho** de nova versão; o aluno não vê sugestões. **Sem IA externa.**
 - **Organização do personal:** quadro de tarefas (A fazer / Em andamento / Concluído) com cartões arrastáveis, etiquetas, aluno e prazo opcional, e **sugestões automáticas** a partir de dados reais. **Não é agenda** (sem horários nem reservas).
 
 Telas novas das entregas 3 a 5: Financeiro e Assinatura (personal), Pagamentos (aluno), Avaliações, Mensagens, Evolução e check-in.
@@ -75,6 +76,15 @@ Para recomeçar do zero: pare o servidor, apague a pasta `data` e rode `npm run 
 3. **Check-ins:** o aluno responde o questionário (sono, fadiga, estresse, motivação, dor); o painel do personal mostra alertas primeiro. Frequência e perguntas se configuram por aluno ou como padrão. Sem finalidade diagnóstica.
 4. **Chat:** conversa individual, com não lidas, vínculo opcional com exercício e limite de mensagens por minuto.
 
+**Entrega 6 (sugestões por regras)**
+1. Entre como `admin` / `admin`, abra o perfil de **Aluno Modelo 1** (treino publicado e 3 sessões no topo da faixa de repetições) e, em **Sugestões**, clique em **Analisar registros**.
+2. Regras (propostas, determinísticas, sobre a **versão atual** do treino; mínimo de 3 sessões concluídas, senão responde "dados insuficientes" e não infere nada):
+   - **Revisar carga:** 3 sessões seguidas com todas as séries de trabalho do exercício no topo da faixa de reps, com RIR registrado e igual ou acima da meta. Proposta: +2,5 kg nas séries de trabalho com carga em kg (carga em % vira só aviso, sem proposta).
+   - **Revisar volume:** 1RM estimada (Epley) caindo em 2 sessões seguidas e check-in recente (14 dias) com fadiga alta ou dor. Proposta: retirar a última série de trabalho (nunca zera o exercício).
+   - **Inconsistências** (sem proposta, só "Marcar como vista"): exercício prescrito nunca registrado; repetições abaixo de 70% da meta por 3 sessões; volume por músculo com razão de 4× ou mais entre o maior e o menor (3 ou mais músculos).
+3. **Aprovar** cria um **rascunho** da próxima versão com a mudança (a versão publicada e o que o aluno vê não mudam); revise e publique no editor. Recusar não cria nada. Gerar de novo não repete sugestões, nem as já decididas na mesma versão. Se o treino mudou ou já existe um rascunho, aprovar é recusado com explicação.
+4. Decisões ficam na auditoria. Aviso fixo na tela: "Sugestão automática por regras: você decide", e que evolução de carga isolada não representa necessariamente hipertrofia.
+
 **Organização (quadro)**
 1. Em **Organização**, adicione tarefas (título, etiqueta, aluno, prazo opcional). Mova os cartões **arrastando** entre as colunas ou pelos botões **←** e **→** (teclado e celular). **Editar** e **Excluir** em cada cartão; a exclusão pede confirmação e fica na auditoria.
 2. **Sugestões:** check-in com sinal de atenção (últimos 14 dias), aluno sem treino publicado, mensagem do aluno sem resposta há mais de 24 h, avaliação enviada e pendente e cobrança em atraso. **Criar tarefa** transforma a sugestão em cartão; ela não volta enquanto a tarefa existir (mesmo concluída). Se a tarefa for excluída e a condição ainda valer, a sugestão reaparece.
@@ -89,7 +99,7 @@ Para recomeçar do zero: pare o servidor, apague a pasta `data` e rode `npm run 
 ## Testes
 
 ```powershell
-npm test          # 224 testes em 14 arquivos, banco em memória
+npm test          # 244 testes em 15 arquivos, banco em memória
 npm run typecheck
 npm run validate  # validação HTTP ponta a ponta (entregas 1 a 5): exige o servidor rodando (npm run dev)
 ```
@@ -102,6 +112,7 @@ npm run validate  # validação HTTP ponta a ponta (entregas 1 a 5): exige o ser
 - `volume.test.ts`: regra de volume (diretas, indiretas, peso, aquecimento e preparação fora do ponderado).
 - `delivery3.test.ts`, `evolution.test.ts`, `syncQueue.test.ts`: evolução e aderência, último treino, frequência semanal, fila de sincronização offline.
 - `delivery4.test.ts`, `followup-libs.test.ts`: biblioteca e mídia por escopo, avaliações, check-ins, chat e as regras puras de apoio.
+- `suggestions.test.ts`: cada regra com dados que disparam e que não disparam, dados insuficientes, evidências iguais aos registros, **sem aprovação nada muda**, aprovar cria só rascunho (v1 intacta), recusar, sem duplicar, treino alterado depois da sugestão (409), isolamento (outra consultoria 404, aluno 403, sem sessão 401).
 - `tasks.test.ts`: quadro de tarefas (criar, editar, mover, reordenar, excluir), sugestões corretas e sem duplicar, isolamento por consultoria (inclusive reordenar com cartão alheio), aluno 403 e sem sessão 401.
 - `delivery5.test.ts`, `billing-libs.test.ts`: webhook assinado, eventos idempotentes e fora de ordem, separação entre assinatura da plataforma e cobrança do aluno, ciclo de cobrança, recebimento manual, painel, despesas, simulador (404 em produção) e isolamento.
 
@@ -150,7 +161,7 @@ A lista de 9 permissões e os padrões vêm do protótipo. O protótipo não des
 2. **Peso das indiretas:** padrão 0,5 (proposta), por consultoria e não por exercício.
 3. **Fonte condensada da marca:** instalar/licenciar Heros Condensed (ou aprovar TeX Gyre Heros Cn).
 4. **Provedor de pagamentos e de e-mail:** nenhum foi escolhido; sem eles não há cobrança real nem envio de e-mail.
-5. **Provedor de IA:** a entrega 6 (sugestões assistivas) será por regras, sem LLM externo; integrar um provedor é decisão futura.
+5. **Provedor de IA:** a entrega 6 é por regras, sem LLM externo; integrar um provedor é decisão futura. **Ponto de extensão:** `analyze()` em `src/lib/suggestions.ts` recebe só dados agregados (por exercício: reps, carga, RIR e metas por sessão; sinais do check-in dos últimos 14 dias; volume por músculo) e devolve rascunhos de sugestão. **Minimização de dados (LGPD):** nome, e-mail, mensagens do chat, avaliações e textos livres do aluno não entram nessa análise; um provedor externo só deveria receber esse mesmo pacote agregado, com consentimento do aluno, e a decisão continuaria sendo do personal. Hoje nada sai do servidor.
 6. **Planos da plataforma:** preços, limites e o teste de 30 dias são **propostas** e não bloqueiam o uso.
 7. **Agenda profissional (tópico 7):** pendente; nada foi implementado.
 
