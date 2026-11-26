@@ -4,7 +4,13 @@
  *   Azul-marinho #0E1B2B (fundo) · Azul vivo #1A73E9 (títulos grandes)
  *   Cinza claro #E6EAED (texto)   · Verde #2AC38B (acento com função)
  * Fonte A "Velocidade": títulos em Heros Condensed Bold Italic (caixa-alta), texto em Inter.
+ * Os títulos usam o equivalente livre TeX Gyre Heros Cn (GUST Font License, em public/fonts); com a licença da
+ * Heros Condensed original basta trocar o arquivo, o nome "Heros Cn" vem antes na pilha.
  */
+@font-face {
+  font-family: "TeX Gyre Heros Cn"; font-style: italic; font-weight: 700; font-display: swap;
+  src: local("TeX Gyre Heros Cn Bold Italic"), url("/fonts/texgyreheroscn-bolditalic.otf") format("opentype");
+}
 :root {
   /* TEMA CLARO (padrão): fundo cinza claro, texto azul-marinho (como as peças do Instagram). Variáveis legadas: --n = fundo, --g = texto. */
   --ink: #0E1B2B; --paper: #E6EAED; --b: #1A73E9; --v: #2AC38B;

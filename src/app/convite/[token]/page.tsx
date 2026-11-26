@@ -40,7 +40,7 @@ export default function Convite() {
     <Stage>
       <div style={{ marginBottom: 20 }}><Wordmark /></div>
       <h1>Você foi convidado</h1>
-      <p className="muted">Consultoria: <b style={{ color: "var(--text)" }}>{info.consultancyName}</b>. Crie seu acesso para ver seus treinos.</p>
+      <p className="muted">Acompanhamento: <b style={{ color: "var(--text)" }}>{info.consultancyName}</b>. Crie seu acesso para ver seus treinos.</p>
       <form className="card" onSubmit={submit}>
         <label htmlFor="n">Nome</label>
         <SmoothInput id="n" required autoComplete="name" value={f.name} onChange={(e) => setF({ ...f, name: e.target.value })} />

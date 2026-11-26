@@ -94,8 +94,9 @@ Catálogo oficial = **81** exercícios (`OFFICIAL_EXERCISES` em `schema.ts`; 65 
 
 `npm run seed` (senha `demo12345`): `personal.alfa@demo.test` (alunos `aluno1@…`, `aluno2@…`), `personal.beta@demo.test` (`aluno3@…`) — domínio `@demo.test`. Aluno Um tem 6 semanas de histórico, 2 avaliações, 2 check-ins (um com alerta), uma conversa e animação oficial de demonstração (SVG fictício em `public/media/`).
 
-## 7. Decisões em aberto com o usuário
-Taxonomia muscular/catálogo oficial (provisórios); peso das indiretas (0,5); fonte condensada licenciada (Heros Condensed); **provedor de pagamentos e de e-mail (nenhum escolhido)**; provedor de IA; agenda (tópico 7); regras finais dos planos (preços/limites/teste são propostas e **não bloqueiam o uso**).
+## 7. Decisões do usuário (issue #8, respondidas em 26/11/2026)
+**Decidido:** (a) **IA**: só regras locais, nenhum dado de saúde sai do servidor; (b) **planos**: seguem como proposta (R$ 0 / 9,90 / 39,90 / 69,90, não bloqueiam o uso); (c) **fonte**: **TeX Gyre Heros Cn** (livre, GUST Font License) em `public/fonts/` com `@font-face` em `globals.css`; o nome "Heros Cn" vem antes na pilha, então basta trocar o arquivo se houver licença da Heros Condensed; (d) **marca**: "Consultoria" sai do texto público (título da aba, tela inicial, login, cadastro "Criar meu espaço", convite "Acompanhamento:", contrato padrão "Acompanhamento mensal"); telas internas do personal e o nome técnico do produto não mudam; (e) **fotos corporais e arquivos/áudio/vídeo no chat**: continuam fora do escopo; (f) **taxonomia muscular** dos 65 exercícios novos e **peso das indiretas (0,5)**: seguem provisórios.
+**Ainda em aberto (o usuário respondeu "ainda não decidi"):** **provedor de pagamentos** (opções apresentadas: Mercado Pago, Asaas, Stripe) e **provedor de e-mail** (Resend, Amazon SES, Brevo). Enquanto isso: pagamento só simulado fora de produção e sem envio de e-mail em produção. **Agenda (tópico 7)** segue pendente.
 
 ## 8. Instrução permanente do usuário sobre contexto
 "Quando estiver atingindo 85% da janela de contexto, jogue no GitHub e continue com o .md gerado." → Ao se aproximar do limite: atualizar este arquivo, `git add -A`, commit (mensagem com a linha `Co-Authored-By` indicada pelo ambiente), `git push`, e seguir a partir daqui.

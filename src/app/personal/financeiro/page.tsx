@@ -31,7 +31,7 @@ export default function Financeiro() {
   const [filter, setFilter] = useState("");
   const [msg, setMsg] = useState(""); const [error, setError] = useState("");
   const [paid, setPaid] = useState<Record<string, string>>({});
-  const [ct, setCt] = useState({ studentId: "", description: "Consultoria mensal", amount: "", dueDay: "10" });
+  const [ct, setCt] = useState({ studentId: "", description: "Acompanhamento mensal", amount: "", dueDay: "10" });
   const [ch, setCh] = useState({ studentId: "", description: "", amount: "", dueDate: "" });
   const [ex, setEx] = useState({ description: "", category: "", amount: "", date: "" });
 

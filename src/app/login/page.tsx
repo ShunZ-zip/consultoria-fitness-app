@@ -13,7 +13,7 @@ export default function Login() {
       <div style={{ marginBottom: 20 }}><Wordmark /></div>
       <h1>Entrar</h1>
       <LoginForm notice={resetDone ? "Senha redefinida. Entre com a nova senha." : undefined} />
-      <p className="muted">Personal novo? <Link href="/register">Criar consultoria</Link>. Alunos entram apenas por convite.</p>
+      <p className="muted">Personal novo? <Link href="/register">Criar meu espaço</Link>. Alunos entram apenas por convite.</p>
     </Stage>
   );
 }

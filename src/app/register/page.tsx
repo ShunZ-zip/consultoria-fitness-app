@@ -25,11 +25,11 @@ export default function Register() {
   return (
     <Stage>
       <div style={{ marginBottom: 20 }}><Wordmark /></div>
-      <h1>Criar consultoria</h1>
+      <h1>Criar meu espaço</h1>
       <form className="card" onSubmit={submit}>
         <label htmlFor="n">Seu nome</label>
         <SmoothInput id="n" required autoComplete="name" value={f.name} onChange={set("name")} />
-        <label htmlFor="c">Nome da consultoria</label>
+        <label htmlFor="c">Nome do seu espaço</label>
         <SmoothInput id="c" required value={f.consultancyName} onChange={set("consultancyName")} />
         <label htmlFor="e">E-mail</label>
         <SmoothInput id="e" type="text" inputMode="email" required autoComplete="username" autoCapitalize="none" spellCheck={false} value={f.email} onChange={set("email")} />

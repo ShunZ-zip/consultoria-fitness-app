@@ -41,7 +41,7 @@ export default function Home() {
 
         <section className="land-hero wrap" aria-labelledby="titulo">
           <Fx animation="fade-up" stagger={110} distance={26} duration={650} once={false} className="land-hero-in">
-            <p className="eyebrow">Plataforma privada de consultoria</p>
+            <p className="eyebrow">Plataforma privada de acompanhamento</p>
             <h1 id="titulo" className="land-h1">Musculação baseada em evidências.</h1>
             <p className="land-lead">Prescrição por série, registro do que você fez e evolução clara. O acesso é por convite do seu personal.</p>
             <div className="land-cta">
@@ -86,7 +86,7 @@ export default function Home() {
                 <li key={b.text}><span className="exs-ic"><Icon name={b.icon} enter /></span><p>{b.text}</p></li>
               ))}
             </ul>
-            <p className="muted exs-note">Primeiro acesso? Abra o link de convite enviado pelo seu personal. Quem é personal pode <Link href="/register">criar a própria consultoria</Link>.</p>
+            <p className="muted exs-note">Primeiro acesso? Abra o link de convite enviado pelo seu personal. Quem é personal pode <Link href="/register">criar o próprio espaço de acompanhamento</Link>.</p>
           </div>
           <div className="exs-form"><LoginForm idPrefix="home" /></div>
         </div>

@@ -116,7 +116,7 @@ async function main() {
   // Entrega 5: contrato mensal, cobranças (paga, pendente, em atraso) e uma despesa (tudo fictício, provedor simulado).
   const today = new Date(); const ym = today.toISOString().slice(0, 7);
   const contractId = uid();
-  await db.query("insert into student_contracts (id, consultancy_id, student_id, description, amount_cents, due_day, start_month, created_by) values ($1,$2,$3,'Consultoria mensal',20000,10,$4,$5)", [contractId, alfa.cid, studentId, new Date(Date.now() - 70 * DAY).toISOString().slice(0, 7), trainerId]);
+  await db.query("insert into student_contracts (id, consultancy_id, student_id, description, amount_cents, due_day, start_month, created_by) values ($1,$2,$3,'Acompanhamento mensal',20000,10,$4,$5)", [contractId, alfa.cid, studentId, new Date(Date.now() - 70 * DAY).toISOString().slice(0, 7), trainerId]);
   const chargeRows: [string, string, string, string | null][] = [
     [new Date(Date.now() - 62 * DAY).toISOString().slice(0, 7), "paid", "pix", new Date(Date.now() - 60 * DAY).toISOString()],
     [new Date(Date.now() - 31 * DAY).toISOString().slice(0, 7), "overdue", "", null],
@@ -126,7 +126,7 @@ async function main() {
     const id = uid();
     await db.query(
       `insert into student_charges (id, consultancy_id, student_id, contract_id, period, description, amount_cents, fee_cents, due_date, status, method, provider_ref, created_by, paid_at)
-       values ($1,$2,$3,$4,$5,'Consultoria mensal',20000,$6,$7,$8,$9,$10,$11,$12)`,
+       values ($1,$2,$3,$4,$5,'Acompanhamento mensal',20000,$6,$7,$8,$9,$10,$11,$12)`,
       [id, alfa.cid, studentId, contractId, period, status === "paid" ? 518 : 0, `${period}-10`, status, method || null, `sim_ch_${id}`, trainerId, paidAt]);
   }
   await db.query("insert into expenses (id, consultancy_id, description, category, amount_cents, date, created_by) values ($1,$2,'Aluguel do espaço','Espaço',15000,$3,$4)", [uid(), alfa.cid, `${ym}-02`, trainerId]);
@@ -146,7 +146,7 @@ async function main() {
     await db.query("insert into users (id, email, name, password_hash) values ($1,$2,$3,$4)", [sid, `modelo${i + 1}@demo.test`, nm, adminHash]);
     await db.query("insert into memberships (user_id, consultancy_id, role) values ($1,$2,'student')", [sid, adm]);
     const cId = uid();
-    await db.query("insert into student_contracts (id, consultancy_id, student_id, description, amount_cents, due_day, start_month, created_by) values ($1,$2,$3,'Consultoria mensal',$4,$5,$6,$7)", [cId, adm, sid, cents, dueDay, monthOf(3), admTrainer]);
+    await db.query("insert into student_contracts (id, consultancy_id, student_id, description, amount_cents, due_day, start_month, created_by) values ($1,$2,$3,'Acompanhamento mensal',$4,$5,$6,$7)", [cId, adm, sid, cents, dueDay, monthOf(3), admTrainer]);
     for (const back of [3, 2, 1, 0]) {
       const period = monthOf(back);
       // meses antigos pagos; o anterior: alguns atrasados; o atual: alguns pagos, outros pendentes
@@ -155,7 +155,7 @@ async function main() {
       const fee = status === "paid" ? Math.round(cents * 0.0259) : 0;
       await db.query(
         `insert into student_charges (id, consultancy_id, student_id, contract_id, period, description, amount_cents, fee_cents, due_date, status, method, provider_ref, created_by, paid_at)
-         values ($1,$2,$3,$4,$5,'Consultoria mensal',$6,$7,$8,$9,$10,$11,$12,$13)`,
+         values ($1,$2,$3,$4,$5,'Acompanhamento mensal',$6,$7,$8,$9,$10,$11,$12,$13)`,
         [id, adm, sid, cId, period, cents, fee, `${period}-${String(dueDay).padStart(2, "0")}`, status, status === "paid" ? methods[i] : null, `sim_ch_${id}`, admTrainer, status === "paid" ? new Date(`${period}-${String(dueDay).padStart(2, "0")}T12:00:00Z`) : null]);
     }
   }
