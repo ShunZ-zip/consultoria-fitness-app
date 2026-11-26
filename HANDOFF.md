@@ -150,6 +150,10 @@ Sessões **concluídas** pelos alunos aparecem para o personal em `/personal/fee
 5. **Miniaturas automáticas do YouTube** nos exercícios: enviariam o IP do aluno a terceiros sem ele pedir (§5n).
 6. **"Permitir PDF" do treino:** não existe exportação de treino.
 
+## 5s. Mapa das issues no GitHub (https://github.com/ShunZ-zip/consultoria-fitness-app/issues)
+**Abertas:** #8 decisões do usuário (faltam **provedor de pagamentos** e **de e-mail**; agenda segue pendente) · #10 revisão visual dos vídeos 3D · #11 verificações em aparelho/navegador real (offline de verdade, leitor de tela, tema escuro das telas novas, firewall/celular) · #12 ideias do app de referência (quase toda entregue) · **#14** [Decisão] link de convite reutilizável com aprovação · **#15** [Decisão] bloquear inadimplentes · **#16** [Decisão] tipos de série e aeróbico · **#17** [Futuro] avisos ao personal e engajamento na lista.
+**Fechadas:** #1 a #7 e #9 (entregas e validação) e **#13** (registro do que foi entregue em 26/11/2026). Comece lendo este arquivo, depois a issue que o usuário indicar.
+
 ## 6. Dados de demonstração
 **Conta de teste local (pedido do usuário): login `admin` / senha `admin`** (Consultoria Modelo: 6 alunos modelo `modelo1..6@demo.test` com senha `admin`, contratos, cobranças de 4 meses em vários status e despesas). Só existe no seed; o login aceita texto livre no campo de e-mail por causa disso.
 
