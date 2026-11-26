@@ -8,6 +8,7 @@ import StudentFollowUp from "../../../../components/StudentFollowUp";
 import StudentSuggestions from "../../../../components/StudentSuggestions";
 import EvolutionPanel, { type EvolutionData } from "../../../../components/EvolutionPanel";
 import EngagementPanel from "../../../../components/EngagementPanel";
+import StudentInfoCard from "../../../../components/StudentInfoCard";
 import RoutinesSection from "../../../../components/RoutinesSection";
 import { api, useMe } from "../../../../lib/client";
 import { PERMISSIONS, type Permissions } from "../../../../lib/permissions";
@@ -82,6 +83,7 @@ export default function PerfilAluno() {
             </span>
           </div>
           <p className="muted">{student.email}</p>
+          <StudentInfoCard studentId={student.id} />
           <EngagementPanel path={`/students/${student.id}/engagement`} who="personal" />
 
           <h2>Evolução</h2>

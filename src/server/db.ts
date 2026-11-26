@@ -1,7 +1,7 @@
 import { randomUUID } from "node:crypto";
 import { PGlite } from "@electric-sql/pglite";
 import { ensureOfficialMedia } from "./officialMedia";
-import { MIGRATION_2_SQL, MIGRATION_3_SQL, MIGRATION_4_SQL, MIGRATION_5_SQL, MIGRATION_6_SQL, MIGRATION_7_SQL, MIGRATION_8_SQL, MIGRATION_9_SQL, MIGRATION_10_SQL, MIGRATION_11_SQL, MIGRATION_12_SQL, MIGRATION_13_SQL, OFFICIAL_EXERCISES, SCHEMA_SQL } from "./schema";
+import { MIGRATION_2_SQL, MIGRATION_3_SQL, MIGRATION_4_SQL, MIGRATION_5_SQL, MIGRATION_6_SQL, MIGRATION_7_SQL, MIGRATION_8_SQL, MIGRATION_9_SQL, MIGRATION_10_SQL, MIGRATION_11_SQL, MIGRATION_12_SQL, MIGRATION_13_SQL, MIGRATION_14_SQL, OFFICIAL_EXERCISES, SCHEMA_SQL } from "./schema";
 
 type G = typeof globalThis & { __fitDb?: Promise<PGlite> };
 
@@ -23,6 +23,7 @@ async function open(): Promise<PGlite> {
   await db.exec(MIGRATION_11_SQL);
   await db.exec(MIGRATION_12_SQL);
   await db.exec(MIGRATION_13_SQL);
+  await db.exec(MIGRATION_14_SQL);
   // Catálogo oficial: insere o que falta e mantém músculos atualizados (idempotente).
   for (const e of OFFICIAL_EXERCISES) {
     const found = await db.query(

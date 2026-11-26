@@ -4,6 +4,7 @@ import { useCallback, useEffect, useState, type FormEvent } from "react";
 import Icon from "../../components/Icon";
 import Shell from "../../components/Shell";
 import { api, useMe } from "../../lib/client";
+import { GENDERS } from "../../lib/studentProfile";
 
 interface Student { id: string; name: string; email: string }
 interface Version { id: string; name: string; status: "draft" | "published"; studentId: string; studentName: string; logCount: number; version: number; isCurrent: boolean }
@@ -39,12 +40,15 @@ export default function Personal() {
   const [attn, setAttn] = useState<Attn[]>([]);
   const [weight, setWeight] = useState(0.5);
   const [name, setName] = useState("");
+  const [extra, setExtra] = useState({ birthDate: "", phone: "", gender: "", anamnesisTemplateId: "" });
+  const [anamnesisOpts, setAnamnesisOpts] = useState<{ id: string; name: string }[]>([]);
   const [link, setLink] = useState("");
   const [error, setError] = useState("");
   const [saved, setSaved] = useState("");
 
   const load = useCallback(async () => {
-    const [s, v, i, t, a, st, ck] = await Promise.all([api("/students"), api("/versions"), api("/invites"), api("/templates"), api("/audit"), api("/settings"), api("/checkins")]);
+    const [s, v, i, t, a, st, ck, at] = await Promise.all([api("/students"), api("/versions"), api("/invites"), api("/templates"), api("/audit"), api("/settings"), api("/checkins"), api("/assessment-templates")]);
+    if (at.ok) setAnamnesisOpts((at.data.templates as { id: string; name: string; kind?: string }[]).map((x) => ({ id: x.id, name: x.name })));
     if (s.ok) setStudents(s.data);
     if (v.ok) setVersions(v.data);
     if (i.ok) setInvites(i.data);
@@ -57,10 +61,12 @@ export default function Personal() {
 
   async function invite(e: FormEvent) {
     e.preventDefault(); setError(""); setLink("");
-    const r = await api("/invites", "POST", { studentName: name });
-    if (!r.ok) return setError(r.data?.error ?? "Falha ao criar convite");
+    const r = await api("/invites", "POST", {
+      studentName: name, birthDate: extra.birthDate || null, phone: extra.phone || null, gender: extra.gender || null, anamnesisTemplateId: extra.anamnesisTemplateId || null,
+    });
+    if (!r.ok) return setError(r.data?.issues?.[0]?.message ?? r.data?.error ?? "Falha ao criar convite");
     setLink(`${window.location.origin}${r.data.path}`);
-    setName(""); load();
+    setName(""); setExtra({ birthDate: "", phone: "", gender: "", anamnesisTemplateId: "" }); load();
   }
 
   async function saveWeight(value: number) {
@@ -95,6 +101,33 @@ export default function Personal() {
             <input id="sn" style={{ flex: 1, minWidth: 180 }} required value={name} onChange={(e) => setName(e.target.value)} placeholder="Ex.: Maria Souza" />
             <button className="btn">Gerar convite</button>
           </div>
+          <details className="rt-notes" style={{ marginTop: 6 }}>
+            <summary>Mais dados do aluno (opcionais)</summary>
+            <div className="row" style={{ marginTop: 6 }}>
+              <div style={{ flex: 1, minWidth: 160 }}>
+                <label htmlFor="sb">Data de nascimento</label>
+                <input id="sb" type="date" value={extra.birthDate} onChange={(e) => setExtra({ ...extra, birthDate: e.target.value })} />
+              </div>
+              <div style={{ flex: 1, minWidth: 160 }}>
+                <label htmlFor="sp">WhatsApp</label>
+                <input id="sp" type="tel" inputMode="tel" autoComplete="off" placeholder="(11) 91234-5678" value={extra.phone} onChange={(e) => setExtra({ ...extra, phone: e.target.value })} />
+              </div>
+              <div style={{ flex: 1, minWidth: 160 }}>
+                <label htmlFor="sg">Gênero</label>
+                <select id="sg" value={extra.gender} onChange={(e) => setExtra({ ...extra, gender: e.target.value })}>
+                  <option value="">Não informar</option>
+                  {GENDERS.map((g) => <option key={g.v} value={g.v}>{g.l}</option>)}
+                </select>
+              </div>
+            </div>
+            <label htmlFor="sa">Enviar anamnese quando o aluno entrar</label>
+            <select id="sa" value={extra.anamnesisTemplateId} onChange={(e) => setExtra({ ...extra, anamnesisTemplateId: e.target.value })}>
+              <option value="">Não enviar</option>
+              {anamnesisOpts.map((o) => <option key={o.id} value={o.id}>{o.name}</option>)}
+            </select>
+            {anamnesisOpts.length === 0 && <p className="muted" style={{ margin: "4px 0 0", fontSize: 12 }}>Para enviar uma anamnese, adicione um modelo em Avaliações.</p>}
+            <p className="muted" style={{ margin: "6px 0 0", fontSize: 12 }}>São dados pessoais: ficam visíveis só para você e para o aluno.</p>
+          </details>
         </form>
         {error && <p className="err">{error}</p>}
         {link && (

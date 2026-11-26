@@ -373,6 +373,16 @@ async function main() {
   check("personal altera nome e nome do espaço; o aluno vê o espaço novo; aluno não renomeia o espaço (403)", (await ana.put("/me/profile", { name: "Personal Renomeado", consultancyName: "Espaço Renomeado" })).status === 200 && (await ana.get("/me")).body.name === "Personal Renomeado" && (await a2.c.get("/me")).body.consultancyName === "Espaço Renomeado" && (await a2.c.put("/me/profile", { name: "Aluno", consultancyName: "Invasão" })).status === 403);
   check("trocar senha: atual errada 400, igual à atual 400, curta 400; correta 200", (await a2.c.post("/me/password", { currentPassword: "errada-12345", newPassword: "nova-senha-99" })).status === 400 && (await a2.c.post("/me/password", { currentPassword: "senha-segura-1", newPassword: "senha-segura-1" })).status === 400 && (await a2.c.post("/me/password", { currentPassword: "senha-segura-1", newPassword: "curta" })).status === 400 && (await a2.c.post("/me/password", { currentPassword: "senha-segura-1", newPassword: "nova-senha-99" })).status === 200 && (await a2.c.get("/me")).status === 200);
 
+  section("Convite com dados do aluno e anamnese automática");
+  const anTpl = await ana.post("/assessment-templates", { key: "anamnese" });
+  const invX = await ana.post("/invites", { studentName: "Aluna Extras", birthDate: "1996-08-20", phone: "(21) 99876-5432", gender: "female", anamnesisTemplateId: anTpl.body.id });
+  const accX = new Client();
+  const accRes = await accX.post(`/invites/${invX.body.token}/accept`, { name: "Aluna Extras", email: `extras.${RUN}@a.test`, password: "senha-segura-1" });
+  const idX = (await accX.get("/me")).body.id as string;
+  const profX = (await ana.get(`/students/${idX}/profile`)).body;
+  check("convite com extras: perfil guardado (WhatsApp normalizado, idade) e anamnese pendente para a aluna", invX.status === 201 && accRes.status === 201 && profX.phone === "5521998765432" && profX.age >= 29 && profX.genderText === "Feminino" && ((await accX.get("/me/assessments")).body as any[]).some((x) => x.templateName === "Anamnese básica" && x.status === "pending"));
+  check("dados do aluno: outra consultoria 404, aluno 403; nascimento futuro, WhatsApp curto e modelo alheio são recusados", (await beta.get(`/students/${idX}/profile`)).status === 404 && (await accX.get(`/students/${idX}/profile`)).status === 403 && (await ana.post("/invites", { studentName: "x", birthDate: "2999-01-01" })).status === 400 && (await ana.post("/invites", { studentName: "x", phone: "12" })).status === 400 && (await beta.post("/invites", { studentName: "x", anamnesisTemplateId: anTpl.body.id })).status === 404);
+
   console.log(`\n${pass} verificações ok, ${fail} falhas`);
   if (fail) { console.log("\nFalhas:\n" + failures.map((f) => " - " + f).join("\n")); process.exit(1); }
 }

@@ -514,6 +514,22 @@ update programs p set position = r.rn
  where p.id = r.id and p.position = 0;
 `;
 
+// Convite com dados opcionais do aluno e anamnese automática. Dados pessoais: só o aluno e o personal da consultoria.
+export const MIGRATION_14_SQL = `
+alter table invites add column if not exists birth_date text;
+alter table invites add column if not exists phone text;
+alter table invites add column if not exists gender text;
+alter table invites add column if not exists anamnesis_template_id uuid references assessment_templates(id);
+create table if not exists student_profiles (
+  user_id uuid primary key references users(id),
+  consultancy_id uuid not null references consultancies(id),
+  birth_date text,
+  phone text,
+  gender text,
+  updated_at timestamptz not null default now()
+);
+`;
+
 // Catálogo oficial inicial (nomes e músculos provisórios; vídeos de referência em src/lib/referenceVideos.ts).
 // Taxonomia muscular PROVISÓRIA: o documento deixa a taxonomia e a ponderação para validação.
 export interface OfficialExercise { name: string; equipment: string; primary: string[]; secondary: string[] }

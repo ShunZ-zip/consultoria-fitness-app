@@ -33,7 +33,7 @@ Next.js 16 (App Router, Turbopack) + TypeScript 7 + PGlite (PostgreSQL embutido 
 | 5 | Operação comercial: assinatura SaaS e cobrança do aluno **separadas**, eventos assinados/idempotentes, painel básico | 🟡 **backend e libs prontos; faltam testes de API, telas e README** (ver §4) |
 | 6 | IA assistiva: sugestões com evidências, aprovação do personal | ✅ por regras, sem IA externa; aprovar cria só rascunho; verificada no navegador |
 
-Verificação atual: `npx tsc --noEmit` limpo; `npm test` = **326 testes passando (26 arquivos)**; `npm run validate` = **115 verificações, 0 falhas**.
+Verificação atual: `npx tsc --noEmit` limpo; `npm test` = **337 testes passando (28 arquivos)**; `npm run validate` = **117 verificações, 0 falhas**.
 
 ## 4. Fila de trabalho, NA ORDEM (continue daqui)
 
@@ -133,6 +133,22 @@ Sessões **concluídas** pelos alunos aparecem para o personal em `/personal/fee
 **Telas:** `/personal/perfil` e `/aluno/perfil` (`ProfileForm.tsx`); o nome do usuário no cabeçalho é link (no celular vira um ícone de 44 px). **Seus dados:** nome (os dois papéis), **nome do espaço** (só o personal; o aluno vê o nome novo) e e-mail somente leitura (**trocar o e-mail não foi feito**: exigiria confirmação por e-mail, provedor não escolhido). **Trocar senha:** senha atual + nova (mín. 8) + confirmação, com o "olhinho".
 **Servidor (`handlers12.ts`):** `PUT /api/me/profile` (aluno que manda `consultancyName` = 403) e `POST /api/me/password`: exige a senha atual (errada = 400 "Senha atual incorreta"), nova diferente da atual, **derruba as OUTRAS sessões e mantém a atual**, **5 tentativas erradas em 15 min bloqueiam (429)** mesmo com a senha certa (contagem por usuário na auditoria: `password.change_failed`), tudo auditado (`profile.update`, `password.change`). Cada um só altera a própria conta. O cabeçalho atualiza sem recarregar (evento `cf-me-changed` no `useSession`).
 **Testes:** `tests/profile.test.ts` (6; mutações de "derrubar as outras sessões" e do limite de tentativas detectadas) e 2 verificações no `validate` (agora **115**); suíte **326 testes (26 arquivos)**. Verificado no navegador (desktop e 375 px): trocar nome (cabeçalho acompanha), senha atual errada, confirmação diferente, troca real e volta para a senha de demonstração.
+
+## 5q. Adicionar aluno com dados opcionais e anamnese automática (issue #12)
+**Convite:** em "Convidar aluno" (`/personal`), o bloco **"Mais dados do aluno (opcionais)"** pede data de nascimento, **WhatsApp**, gênero e **"Enviar anamnese quando o aluno entrar"** (escolhe um modelo de avaliação do personal). Ao **aceitar o convite**, os dados vão para `student_profiles` e, se houve modelo, nasce uma avaliação **PENDENTE** para o aluno preencher (cópia dos campos do modelo; auditado como `assessment.create` com `via: "convite"`). Convite sem extras funciona como antes.
+**Regras (`src/lib/studentProfile.ts`, puras e testadas):** telefone só com dígitos e DDI (com "+" o país vale como veio; sem "+", 10 ou 11 dígitos ganham o 55); nascimento = data real, não futura, de 1900 em diante; gênero em lista curta (Feminino, Masculino, Outro, Prefiro não informar); idade completa. Valores inválidos = 400 com mensagem em pt-BR; modelo de outra consultoria = 404.
+**Perfil do aluno (personal):** cartão **"Dados do aluno"** (idade, nascimento, gênero e **link do WhatsApp** com `rel="noopener noreferrer"`) com **Editar** (diálogo; campo em branco remove o dado). `GET/PUT /api/students/[id]/profile` (`handlers13.ts`): **só o personal da consultoria** (outra consultoria ou id inválido = 404, aluno 403, mesmo o próprio por essa rota; auditado `student.profile_update`). São dados pessoais: não aparecem para outros alunos nem em nenhuma rota do aluno. `MIGRATION_14_SQL` (colunas em `invites` + `student_profiles`).
+**Testes:** `tests/student-profile-lib.test.ts` (5), `tests/invite-extras.test.ts` (6; mutações do modelo alheio e do escopo do perfil detectadas) e 2 verificações no `validate` (agora **117**); suíte **337 testes (28 arquivos)**. Verificado no navegador de ponta a ponta: convite com extras e anamnese, aceite como aluna, anamnese pendente, cartão no perfil e edição com erro de WhatsApp.
+
+## 5r. Decisões tomadas SEM perguntar (usuário: "faça tudo sem me perguntar", 26/11/2026) — revise se discordar
+**Feito:** frequência/engajamento (§5l), rotinas (§5m), iniciar treino (§5n), copiar de + reordenar (§5o), perfil/senha (§5p), convite com extras (§5q).
+**Decidi NÃO fazer, pelas regras já fixadas ou por risco (nada foi apagado; dá para reverter a decisão):**
+1. **Link de cadastro público** do app de referência: conflita com a regra confirmada de consultorias **privadas por convite** (sem vitrine/descoberta). Alternativa compatível, se quiser: link de convite reutilizável com **aprovação do personal** antes de qualquer acesso (precisa de limite de tentativas contra spam).
+2. **Bloquear acesso de inadimplentes:** é política comercial com impacto no aluno (e LGPD); sem pagamento real/provedor definido (issue #8) não faz sentido ainda.
+3. **Tipos de série e aba Aeróbico** (repetição/tempo, cronômetro, corrida, cadência): mudaria o modelo de série (colunas novas nas séries publicadas, que são imutáveis por gatilho), o volume, a comparação e a evolução; aeróbico também sai do escopo "Musculação baseada em evidências" do produto. Hoje a **cadência** (`tempo`) e a **orientação** (`note`) por série cobrem isometria e tempo controlado. Exige decisão de produto e taxonomia antes.
+4. **Trocar o e-mail:** exigiria confirmação por e-mail (provedor não escolhido, issue #8).
+5. **Miniaturas automáticas do YouTube** nos exercícios: enviariam o IP do aluno a terceiros sem ele pedir (§5n).
+6. **"Permitir PDF" do treino:** não existe exportação de treino.
 
 ## 6. Dados de demonstração
 **Conta de teste local (pedido do usuário): login `admin` / senha `admin`** (Consultoria Modelo: 6 alunos modelo `modelo1..6@demo.test` com senha `admin`, contratos, cobranças de 4 meses em vários status e despesas). Só existe no seed; o login aceita texto livre no campo de e-mail por causa disso.

@@ -7,6 +7,7 @@ import type { Db } from "./db";
 import { body, HttpError, json, notFound, requireActor, route, type Ctx } from "./http";
 import { sendMail } from "./mailer";
 import { dayKey } from "../lib/engagement";
+import { cleanProfile } from "../lib/studentProfile";
 import { ALLOWED_WEIGHTS, computeVolume, DEFAULT_INDIRECT_WEIGHT, type SetType } from "../lib/volume";
 import { mergePermissions, PERMISSION_KEYS, type PermKey, type Permissions } from "../lib/permissions";
 
@@ -80,12 +81,20 @@ async function findValidInvite(db: Db, token: string): Promise<InviteRow | null>
 
 export const createInvite = route(async (ctx) => {
   const a = await requireActor(ctx, "trainer");
-  const input = await body(ctx, z.object({ studentName: name }));
+  const input = await body(ctx, z.object({
+    studentName: name, birthDate: z.string().nullish(), phone: z.string().max(40).nullish(), gender: z.string().max(20).nullish(), anamnesisTemplateId: uuid.nullish(),
+  }));
+  const prof = cleanProfile({ birthDate: input.birthDate, phone: input.phone, gender: input.gender }, dayKey(new Date()));
+  if ("error" in prof) throw new HttpError(400, prof.error);
+  if (input.anamnesisTemplateId) {
+    const t = await ctx.db.query("select 1 from assessment_templates where id = $1 and consultancy_id = $2", [input.anamnesisTemplateId, a.consultancyId]);
+    if (t.rows.length === 0) notFound();       // modelo de outra consultoria ou inexistente
+  }
   const token = newToken();
   await ctx.db.query(
-    `insert into invites (id, consultancy_id, created_by, student_name, token_hash, expires_at)
-     values ($1,$2,$3,$4,$5, now() + interval '7 days')`,
-    [uid(), a.consultancyId, a.userId, input.studentName, sha256(token)],
+    `insert into invites (id, consultancy_id, created_by, student_name, token_hash, expires_at, birth_date, phone, gender, anamnesis_template_id)
+     values ($1,$2,$3,$4,$5, now() + interval '7 days', $6,$7,$8,$9)`,
+    [uid(), a.consultancyId, a.userId, input.studentName, sha256(token), prof.data.birthDate, prof.data.phone, prof.data.gender, input.anamnesisTemplateId ?? null],
   );
   // O token só existe aqui; no banco fica apenas o hash.
   return json({ token, path: `/convite/${token}`, expiresInDays: 7 }, 201);
@@ -114,8 +123,8 @@ export const acceptInvite = route(async (ctx) => {
   const userId = uid();
   try {
     await ctx.db.transaction(async (tx) => {
-      const found = await tx.query<{ id: string; consultancy_id: string }>(
-        `select id, consultancy_id from invites
+      const found = await tx.query<{ id: string; consultancy_id: string; created_by: string; birth_date: string | null; phone: string | null; gender: string | null; anamnesis_template_id: string | null }>(
+        `select id, consultancy_id, created_by, birth_date, phone, gender, anamnesis_template_id from invites
           where token_hash = $1 and used_at is null and expires_at > now()`,
         [sha256(ctx.params.token ?? "")],
       );
@@ -130,6 +139,21 @@ export const acceptInvite = route(async (ctx) => {
       await tx.query("insert into memberships (user_id, consultancy_id, role) values ($1,$2,'student')", [
         userId, inv.consultancy_id,
       ]);
+      // Dados cadastrais informados pelo personal no convite.
+      if (inv.birth_date || inv.phone || inv.gender) {
+        await tx.query("insert into student_profiles (user_id, consultancy_id, birth_date, phone, gender) values ($1,$2,$3,$4,$5)",
+          [userId, inv.consultancy_id, inv.birth_date, inv.phone, inv.gender]);
+      }
+      // Anamnese pedida no convite: nasce PENDENTE para o aluno preencher (cópia dos campos do modelo no momento do aceite).
+      if (inv.anamnesis_template_id) {
+        const assessmentId = uid();
+        const made = await tx.query(
+          `insert into assessments (id, consultancy_id, student_id, template_id, template_name, fields, answers, status, requested_by)
+           select $1, t.consultancy_id, $2, t.id, t.name, t.fields, null, 'pending', $3 from assessment_templates t
+            where t.id = $4 and t.consultancy_id = $5 returning id`,
+          [assessmentId, userId, inv.created_by, inv.anamnesis_template_id, inv.consultancy_id]);
+        if (made.rows.length) await audit(tx, { userId: inv.created_by, consultancyId: inv.consultancy_id } as Actor, "assessment.create", { assessmentId, studentId: userId, status: "pending", via: "convite" });
+      }
     });
   } catch (e) {
     if (String(e).includes("duplicate key")) throw new HttpError(409, "E-mail já cadastrado");
