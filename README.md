@@ -105,7 +105,7 @@ Para recomeçar do zero: pare o servidor, apague a pasta `data` e rode `npm run 
 ## Testes
 
 ```powershell
-npm test          # 312 testes em 24 arquivos, banco em memória
+npm test          # 316 testes em 24 arquivos, banco em memória
 npm run typecheck
 npm run validate  # validação HTTP ponta a ponta (entregas 1 a 5): exige o servidor rodando (npm run dev)
 ```
@@ -122,7 +122,7 @@ npm run validate  # validação HTTP ponta a ponta (entregas 1 a 5): exige o ser
 - `tasks.test.ts`: quadro de tarefas (criar, editar, mover, reordenar, excluir), sugestões corretas e sem duplicar, isolamento por consultoria (inclusive reordenar com cartão alheio), aluno 403 e sem sessão 401.
 - `delivery5.test.ts`, `billing-libs.test.ts`: webhook assinado, eventos idempotentes e fora de ordem, separação entre assinatura da plataforma e cobrança do aluno, ciclo de cobrança, recebimento manual, painel, despesas, simulador (404 em produção) e isolamento.
 
-`npm run validate` cria contas novas a cada execução e confere por HTTP o que os testes cobrem por chamada direta de handlers: 109 verificações nas entregas 1 a 5 e na recuperação de senha.
+`npm run validate` cria contas novas a cada execução e confere por HTTP o que os testes cobrem por chamada direta de handlers: 111 verificações nas entregas 1 a 5 e na recuperação de senha.
 
 Os testes chamam os handlers da API (`Request` → `Response`), a mesma camada das rotas do Next. Não há teste automatizado de navegador; as telas foram verificadas manualmente (as telas financeiras em desktop; a verificação em 375 px cobriu só o Financeiro).
 

@@ -452,3 +452,16 @@ details.card.rt-notes { padding-top: 0; padding-bottom: 0; }
 .rt-notes[open] summary::before { content: "▾"; }
 .pk-check input[type="checkbox"], .pk-check input[type="radio"] { width: 22px; height: 22px; min-height: 0; flex: none; margin: 0; padding: 0; accent-color: #2AC38B; cursor: pointer; }
 .pk-check { font-size: 14px; color: var(--g); text-transform: none; letter-spacing: 0; font-family: inherit; font-style: normal; font-weight: 500; }
+
+/* Aluno: modo visualização → iniciar, barra do treino em andamento e atalho da demonstração */
+.run-banner { margin: 12px 0; padding: 18px 16px; border-radius: 12px; background: var(--b); color: var(--paper); text-align: center; display: grid; gap: 10px; justify-items: center; }
+.run-banner p { margin: 0; font-size: 13px; color: var(--paper); }
+.run-banner .btn { background: var(--v); color: var(--ink); min-width: min(320px, 100%); justify-content: center; }
+.run-bar { position: sticky; top: 8px; z-index: 6; display: flex; align-items: center; justify-content: space-between; gap: 10px; margin: 12px 0; padding: 8px 12px; border-radius: 12px; background: var(--ink); color: var(--paper); border: 1px solid var(--line); }
+.run-bar .hf { color: var(--paper); }
+.run-clock { font-variant-numeric: tabular-nums; font-weight: 800; font-size: 18px; }
+.media-tile { flex: none; display: inline-flex; flex-direction: column; align-items: center; justify-content: center; gap: 4px; width: 92px; min-height: 66px; padding: 6px; border: 1px solid var(--line); border-radius: 10px; background: var(--ink); color: var(--paper); cursor: pointer; font-family: inherit; }
+.media-tile:hover, .media-tile.on { border-color: var(--b); }
+.media-play { width: 30px; height: 30px; border-radius: 50%; background: var(--b); display: grid; place-items: center; }
+.media-play svg { width: 16px; height: 16px; }
+.media-cap { font-size: 11px; font-weight: 700; letter-spacing: .02em; }

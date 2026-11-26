@@ -663,16 +663,19 @@ export const listLogs = route(async (ctx) => {
 export const startLog = route(async (ctx) => {
   const a = await requireActor(ctx, "student");
   const v = await loadVersion(ctx.db, a, ctx.params.id);
-  const input = await body(ctx, z.object({ id: uuid.optional() }));
+  const input = await body(ctx, z.object({ id: uuid.optional(), startedAt: z.string().datetime().optional() }));
   const id = input.id ?? uid();
+  // O aluno pode ter iniciado sem rede: aceita o instante informado se for plausível (até 24 h atrás e não no futuro); senão usa agora.
+  const nowMs = Date.now(); const claimed = input.startedAt ? Date.parse(input.startedAt) : NaN;
+  const startedAt = new Date(Number.isFinite(claimed) && claimed >= nowMs - 24 * 3600_000 && claimed <= nowMs + 60_000 ? Math.min(claimed, nowMs) : nowMs);
   const already = await ctx.db.query(
     "select 1 from workout_logs where id = $1 and student_id = $2 and version_id = $3", [id, a.userId, v.id]);
   if (already.rows.length === 0 && !v.is_current) {
     throw new HttpError(409, "Este treino foi substituído por uma versão mais nova");
   }
   await ctx.db.query(
-    "insert into workout_logs (id, student_id, version_id) values ($1,$2,$3) on conflict (id) do nothing",
-    [id, a.userId, v.id],
+    "insert into workout_logs (id, student_id, version_id, started_at) values ($1,$2,$3,$4) on conflict (id) do nothing",
+    [id, a.userId, v.id, startedAt],
   );
   // Reenvio com o mesmo id devolve o mesmo registro; id de outro aluno = não encontrado.
   const { rows } = await ctx.db.query<LogRow>(

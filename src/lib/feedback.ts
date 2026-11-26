@@ -41,3 +41,21 @@ export function matchesQuery(it: Pick<FeedbackItem, "studentName" | "workoutName
   const t = norm(q.trim());
   return !t || norm(`${it.studentName} ${it.workoutName}`).includes(t);
 }
+
+/** Cronômetro da sessão em andamento: "7:05" ou "1:02:09". Nulo se faltar o início, se for do futuro ou passar de 24 h (provável esquecimento). */
+export function elapsedText(startedAt: string | Date | null | undefined, nowMs: number): string | null {
+  if (!startedAt) return null;
+  const sec = Math.floor((nowMs - new Date(startedAt).getTime()) / 1000);
+  if (!Number.isFinite(sec) || sec < 0 || sec > 24 * 3600) return null;
+  const h = Math.floor(sec / 3600), m = Math.floor((sec % 3600) / 60), r = sec % 60;
+  const pad = (n: number) => String(n).padStart(2, "0");
+  return h > 0 ? `${h}:${pad(m)}:${pad(r)}` : `${m}:${pad(r)}`;
+}
+
+/** Janela em que a tela ainda mostra "Parabéns, treino concluído" depois de concluir; passada ela, volta ao modo visualização. */
+export const FRESH_FINISH_MS = 6 * 3600 * 1000;
+export function isFreshFinish(finishedAt: string | Date | null | undefined, nowMs: number): boolean {
+  if (!finishedAt) return false;
+  const age = nowMs - new Date(finishedAt).getTime();
+  return Number.isFinite(age) && age >= -60_000 && age <= FRESH_FINISH_MS;
+}

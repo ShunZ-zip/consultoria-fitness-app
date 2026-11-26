@@ -4,10 +4,10 @@ import { useParams } from "next/navigation";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import FinishDialog from "../../../../components/FinishDialog";
 import Icon from "../../../../components/Icon";
-import MediaViewer from "../../../../components/MediaViewer";
+import { MediaPanel } from "../../../../components/MediaViewer";
 import Shell from "../../../../components/Shell";
 import { api, apiCached, useMe } from "../../../../lib/client";
-import { durationMinutes, effortLabel, formatDuration } from "../../../../lib/feedback";
+import { durationMinutes, effortLabel, elapsedText, formatDuration, isFreshFinish } from "../../../../lib/feedback";
 import { prescribedText, SET_TYPE_LABEL, type PrescribedSetView } from "../../../../lib/format";
 import type { Permissions } from "../../../../lib/permissions";
 import { SyncQueue, type QueuedOp, type Sender } from "../../../../lib/syncQueue";
@@ -56,6 +56,8 @@ export default function Registro() {
   const [extras, setExtras] = useState<Extra[]>([]);
   const [error, setError] = useState("");
   const [finishing, setFinishing] = useState(false);
+  const [nowMs, setNowMs] = useState(() => Date.now());   // relógio do cronômetro da sessão
+  const [openMedia, setOpenMedia] = useState<Record<string, boolean>>({});
   const [summary, setSummary] = useState<{ minutes: number | null; effort: number | null } | null>(null);
   const [addId, setAddId] = useState("");
   const [online, setOnline] = useState(true);
@@ -82,7 +84,9 @@ export default function Registro() {
     const l = await apiCached(`/versions/${id}/last`, me.id); if (l.ok) setLast(l.data);
 
     const all = (logs.ok ? logs.data : []) as Log[];
-    const current = [...all].reverse().find((x) => !x.finishedAt) ?? all.at(-1) ?? null;
+    const lastLog = [...all].reverse().find((x) => !x.finishedAt) ?? all.at(-1) ?? null;
+    // Conclusão antiga não conta como "sessão atual": a tela volta ao modo visualização, com os campos em branco.
+    const current = lastLog && lastLog.finishedAt && !isFreshFinish(lastLog.finishedAt, Date.now()) ? null : lastLog;
     const f: Record<string, Form> = {};
     let ord = current?.exerciseOrder ?? det.exercises.map((e) => e.id);
     const sb: Record<string, { id: string; name: string }> = Object.fromEntries((current?.substitutions ?? []).map((s) => [s.versionExerciseId, { id: s.exerciseId, name: s.name }]));
@@ -100,7 +104,7 @@ export default function Registro() {
     let cur: Log | null = current && !current.finishedAt ? current : null;
     if (!cur) {
       const start = [...pend].reverse().find((o) => o.id.startsWith("log:"));
-      if (start) cur = { id: (start.body as any).id, startedAt: typeof start.at === "number" ? new Date(start.at).toISOString() : null, finishedAt: null, exerciseOrder: null, substitutions: [], extraExercises: [], sets: [] };
+      if (start) cur = { id: (start.body as any).id, startedAt: (start.body as any).startedAt ?? (typeof start.at === "number" ? new Date(start.at).toISOString() : null), finishedAt: null, exerciseOrder: null, substitutions: [], extraExercises: [], sets: [] };
     }
     if (!cur) cur = current; // concluído e sem novo registro pendente
     for (const op of pend) {
@@ -137,6 +141,15 @@ export default function Registro() {
     return () => { window.removeEventListener("online", on); window.removeEventListener("offline", off); clearInterval(t); };
   }, [flush, queue]);
 
+  // Cronômetro da sessão: só corre com o treino em andamento.
+  const runningNow = !!log && !log.finishedAt;
+  useEffect(() => {
+    if (!runningNow) return;
+    setNowMs(Date.now());
+    const t = setInterval(() => setNowMs(Date.now()), 1000);
+    return () => clearInterval(t);
+  }, [runningNow]);
+
   // Cronômetro de descanso (inicia ao concluir a série).
   useEffect(() => {
     if (!rest || rest.left <= 0) return;
@@ -151,8 +164,15 @@ export default function Registro() {
     if (logRef.current && !logRef.current.finishedAt) return logRef.current.id;
     const nl: Log = { id: crypto.randomUUID(), startedAt: new Date().toISOString(), finishedAt: null, exerciseOrder: null, substitutions: [], extraExercises: [], sets: [] };
     logRef.current = nl; setLog(nl);
-    enqueue({ id: `log:${nl.id}`, method: "POST", path: `/versions/${id}/logs`, body: { id: nl.id }, label: "Início do treino" });
+    enqueue({ id: `log:${nl.id}`, method: "POST", path: `/versions/${id}/logs`, body: { id: nl.id, startedAt: nl.startedAt }, label: "Início do treino" });
     return nl.id;
+  }
+
+  /** Iniciar treino: cria o registro AGORA (hora real de início, funciona sem rede) e libera os campos. */
+  function startWorkout() {
+    setError("");
+    ensureLog();
+    setNowMs(Date.now());
   }
 
   const patch = (key: string, k: keyof Form, v: string) => setForms((p) => ({ ...p, [key]: { ...p[key], [k]: v, saved: false } }));
@@ -207,6 +227,8 @@ export default function Registro() {
   function again() {
     logRef.current = null; setLog(null); setSubs({}); setExtras([]); setOrder(detail?.exercises.map((e) => e.id) ?? []);
     setForms(Object.fromEntries(Object.keys(forms).filter((k) => k.startsWith("s:")).map((k) => [k, blank()])));
+    setSummary(null);
+    startWorkout();   // "iniciar outra execução" já começa a sessão
   }
 
   const pendingIds = new Set(queue?.pending().map((o) => o.id) ?? []);
@@ -215,7 +237,10 @@ export default function Registro() {
   const conflicts = queue?.conflicts() ?? [];
   const finished = !!log?.finishedAt;
   const showTime = detail?.routine?.showTime !== false;   // a rotina pode ocultar o tempo do treino para o aluno
-  const readOnly = finished || (detail ? !detail.isCurrent && !log : false);
+  const running = !!log && !log.finishedAt;
+  const viewing = !!detail?.isCurrent && !log;            // modo visualização: lê a prescrição e toca em Iniciar
+  const readOnly = finished || viewing || (detail ? !detail.isCurrent && !log : false);
+  const elapsed = running && showTime ? elapsedText(log?.startedAt ?? null, nowMs) : null;
   const byId = new Map(detail?.exercises.map((e) => [e.id, e]) ?? []);
 
   // Função de renderização (não um componente): mantém o foco dos campos ao digitar.
@@ -259,7 +284,7 @@ export default function Registro() {
       ))}
       {error && <p className="err">{error}</p>}
       {rest && rest.left >= 0 && !finished && (
-        <div className="card row between" data-testid="rest-timer" style={{ position: "sticky", top: 8, zIndex: 5, background: "var(--n)" }}>
+        <div className="card row between" data-testid="rest-timer" style={{ position: "sticky", top: 76, zIndex: 5, background: "var(--n)" }}>
           <span><b className="hf" style={{ fontSize: 12, letterSpacing: ".1em" }}><Icon name="timer" />Descanso</b></span>
           <b style={{ fontSize: 28, fontVariantNumeric: "tabular-nums", color: "var(--g)", ...(rest.left === 0 ? { borderBottom: "3px solid var(--v)" } : {}) }}>{rest.left === 0 ? "Pronto!" : mmss(rest.left)}</b>
           <button className="btn ghost small" onClick={() => setRest(null)}>{rest.left === 0 ? "Fechar" : "Pular"}</button>
@@ -269,12 +294,24 @@ export default function Registro() {
         <>
           <h1>{detail.name} <span className="sub">· v{detail.version}</span></h1>
           {!detail.isCurrent && <p className="muted"><span className="tag">Versão anterior</span> Somente consulta: seu personal publicou uma versão mais nova.</p>}
-          <p className="muted">Registre o que você realmente fez. A prescrição do seu personal não é alterada; ajustes que você faz ficam como adaptações.</p>
+          <p className="muted">{viewing ? "Veja a prescrição do seu personal e, quando for treinar, toque em Iniciar treino." : "Registre o que você realmente fez. A prescrição do seu personal não é alterada; ajustes que você faz ficam como adaptações."}</p>
+          {viewing && (
+            <section className="run-banner" aria-label="Modo visualização">
+              <button type="button" className="btn big" onClick={startWorkout}><Icon name="play" />Iniciar treino</button>
+              <p>Você está no “modo visualização”. Toque em <b>Iniciar treino</b> para começar a registrar.</p>
+            </section>
+          )}
+          {running && (
+            <div className="run-bar" data-testid="run-bar">
+              <span><b className="hf" style={{ fontSize: 12, letterSpacing: ".1em" }}><Icon name="pulse" />Treino em andamento</b>{elapsed && <span className="run-clock" role="timer" aria-label={`Tempo de treino ${elapsed}`}> · {elapsed}</span>}</span>
+              <button type="button" className="btn small" onClick={() => setFinishing(true)}>Concluir treino</button>
+            </div>
+          )}
           {finished && (
             <div className="card">
               <p className="okmsg"><b>Parabéns! Você concluiu seu treino.</b> Seu personal já pode ver o que você registrou{pendingCount > 0 ? " (assim que sincronizar)" : ""}.</p>
               {summary && (showTime || summary.effort) && <p className="muted">{showTime ? `Tempo de treino: ${formatDuration(summary.minutes)}` : ""}{showTime && summary.effort ? " · " : ""}{summary.effort ? `Você achou: ${effortLabel(summary.effort)}` : ""}.</p>}
-              {detail.isCurrent && <button className="btn ghost small" onClick={again}>Registrar outra execução</button>}
+              {detail.isCurrent && <button className="btn ghost small" onClick={again}><Icon name="play" />Iniciar outra execução</button>}
             </div>
           )}
 
@@ -288,6 +325,10 @@ export default function Registro() {
               <div className="card" key={e.id}>
                 <div className="row between">
                   <b>{sub ? <>{sub.name} <span className="muted" style={{ fontWeight: 500 }}>(no lugar de {e.name})</span></> : e.name}</b>
+                  <button type="button" className={`media-tile${openMedia[e.id] ? " on" : ""}`} aria-expanded={!!openMedia[e.id]} aria-controls={`media-${e.id}`}
+                    aria-label={`${openMedia[e.id] ? "Fechar" : "Ver"} a demonstração de ${sub?.name ?? e.name}`} onClick={() => setOpenMedia((m) => ({ ...m, [e.id]: !m[e.id] }))}>
+                    <span className="media-play" aria-hidden="true"><Icon name="play" /></span><span className="media-cap">Demonstração</span>
+                  </button>
                   {perms.reorder && !readOnly && (
                     <span className="row">
                       <button className="btn ghost small" aria-label="Subir exercício" disabled={i === 0} onClick={() => move(i, -1)}>↑</button>
@@ -295,7 +336,7 @@ export default function Registro() {
                     </span>
                   )}
                 </div>
-                <MediaViewer exerciseId={sub?.id ?? e.exerciseId} key={sub?.id ?? e.exerciseId} />
+                {openMedia[e.id] && <MediaPanel exerciseId={sub?.id ?? e.exerciseId} key={sub?.id ?? e.exerciseId} id={`media-${e.id}`} />}
                 {lastE && !sub && <div className="muted" data-testid="last-training" style={{ marginTop: 6 }}>Último treino: <b style={{ color: "var(--g)" }}>{fmtLast(lastE)}</b></div>}
                 {options.length > 0 && !readOnly && (
                   <div style={{ marginTop: 8, maxWidth: 360 }}>

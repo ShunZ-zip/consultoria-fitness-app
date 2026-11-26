@@ -1,5 +1,5 @@
 "use client";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { isDirectVideoFile, isImageFile, youtubeId } from "../lib/media";
 import type { ResolvedMedia } from "../lib/media";
 import { api } from "../lib/client";
@@ -61,5 +61,25 @@ export default function MediaViewer({ exerciseId }: { exerciseId: string }) {
         {state.resolved && <MediaItems resolved={state.resolved} />}
       </div>
     </details>
+  );
+}
+
+/** Painel de demonstração que carrega a mídia ao abrir (usado pelo atalho ao lado do exercício). Nada de terceiros carrega antes do toque. */
+export function MediaPanel({ exerciseId, id }: { exerciseId: string; id?: string }) {
+  const [state, setState] = useState<{ resolved: ResolvedMedia | null; loading: boolean; error: string }>({ resolved: null, loading: true, error: "" });
+  useEffect(() => {
+    let live = true;
+    setState({ resolved: null, loading: true, error: "" });
+    api(`/exercises/${exerciseId}/media`)
+      .then((r) => live && setState({ resolved: r.ok ? r.data.resolved : null, loading: false, error: r.ok ? "" : "Não foi possível carregar a demonstração." }))
+      .catch(() => live && setState({ resolved: null, loading: false, error: "Sem conexão: a demonstração não está disponível agora." }));
+    return () => { live = false; };
+  }, [exerciseId]);
+  return (
+    <div id={id} style={{ marginTop: 10 }}>
+      {state.loading && <p className="muted">Carregando…</p>}
+      {state.error && <p className="err">{state.error}</p>}
+      {state.resolved && <MediaItems resolved={state.resolved} />}
+    </div>
   );
 }

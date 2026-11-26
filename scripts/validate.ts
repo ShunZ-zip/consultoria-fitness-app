@@ -98,6 +98,14 @@ async function main() {
   check("outra consultoria não vê nem resolve (404); aluno 403", (await beta.get("/feedbacks")).body.items.length === 0 && (await beta.post(`/feedbacks/${fbLog}/resolve`, { resolved: true })).status === 404 && (await a1.c.get("/feedbacks")).status === 403 && (await a1.c.post(`/feedbacks/${fbLog}/resolve`, { resolved: true })).status === 403);
   check("resolver tira da fila e reabrir devolve", (await ana.post(`/feedbacks/${fbLog}/resolve`, { resolved: true })).status === 200 && !(await ana.get("/feedbacks")).body.items.some((i: any) => i.id === fbLog) && (await ana.get("/feedbacks?status=resolved")).body.items.some((i: any) => i.id === fbLog) && (await ana.post(`/feedbacks/${fbLog}/resolve`, { resolved: false })).status === 200 && (await ana.get("/feedbacks")).body.items.some((i: any) => i.id === fbLog));
 
+  section("Iniciar treino com a hora real");
+  const iniId = uuid();
+  const ini = await a1.c.post(`/versions/${v1}/logs`, { id: iniId, startedAt: new Date(Date.now() - 30 * 60_000).toISOString() });
+  const iniAge = Date.now() - Date.parse(ini.body.startedAt);
+  check("início informado (30 min atrás) é guardado; reenviar o mesmo id não o altera", ini.status === 200 && iniAge > 29 * 60_000 && iniAge < 31 * 60_000 && (await a1.c.post(`/versions/${v1}/logs`, { id: iniId, startedAt: new Date().toISOString() })).body.startedAt === ini.body.startedAt);
+  check("início no futuro ou formato inválido não distorcem (agora / 400)", Date.now() - Date.parse((await a1.c.post(`/versions/${v1}/logs`, { startedAt: new Date(Date.now() + 3600_000).toISOString() })).body.startedAt) < 5_000 && (await a1.c.post(`/versions/${v1}/logs`, { startedAt: "ontem" })).status === 400);
+  await a1.c.post(`/logs/${iniId}/finish`, {});
+
   section("Frequência semanal e engajamento");
   const myEng = await a1.c.get("/me/engagement?tz=-180");
   const prEng = await ana.get(`/students/${a1.id}/engagement?tz=-180`);
@@ -105,7 +113,7 @@ async function main() {
   check("engajamento: sessão de hoje = engajado; id inválido 404; outra consultoria 404; aluno 403 na rota do personal; personal 403 na do aluno", prEng.body.status === "engaged" && (await ana.get("/students/nao-e-uuid/engagement")).status === 404 && (await beta.get(`/students/${a1.id}/engagement`)).status === 404 && (await a1.c.get(`/students/${a1.id}/engagement`)).status === 403 && (await ana.get("/me/engagement")).status === 403);
 
   const cmp = (await ana.get(`/versions/${v1}/comparison`)).body;
-  const rows = cmp.logs[0].rows;
+  const rows = cmp.logs.find((l: any) => l.id === log).rows;   // por id: outras sessões do aluno nesta versão não mudam a conta
   check("comparação: prescrito e realizado lado a lado", rows.length === 3 && rows[1].prescribed.reps === 10 && rows[1].done.reps === 8);
   check("comparação: diferenças (−2 reps, +2,5 kg)", rows[1].diff.reps === -2 && rows[1].diff.loadKg === 2.5);
   check("prescrição publicada segue intacta após o registro", (await ana.get(`/versions/${v1}`)).body.exercises[0].sets[1].reps === 10);

@@ -1,6 +1,6 @@
 import { randomUUID as uuid } from "node:crypto";
 import { describe, expect, it } from "vitest";
-import { completionPct, durationMinutes, effortLabel, formatDuration, matchesQuery } from "../src/lib/feedback";
+import { completionPct, durationMinutes, effortLabel, elapsedText, formatDuration, isFreshFinish, matchesQuery } from "../src/lib/feedback";
 import * as h from "../src/server/handlers";
 import * as h9 from "../src/server/handlers9";
 import { call, inviteStudent, publishWorkout, registerTrainer } from "./helpers";
@@ -20,6 +20,23 @@ describe("caixa de feedbacks: regras puras", () => {
   it("conclusão: percentual limitado a 100; sem prescrição = nulo", () => {
     expect(completionPct(2, 3)).toBe(67); expect(completionPct(5, 3)).toBe(100); expect(completionPct(0, 3)).toBe(0);
     expect(completionPct(3, 0)).toBeNull();
+  });
+  it("cronômetro da sessão: m:ss, h:mm:ss; nulo sem início, no futuro ou depois de 24 h", () => {
+    const t0 = Date.parse("2026-11-26T12:00:00Z");
+    expect(elapsedText("2026-11-26T12:00:00Z", t0)).toBe("0:00");
+    expect(elapsedText("2026-11-26T12:00:00Z", t0 + 425_000)).toBe("7:05");
+    expect(elapsedText("2026-11-26T12:00:00Z", t0 + 3_729_000)).toBe("1:02:09");
+    expect(elapsedText("2026-11-26T12:00:00Z", t0 - 5000)).toBeNull();
+    expect(elapsedText("2026-11-26T12:00:00Z", t0 + 25 * 3600_000)).toBeNull();
+    expect(elapsedText(null, t0)).toBeNull(); expect(elapsedText("lixo", t0)).toBeNull();
+  });
+  it("conclusão recente: até 6 h mostra o parabéns; depois volta ao modo visualização", () => {
+    const t0 = Date.parse("2026-11-26T12:00:00Z");
+    expect(isFreshFinish("2026-11-26T11:59:00Z", t0)).toBe(true);
+    expect(isFreshFinish("2026-11-26T06:00:00Z", t0)).toBe(true);
+    expect(isFreshFinish("2026-11-26T05:59:00Z", t0)).toBe(false);
+    expect(isFreshFinish("2026-11-24T12:00:00Z", t0)).toBe(false);
+    expect(isFreshFinish(null, t0)).toBe(false); expect(isFreshFinish("lixo", t0)).toBe(false);
   });
   it("busca por aluno ou treino sem acento nem maiúsculas", () => {
     const it1 = { studentName: "Jéssica da Silva", workoutName: "Superiores A" };
@@ -42,6 +59,29 @@ async function doSession(student: string, versionId: string, o: { effort?: numbe
   }
   return { logId: log.body.id as string, status: 0 };
 }
+
+describe("início do treino com a hora real (inclusive feito sem rede)", () => {
+  it("aceita o início informado se for plausível; futuro, mais de 24 h atrás ou formato inválido não distorcem", async () => {
+    const t = await registerTrainer("st-a"); const s = await inviteStudent(t, "st-s1"); const vid = await publishWorkout(t, s.id);
+    const ago = (ms: number) => new Date(Date.now() - ms).toISOString();
+    const start = (startedAt?: string) => call(h.startLog, { body: { id: uuid(), ...(startedAt ? { startedAt } : {}) }, cookie: s.cookie, params: { id: vid } });
+    const age = (r: any) => Date.now() - Date.parse(r.body.startedAt);
+    const a = await start(ago(45 * 60_000));
+    expect(a.status).toBe(200); expect(age(a)).toBeGreaterThan(44 * 60_000); expect(age(a)).toBeLessThan(46 * 60_000);
+    expect(age(await start(new Date(Date.now() + 3600_000).toISOString()))).toBeLessThan(5_000);       // futuro vira agora
+    expect(age(await start(ago(30 * 3600_000)))).toBeLessThan(5_000);                                  // mais de 24 h: ignora
+    expect(age(await start())).toBeLessThan(5_000);                                                    // sem informar: agora
+    expect((await start("ontem às 10h")).status).toBe(400);                                            // formato inválido
+  });
+
+  it("reenviar o mesmo id não muda o início já guardado", async () => {
+    const t = await registerTrainer("st-b"); const s = await inviteStudent(t, "st-s2"); const vid = await publishWorkout(t, s.id);
+    const id = uuid();
+    const first = await call(h.startLog, { body: { id, startedAt: new Date(Date.now() - 20 * 60_000).toISOString() }, cookie: s.cookie, params: { id: vid } });
+    const again = await call(h.startLog, { body: { id, startedAt: new Date(Date.now() - 5 * 60_000).toISOString() }, cookie: s.cookie, params: { id: vid } });
+    expect(again.body.startedAt).toBe(first.body.startedAt);
+  });
+});
 
 describe("caixa de feedbacks: API", () => {
   it("lista só sessões concluídas, com esforço, observação, séries feitas e RIR; contagens corretas", async () => {
