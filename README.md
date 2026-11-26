@@ -13,6 +13,8 @@
 
 Telas novas das entregas 3 a 5: Financeiro e Assinatura (personal), Pagamentos (aluno), Avaliações, Mensagens, Evolução e check-in.
 
+Os vídeos próprios do personal continuam valendo (links https) e podem ser exibidos junto da animação 3D oficial.
+
 Fora do escopo (conforme combinado): agenda profissional (etapa 4, tópico 7, **pendente**), **pagamentos reais** (provedor não escolhido), integração com **IA externa**, fotos corporais (exigem armazenamento privado e LGPD), upload de arquivos no chat e nutrição. Fluxo de caixa, DRE, margem, pró-labore, churn, CAC, LTV e projeções ficam para evolução futura. Todos os dados de exemplo são **fictícios**.
 
 ## Como rodar
@@ -71,6 +73,7 @@ Para recomeçar do zero: pare o servidor, apague a pasta `data` e rode `npm run 
 2. Com a permissão "Consultar treinos anteriores", o aluno vê **Evolução** (carga, 1RM, recordes, aderência). O personal vê a mesma tela no perfil do aluno. A aderência só existe se o treino tiver frequência semanal.
 
 **Entrega 4**
+0. **Animações 3D dos exercícios:** os 16 exercícios oficiais têm uma animação **3D original** (boneco articulado em Three.js, sem material de terceiros). Em "Ver demonstração" o aluno pode **girar o boneco arrastando**, ver de **lado, de frente ou em 3/4**, pausar e usar câmera lenta; o músculo principal fica em **verde** e o equipamento em azul, com uma dica de execução. Código em `src/lib/exercise3d.ts` (poses e equipamento) e `src/components/Exercise3D.tsx` (desenho). Para adicionar um exercício, crie sua pose em `SPECS`. Se o aparelho não suportar WebGL, aparece um aviso. Com movimento reduzido ativado, começa pausado.
 1. **Mídia:** na biblioteca, adicione um vídeo próprio (só https) a um exercício e escolha "oficial", "própria" ou "ambas", para todos os alunos ou para um aluno. O aluno vê só o resultado.
 2. **Avaliações:** crie um modelo (medidas, anamnese, triagem, testes ou personalizado), registre ou envie ao aluno; o aluno responde uma vez. Leituras pelo personal vão para a auditoria, sem as respostas.
 3. **Check-ins:** o aluno responde o questionário (sono, fadiga, estresse, motivação, dor); o painel do personal mostra alertas primeiro. Frequência e perguntas se configuram por aluno ou como padrão. Sem finalidade diagnóstica.
@@ -99,7 +102,7 @@ Para recomeçar do zero: pare o servidor, apague a pasta `data` e rode `npm run 
 ## Testes
 
 ```powershell
-npm test          # 248 testes em 16 arquivos, banco em memória
+npm test          # 259 testes em 17 arquivos, banco em memória
 npm run typecheck
 npm run validate  # validação HTTP ponta a ponta (entregas 1 a 5): exige o servidor rodando (npm run dev)
 ```

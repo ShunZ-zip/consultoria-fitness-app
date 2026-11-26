@@ -1,5 +1,6 @@
 import { randomUUID } from "node:crypto";
 import { PGlite } from "@electric-sql/pglite";
+import { ensureOfficialMedia } from "./officialMedia";
 import { MIGRATION_2_SQL, MIGRATION_3_SQL, MIGRATION_4_SQL, MIGRATION_5_SQL, MIGRATION_6_SQL, MIGRATION_7_SQL, MIGRATION_8_SQL, MIGRATION_9_SQL, OFFICIAL_EXERCISES, SCHEMA_SQL } from "./schema";
 
 type G = typeof globalThis & { __fitDb?: Promise<PGlite> };
@@ -33,6 +34,8 @@ async function open(): Promise<PGlite> {
       [e.name, e.primary, e.secondary, e.primary.join(" / ")],
     );
   }
+  // Animações oficiais (arte original em public/media/animations). Em memória (testes) não são registradas, para os testes controlarem a mídia.
+  if (dir !== "memory") await ensureOfficialMedia(db);
   return db;
 }
 

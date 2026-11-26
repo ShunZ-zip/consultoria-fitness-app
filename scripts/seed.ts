@@ -83,8 +83,7 @@ async function main() {
     }
   }
 
-  // Entrega 4: animação oficial de demonstração (fictícia), avaliações, check-ins e conversa do Aluno Um.
-  await db.query("insert into exercise_media (id, exercise_id, consultancy_id, kind, title, url, license) values ($1,$2,null,'animation','Supino reto (demonstração fictícia)','/media/supino-demo.svg','Arte própria do projeto, fictícia')", [uid(), supino]);
+  // Entrega 4: as animações oficiais são registradas ao abrir o banco (src/server/officialMedia.ts).
 
   const medidas = BUILTIN_TEMPLATES.find((t) => t.key === "medidas")!;
   const tplId = uid();

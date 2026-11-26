@@ -3,6 +3,8 @@ import { useState } from "react";
 import { isDirectVideoFile, isImageFile } from "../lib/media";
 import type { ResolvedMedia } from "../lib/media";
 import { api } from "../lib/client";
+import { nameFromModelUrl } from "../lib/exercise3d";
+import Exercise3D from "./Exercise3D";
 
 /** Demonstração do exercício: carrega sob demanda a mídia já resolvida para o aluno (oficial, própria ou ambas). */
 export function MediaItems({ resolved }: { resolved: ResolvedMedia }) {
@@ -12,14 +14,16 @@ export function MediaItems({ resolved }: { resolved: ResolvedMedia }) {
       {resolved.fallback && <p className="muted" style={{ margin: 0 }}>Mostrando a mídia disponível (a preferida ainda não existe).</p>}
       {resolved.items.map((m) => (
         <figure key={m.id} style={{ margin: 0 }}>
-          {isImageFile(m.url)
+          {nameFromModelUrl(m.url)
+            ? <Exercise3D name={nameFromModelUrl(m.url)!} />
+            : isImageFile(m.url)
             // eslint-disable-next-line @next/next/no-img-element
             ? <img src={m.url} alt={m.title} style={{ width: "100%", maxHeight: 360, objectFit: "contain", background: "#0E1B2B" }} />
             : isDirectVideoFile(m.url)
             ? <video controls preload="none" playsInline style={{ width: "100%", maxHeight: 360, background: "#000" }} src={m.url} aria-label={m.title} />
             : <a href={m.url} target="_blank" rel="noopener noreferrer" className="btn ghost small">Abrir vídeo ↗</a>}
           <figcaption className="muted" style={{ marginTop: 4 }}>
-            <span className="tag" style={{ marginRight: 6 }}>{m.source === "official" ? "Animação oficial" : "Vídeo do seu personal"}</span>{m.title}
+            <span className="tag" style={{ marginRight: 6 }}>{m.source === "official" ? (nameFromModelUrl(m.url) ? "Animação 3D" : "Animação oficial") : "Vídeo do seu personal"}</span>{m.title}
           </figcaption>
         </figure>
       ))}
