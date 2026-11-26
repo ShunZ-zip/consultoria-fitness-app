@@ -1,4 +1,4 @@
-# Cauã Henry | Musculação — Consultoria (MVP web)
+# FisIQ (Cauã Henry | Musculação) — MVP web
 
 - **Entrega 1:** o personal convida um aluno → publica um treino → o aluno registra o que fez → o personal compara o realizado com a prescrição.
 - **Entrega 2:** editor por série completo, rascunho editável, **versões** (a publicada é imutável), duplicar, **modelos**, **volume por músculo** com peso configurável e **auditoria** das alterações.

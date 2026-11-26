@@ -8,7 +8,7 @@ import "./scrollfx.css";
 import "./globals.css";
 
 export const metadata: Metadata = {
-  title: "Cauã Henry | Musculação — Acompanhamento",
+  title: "FisIQ — Acompanhamento",
   description: "Plataforma privada de acompanhamento: prescrição, execução e evolução.",
 };
 export const viewport: Viewport = { width: "device-width", initialScale: 1, themeColor: [{ media: "(prefers-color-scheme: light)", color: "#E6EAED" }] };
